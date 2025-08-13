@@ -25,14 +25,12 @@ public class CategoryRepository {
 
     
     public Category getCategoryById(int categoryId) {
-        return null;
+        return categories.stream().filter(category -> category.getId() == categoryId).findFirst().orElse(null);
     }
 
 
     
     public String createCategory(String entity) {
-
-        
         return null;
     }
 
