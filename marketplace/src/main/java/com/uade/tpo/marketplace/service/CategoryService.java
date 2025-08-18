@@ -1,19 +1,25 @@
 package com.uade.tpo.marketplace.service;
 
 import java.util.ArrayList;
-
+import java.util.Optional;
 
 import com.uade.tpo.marketplace.entity.Category;
+import com.uade.tpo.marketplace.exceptions.CategoryDuplicateException;
 import com.uade.tpo.marketplace.repository.CategoryRepository;
 
 public class CategoryService {
 
     //Aca, deberemos implementar los mismos 3 metodos de la capa de trafico, pero sin las annotations
     
+    private CategoryRepository categoryRepository;
+
+    
+    public CategoryService() {
+        this.categoryRepository = new CategoryRepository();
+    }
     
 
     public ArrayList<Category> getCategories() {
-        CategoryRepository categoryRepository = new CategoryRepository();
         return categoryRepository.getCategories();
     }
     //Quiero que este metodo me traiga todas las categorias de la BD
@@ -21,16 +27,18 @@ public class CategoryService {
     //Pero quiero poder indicar un numero para que me devuleva solo alguna categoria tambien
 
     
-    public Category getCategoryById(int categoryId) {
-        CategoryRepository categoryRepository = new CategoryRepository();
+    public Optional<Category> getCategoryById(int categoryId) {
         return categoryRepository.getCategoryById(categoryId);
     }
 
 
     
-    public String createCategory(String entity) {
-        CategoryRepository categoryRepository = new CategoryRepository();
-        return categoryRepository.createCategory(entity);
+    public Category createCategory(int newCategoryId, String newCategoryDescription) throws CategoryDuplicateException {
+        ArrayList<Category> categories = categoryRepository.getCategories();
+        if (categories.stream().anyMatch(category -> category.getId() == newCategoryId && category.getDescription().equals(newCategoryDescription))) {
+            throw new CategoryDuplicateException();
+    }
+        return categoryRepository.createCategory(newCategoryId, newCategoryDescription);
     }
     
 }

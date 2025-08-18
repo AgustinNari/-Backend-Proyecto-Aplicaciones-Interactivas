@@ -2,7 +2,7 @@ package com.uade.tpo.marketplace.repository;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-
+import java.util.Optional;
 
 import com.uade.tpo.marketplace.entity.Category;
 
@@ -24,14 +24,16 @@ public class CategoryRepository {
 
 
     
-    public Category getCategoryById(int categoryId) {
-        return categories.stream().filter(category -> category.getId() == categoryId).findFirst().orElse(null);
+    public Optional<Category> getCategoryById(int categoryId) {
+        return this.categories.stream().filter(category -> category.getId() == categoryId).findAny();
     }
 
 
     
-    public String createCategory(String entity) {
-        return null;
+    public Category createCategory(int newCategoryId, String newCategoryDescription) {
+        Category newCategory = Category.builder().id(newCategoryId).description(newCategoryDescription).build();
+        this.categories.add(newCategory);
+        return newCategory;
     }
 
 
