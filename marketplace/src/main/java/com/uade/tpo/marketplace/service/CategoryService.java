@@ -3,7 +3,7 @@ package com.uade.tpo.marketplace.service;
 import java.util.ArrayList;
 import java.util.Optional;
 
-import com.uade.tpo.marketplace.entity.Category;
+import com.uade.tpo.marketplace.entity.basic.Category;
 import com.uade.tpo.marketplace.exceptions.CategoryDuplicateException;
 import com.uade.tpo.marketplace.repository.CategoryRepository;
 
@@ -33,12 +33,12 @@ public class CategoryService {
 
 
     
-    public Category createCategory(int newCategoryId, String newCategoryDescription) throws CategoryDuplicateException {
+    public Category createCategory(String newCategoryDescription) throws CategoryDuplicateException {
         ArrayList<Category> categories = categoryRepository.getCategories();
-        if (categories.stream().anyMatch(category -> category.getId() == newCategoryId && category.getDescription().equals(newCategoryDescription))) {
+        if (categories.stream().anyMatch(category -> category.getDescription().equals(newCategoryDescription))) {
             throw new CategoryDuplicateException();
     }
-        return categoryRepository.createCategory(newCategoryId, newCategoryDescription);
+        return categoryRepository.createCategory(newCategoryDescription);
     }
     
 }

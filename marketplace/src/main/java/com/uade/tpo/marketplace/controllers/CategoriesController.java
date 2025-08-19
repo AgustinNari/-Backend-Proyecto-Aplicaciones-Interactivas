@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.uade.tpo.marketplace.entity.Category;
-import com.uade.tpo.marketplace.entity.dto.CategoryRequest;
+import com.uade.tpo.marketplace.entity.basic.Category;
+import com.uade.tpo.marketplace.entity.dto.CategoryRequestDto;
 import com.uade.tpo.marketplace.exceptions.CategoryDuplicateException;
 import com.uade.tpo.marketplace.service.CategoryService;
 
@@ -50,9 +50,9 @@ public class CategoriesController {
 
 
     @PostMapping()
-    public ResponseEntity<Object> createCategory(@RequestBody CategoryRequest categoryRequest)
+    public ResponseEntity<Object> createCategory(@RequestBody CategoryRequestDto categoryRequest)
             throws CategoryDuplicateException {
-        Category result = categoryService.createCategory(categoryRequest.getId(), categoryRequest.getDescription());
+        Category result = categoryService.createCategory(categoryRequest.getDescription());
       
         return ResponseEntity.created(URI.create("categories/" + result.getId())).body(result);
     }

@@ -4,15 +4,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
 
-import com.uade.tpo.marketplace.entity.Category;
+import com.uade.tpo.marketplace.entity.basic.Category;
 
 public class CategoryRepository {
 
     private ArrayList<Category> categories = new ArrayList<Category>(
         Arrays.asList(
-            Category.builder().id(1).description("Videojuegos").build(),
-            Category.builder().id(2).description("Tarjetas de Regalo").build(),
-            Category.builder().id(3).description("Monedas Virtuales").build()
+            Category.builder().id(1).description("Acción").build(),
+            Category.builder().id(2).description("Aventura").build(),
+            Category.builder().id(3).description("Carreras").build()
         )
     );
 
@@ -30,8 +30,8 @@ public class CategoryRepository {
 
 
     
-    public Category createCategory(int newCategoryId, String newCategoryDescription) {
-        Category newCategory = Category.builder().id(newCategoryId).description(newCategoryDescription).build();
+    public Category createCategory(String newCategoryDescription) {
+        Category newCategory = Category.builder().id(this.categories.size()).description(newCategoryDescription).build();
         this.categories.add(newCategory);
         return newCategory;
     }
