@@ -1,10 +1,14 @@
 package com.uade.tpo.marketplace.repository.interfaces;
 
-import com.uade.tpo.marketplace.entity.basic.Review;
 import java.util.List;
 import java.util.Optional;
 
-public interface IReviewRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.uade.tpo.marketplace.entity.basic.Review;
+
+
+public interface IReviewRepository extends JpaRepository<Review, Integer> {
     Optional<Review> getReviewById(Integer id);
     List<Review> getReviewsByProductId(Integer productId);
     List<Review> getReviewsBySellerId(Integer sellerId);

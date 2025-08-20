@@ -1,11 +1,15 @@
 package com.uade.tpo.marketplace.repository.interfaces;
 
 
-import com.uade.tpo.marketplace.entity.basic.Discount;
-import java.util.Optional;
 import java.util.List;
+import java.util.Optional;
 
-public interface IDiscountRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.uade.tpo.marketplace.entity.basic.Discount;
+
+
+public interface IDiscountRepository extends JpaRepository<Discount, Integer> {
     Optional<Discount> getDiscountById(Integer id);
     Optional<Discount> getDiscountByCode(String code);
     List<Discount> getActiveDiscounts();

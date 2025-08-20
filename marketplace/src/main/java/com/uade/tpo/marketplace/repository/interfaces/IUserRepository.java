@@ -1,10 +1,14 @@
 package com.uade.tpo.marketplace.repository.interfaces;
 
-import com.uade.tpo.marketplace.entity.basic.User;
-import java.util.Optional;
 import java.util.List;
+import java.util.Optional;
 
-public interface IUserRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.uade.tpo.marketplace.entity.basic.User;
+
+
+public interface IUserRepository extends JpaRepository<User, Integer> {
     Optional<User> getUserById(Integer id);
     Optional<User> getUserByUsername(String username);
     Optional<User> getUserByEmail(String email);

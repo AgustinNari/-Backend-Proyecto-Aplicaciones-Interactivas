@@ -1,10 +1,14 @@
 package com.uade.tpo.marketplace.repository.interfaces;
 
-import com.uade.tpo.marketplace.entity.basic.Product;
 import java.util.List;
 import java.util.Optional;
 
-public interface IProductRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.uade.tpo.marketplace.entity.basic.Product;
+
+
+public interface IProductRepository extends JpaRepository<Product, Integer> {
     List<Product> getProducts();
     List<Product> getActiveProducts();
     List<Product> getProductsByCategoryId(Integer categoryId);

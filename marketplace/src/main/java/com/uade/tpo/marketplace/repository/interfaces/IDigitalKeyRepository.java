@@ -1,10 +1,16 @@
 package com.uade.tpo.marketplace.repository.interfaces;
 
-import com.uade.tpo.marketplace.entity.basic.DigitalKey;
 import java.util.List;
 import java.util.Optional;
 
-public interface IDigitalKeyRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.uade.tpo.marketplace.entity.basic.DigitalKey;
+
+
+
+
+public interface IDigitalKeyRepository extends JpaRepository<DigitalKey, Integer> {
     Optional<DigitalKey> getKeyById(Integer id);
     DigitalKey creatKey(DigitalKey key);
     void deleteKeyById(Integer id);
