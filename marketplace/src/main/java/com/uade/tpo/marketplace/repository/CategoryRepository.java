@@ -24,7 +24,7 @@ public class CategoryRepository {
 
 
     
-    public Optional<Category> getCategoryById(int categoryId) {
+    public Optional<Category> getCategoryById(Integer categoryId) {
         return this.categories.stream().filter(category -> category.getId() == categoryId).findAny();
     }
 

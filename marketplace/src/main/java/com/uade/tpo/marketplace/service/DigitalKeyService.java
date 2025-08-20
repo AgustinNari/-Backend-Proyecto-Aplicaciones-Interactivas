@@ -3,12 +3,15 @@ package com.uade.tpo.marketplace.service;
 import java.time.Instant;
 import java.util.List;
 
+import org.springframework.stereotype.Service;
+
 import com.uade.tpo.marketplace.entity.basic.DigitalKey;
 import com.uade.tpo.marketplace.entity.enums.KeyStatus;
 import com.uade.tpo.marketplace.exceptions.ProductNotFoundException;
 import com.uade.tpo.marketplace.repository.interfaces.IDigitalKeyRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IProductRepository;
 
+@Service
 public class DigitalKeyService {
     private IDigitalKeyRepository digitalKeyRepository;
     private IProductRepository productRepository;
@@ -44,7 +47,7 @@ public class DigitalKeyService {
     }
 
 
-    public List<DigitalKey> reserveAvailableKeys(Integer productId, int limit) {
+    public List<DigitalKey> reserveAvailableKeys(Integer productId, Integer limit) {
         List<DigitalKey> keys = digitalKeyRepository.getAvailableKeysForProduct(productId, limit);
         return keys;
     }

@@ -4,12 +4,15 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Optional;
 
+import org.springframework.stereotype.Service;
+
 import com.uade.tpo.marketplace.entity.basic.Discount;
 import com.uade.tpo.marketplace.entity.dto.DiscountCreateDto;
 import com.uade.tpo.marketplace.entity.enums.DiscountScope;
 import com.uade.tpo.marketplace.entity.enums.DiscountType;
 import com.uade.tpo.marketplace.repository.interfaces.IDiscountRepository;
 
+@Service
 public class DiscountService {
     
     private  IDiscountRepository discountRepository;

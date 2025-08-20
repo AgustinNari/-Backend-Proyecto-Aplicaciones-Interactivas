@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.stereotype.Service;
+
 import com.uade.tpo.marketplace.entity.basic.Category;
 import com.uade.tpo.marketplace.entity.basic.Product;
 import com.uade.tpo.marketplace.entity.dto.ProductCreateDto;
@@ -18,6 +20,7 @@ import com.uade.tpo.marketplace.repository.interfaces.ICategoryRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IDigitalKeyRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IProductRepository;
 
+@Service
 public class ProductService {
     
     private IProductRepository productRepository;
@@ -34,7 +37,7 @@ public class ProductService {
         List<Product> products = productRepository.getActiveProducts();
         return products.stream()
                 .map(p -> {
-                    int stock = (int) digitalKeyRepository.countAvailableKeysByProductId(p.getId());
+                    Integer stock = (int) digitalKeyRepository.countAvailableKeysByProductId(p.getId());
                     return AppMappers.toProductDto(p, stock);
                 }).collect(Collectors.toList());
     }
@@ -42,7 +45,7 @@ public class ProductService {
     public ProductDto getProductById(Integer id) throws ProductNotFoundException {
         Product p = productRepository.getProductById(id)
                 .orElseThrow(() -> new ProductNotFoundException());
-        int stock = (int) digitalKeyRepository.countAvailableKeysByProductId(p.getId());
+        Integer stock = (int) digitalKeyRepository.countAvailableKeysByProductId(p.getId());
         return AppMappers.toProductDto(p, stock);
     }
 
@@ -73,7 +76,7 @@ public class ProductService {
 
     
 
-        int stock = (int) digitalKeyRepository.countAvailableKeysByProductId(saved.getId());
+        Integer stock = (int) digitalKeyRepository.countAvailableKeysByProductId(saved.getId());
         return AppMappers.toProductDto(saved, stock);
     }
 
@@ -104,7 +107,7 @@ public class ProductService {
 
      
 
-        int stock = (int) digitalKeyRepository.countAvailableKeysByProductId(saved.getId());
+        Integer stock = (int) digitalKeyRepository.countAvailableKeysByProductId(saved.getId());
         return AppMappers.toProductDto(saved, stock);
     }
 

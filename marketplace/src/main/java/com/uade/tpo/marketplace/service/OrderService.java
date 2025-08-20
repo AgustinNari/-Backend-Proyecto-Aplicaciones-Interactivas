@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
+import org.springframework.stereotype.Service;
 
 import com.uade.tpo.marketplace.entity.basic.DigitalKey;
 import com.uade.tpo.marketplace.entity.basic.Discount;
@@ -34,6 +35,7 @@ import com.uade.tpo.marketplace.repository.interfaces.IOrderRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IProductRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IUserRepository;
 
+@Service
 public class OrderService {
     
     private IOrderRepository orderRepository;
@@ -85,7 +87,7 @@ public class OrderService {
    
             for (OrderItemCreateDto itemReq : dto.items()) {
                 Integer pid = itemReq.productId();
-                int qty = itemReq.quantity();
+                Integer qty = itemReq.quantity();
 
                 Product p = productRepository.getProductById(pid)
                         .orElseThrow(() -> new ProductNotFoundException());
@@ -152,8 +154,8 @@ public class OrderService {
                 List<DigitalKey> keys = assignedKeysByProduct.get(pid);
 
                 List<OrderItem> persistedItems = new ArrayList<>();
-                int idx = 0;
-                for (int i = 0; i < item.getQuantity(); i++) {
+                Integer idx = 0;
+                for (Integer i = 0; i < item.getQuantity(); i++) {
                     DigitalKey assignedKey = keys.get(i);
                     OrderItem unitItem = OrderItem.builder()
                             .orderId(savedOrder.getId())

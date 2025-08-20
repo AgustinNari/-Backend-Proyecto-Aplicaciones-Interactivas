@@ -10,5 +10,5 @@ public interface IDigitalKeyRepository {
     void deleteKeyById(Integer id);
     List<DigitalKey> getKeysByProductId(Integer productId);
     Integer countAvailableKeysByProductId(Integer productId);
-    List<DigitalKey> getAvailableKeysForProduct(Integer productId, int limit);
+    List<DigitalKey> getAvailableKeysForProduct(Integer productId, Integer limit);
 }

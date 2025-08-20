@@ -39,7 +39,7 @@ public class CategoriesController {
     //Pero quiero poder indicar un numero para que me devuleva solo alguna categoria tambien
 
     @GetMapping("{categoryId}") //localhost:4002/categories/1,2,3 y así
-    public ResponseEntity<Category> getCategoryById(@PathVariable int categoryId) {
+    public ResponseEntity<Category> getCategoryById(@PathVariable Integer categoryId) {
         Optional<Category> result = categoryService.getCategoryById(categoryId);
         if (result.isPresent()) {
             return ResponseEntity.ok(result.get());

@@ -3,10 +3,13 @@ package com.uade.tpo.marketplace.service;
 import java.util.ArrayList;
 import java.util.Optional;
 
+import org.springframework.stereotype.Service;
+
 import com.uade.tpo.marketplace.entity.basic.Category;
 import com.uade.tpo.marketplace.exceptions.CategoryDuplicateException;
 import com.uade.tpo.marketplace.repository.CategoryRepository;
 
+@Service
 public class CategoryService {
 
     //Aca, deberemos implementar los mismos 3 metodos de la capa de trafico, pero sin las annotations
@@ -27,7 +30,7 @@ public class CategoryService {
     //Pero quiero poder indicar un numero para que me devuleva solo alguna categoria tambien
 
     
-    public Optional<Category> getCategoryById(int categoryId) {
+    public Optional<Category> getCategoryById(Integer categoryId) {
         return categoryRepository.getCategoryById(categoryId);
     }
 
