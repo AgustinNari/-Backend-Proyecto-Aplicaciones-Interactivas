@@ -3,6 +3,7 @@ package com.uade.tpo.marketplace.service;
 import java.time.Instant;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.uade.tpo.marketplace.entity.basic.DigitalKey;
@@ -13,7 +14,11 @@ import com.uade.tpo.marketplace.repository.interfaces.IProductRepository;
 
 @Service
 public class DigitalKeyService {
+
+    @Autowired
     private IDigitalKeyRepository digitalKeyRepository;
+    
+    @Autowired
     private IProductRepository productRepository;
     
     public DigitalKeyService(IDigitalKeyRepository digitalKeyRepository, IProductRepository productRepository) {
@@ -23,7 +28,7 @@ public class DigitalKeyService {
     }
 
     
-    public void uploadKeys(Integer productId, List<String> keyCodes, Integer uploaderId, String batchId) throws ProductNotFoundException {
+    public void uploadKeys(Long productId, List<String> keyCodes, Integer uploaderId, String batchId) throws ProductNotFoundException {
 
         productRepository.getProductById(productId)
                 .orElseThrow(() -> new ProductNotFoundException());
@@ -37,28 +42,28 @@ public class DigitalKeyService {
                     .status(KeyStatus.AVAILABLE)
                     .createdAt(Instant.now())
                     .build();
-            digitalKeyRepository.creatKey(k);
+            digitalKeyRepository.save(k);
         }
     }
 
 
-     public Integer countAvailableKeysByProductId(Integer productId) {
-        return digitalKeyRepository.countAvailableKeysByProductId(productId);
-    }
+    //  public Integer countAvailableKeysByProductId(Long productId) {
+    //     return digitalKeyRepository.countAvailableKeysByProductId(productId);
+    // }
 
 
-    public List<DigitalKey> reserveAvailableKeys(Integer productId, Integer limit) {
-        List<DigitalKey> keys = digitalKeyRepository.getAvailableKeysForProduct(productId, limit);
-        return keys;
-    }
+    // public List<DigitalKey> reserveAvailableKeys(Long productId, Integer limit) {
+    //     List<DigitalKey> keys = digitalKeyRepository.getAvailableKeysForProduct(productId, limit);
+    //     return keys;
+    // }
 
 
-    public void markKeysSold(List<DigitalKey> keys, Integer orderItemId) {
+    public void markKeysSold(List<DigitalKey> keys, Long orderItemId) {
         for (DigitalKey k : keys) {
             k.setStatus(KeyStatus.SOLD);
             k.setSoldAt(Instant.now());
             k.setOrderItemId(orderItemId);
-            digitalKeyRepository.creatKey(k);
+            digitalKeyRepository.save(k);
         }
     }
 

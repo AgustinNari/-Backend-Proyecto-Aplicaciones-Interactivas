@@ -5,8 +5,8 @@ import java.time.Instant;
 import java.util.List;
 
 public record OrderDto(
-    Integer id,
-    Integer buyerId,
+    Long id,
+    Long buyerId,
     BigDecimal totalAmount,
     BigDecimal discountAmount,
     BigDecimal taxAmount,

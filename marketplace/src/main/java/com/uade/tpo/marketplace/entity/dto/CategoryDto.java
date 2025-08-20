@@ -1,11 +1,11 @@
 package com.uade.tpo.marketplace.entity.dto;
 
 public record CategoryDto(
-    Integer id,
+    Long id,
     String description
 ) {
 
-    public Integer id() {
+    public Long id() {
         return id;
     }
     

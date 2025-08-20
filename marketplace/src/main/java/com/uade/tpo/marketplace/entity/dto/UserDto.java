@@ -4,7 +4,7 @@ package com.uade.tpo.marketplace.entity.dto;
 import java.time.Instant;
 
 public record UserDto(
-    Integer id,
+    Long id,
     String username,
     String email,
     String displayName,

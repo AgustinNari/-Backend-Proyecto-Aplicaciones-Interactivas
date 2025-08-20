@@ -10,11 +10,11 @@ import com.uade.tpo.marketplace.entity.basic.DigitalKey;
 
 
 
-public interface IDigitalKeyRepository extends JpaRepository<DigitalKey, Integer> {
-    Optional<DigitalKey> getKeyById(Integer id);
-    DigitalKey creatKey(DigitalKey key);
-    void deleteKeyById(Integer id);
-    List<DigitalKey> getKeysByProductId(Integer productId);
-    Integer countAvailableKeysByProductId(Integer productId);
-    List<DigitalKey> getAvailableKeysForProduct(Integer productId, Integer limit);
+public interface IDigitalKeyRepository extends JpaRepository<DigitalKey, Long> {
+    // Optional<DigitalKey> getKeyById(Long id);
+    // DigitalKey createKey(DigitalKey key);
+    // void deleteKeyById(Long id);
+    // List<DigitalKey> getKeysByProductId(Long productId);
+    // Integer countAvailableKeysByProductId(Long productId);
+    // List<DigitalKey> getAvailableKeysForProduct(Long productId, Integer limit);
 }

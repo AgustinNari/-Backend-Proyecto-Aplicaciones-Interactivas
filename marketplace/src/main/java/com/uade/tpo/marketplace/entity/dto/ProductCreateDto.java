@@ -9,7 +9,7 @@ public record ProductCreateDto(
     @NotBlank String title,
     String description,
     @NotNull @DecimalMin("0.0") BigDecimal price,
-    @NotEmpty Set<Integer> categoryIds,   // ids de categorías
+    @NotEmpty Set<Long> categoryIds,   // ids de categorías
     String platform,
     LocalDate releaseDate,
     @Size(max = 200) String developer,

@@ -8,8 +8,8 @@ import java.util.Set;
 import com.uade.tpo.marketplace.entity.basic.Category;
 
 public record ProductDto(
-    Integer id,
-    Integer sellerId,
+    Long id,
+    Long sellerId,
     String sku,
     String title,
     String description,

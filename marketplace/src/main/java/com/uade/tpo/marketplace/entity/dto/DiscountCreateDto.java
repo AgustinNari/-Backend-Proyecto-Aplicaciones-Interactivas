@@ -9,7 +9,7 @@ public record DiscountCreateDto(
     @NotNull String type, // PERCENT, FIXED, BULK
     @NotNull BigDecimal value,
     @NotNull String scope, // PRODUCT,CATEGORY,SELLER
-    Integer targetId,
+    Long targetId,
     Integer minQuantity,
     Instant startsAt,
     Instant endsAt,

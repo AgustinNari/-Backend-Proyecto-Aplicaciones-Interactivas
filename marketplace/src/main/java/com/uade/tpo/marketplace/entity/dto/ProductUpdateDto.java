@@ -8,7 +8,7 @@ public record ProductUpdateDto(
     String title,
     String description,
     @DecimalMin("0.0") BigDecimal price,
-    Set<Integer> categoryIds,    // si está presente, reemplaza categorías actuales
+    Set<Long> categoryIds,    // si está presente, reemplaza categorías actuales
     Boolean active,
     String platform,
     LocalDate releaseDate,

@@ -4,12 +4,12 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 public record DiscountDto(
-    Integer id,
+    Long id,
     String code,
     String type,
     BigDecimal value,
     String scope,
-    Integer targetId,
+    Long targetId,
     Integer minQuantity,
     Instant startsAt,
     Instant endsAt,

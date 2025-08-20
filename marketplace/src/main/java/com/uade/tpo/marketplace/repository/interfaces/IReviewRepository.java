@@ -5,12 +5,13 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import com.uade.tpo.marketplace.entity.basic.OrderItem;
 import com.uade.tpo.marketplace.entity.basic.Review;
 
 
-public interface IReviewRepository extends JpaRepository<Review, Integer> {
-    Optional<Review> getReviewById(Integer id);
-    List<Review> getReviewsByProductId(Integer productId);
-    List<Review> getReviewsBySellerId(Integer sellerId);
+public interface IReviewRepository extends JpaRepository<Review, Long>{
+    Optional<Review> getReviewById(Long id);
+    List<Review> getReviewsByProductId(Long productId);
+    List<Review> getReviewsBySellerId(Long sellerId);
     Review creatReview(Review review);
 }

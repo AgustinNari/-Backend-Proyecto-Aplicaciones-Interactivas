@@ -8,17 +8,25 @@ import java.time.Instant;
 import com.uade.tpo.marketplace.entity.enums.DiscountScope;
 import com.uade.tpo.marketplace.entity.enums.DiscountType;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
 public class Discount {
-    private Integer id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     private String code; // Código de cupón
     private DiscountType type;
     private BigDecimal value;
     private DiscountScope scope;
-    private Integer targetId; // IdProducto, IdCategoría o IdVendedor
+    private Long targetId; // IdProducto, IdCategoría o IdVendedor
     private Integer minQuantity;
     private Instant startsAt;
     private Instant endsAt;

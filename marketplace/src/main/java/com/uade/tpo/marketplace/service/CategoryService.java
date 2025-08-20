@@ -1,47 +1,49 @@
 package com.uade.tpo.marketplace.service;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.uade.tpo.marketplace.entity.basic.Category;
 import com.uade.tpo.marketplace.exceptions.CategoryDuplicateException;
-import com.uade.tpo.marketplace.repository.CategoryRepository;
+import com.uade.tpo.marketplace.repository.CategoryRepositoryOLD;
+import com.uade.tpo.marketplace.repository.interfaces.ICategoryRepository;
+import com.uade.tpo.marketplace.service.interfaces.ICategoryService;
 
 @Service
-public class CategoryService {
+public class CategoryService implements ICategoryService {
 
     //Aca, deberemos implementar los mismos 3 metodos de la capa de trafico, pero sin las annotations
     
-    private CategoryRepository categoryRepository;
+    @Autowired
+    private ICategoryRepository categoryRepository;
+
 
     
-    public CategoryService() {
-        this.categoryRepository = new CategoryRepository();
-    }
-    
-
-    public ArrayList<Category> getCategories() {
-        return categoryRepository.getCategories();
+    @Override
+    public List<Category> getCategories() {
+        return categoryRepository.findAll();
     }
     //Quiero que este metodo me traiga todas las categorias de la BD
 
     //Pero quiero poder indicar un numero para que me devuleva solo alguna categoria tambien
 
-    
-    public Optional<Category> getCategoryById(Integer categoryId) {
-        return categoryRepository.getCategoryById(categoryId);
+    @Override
+    public Optional<Category> getCategoryById(Long categoryId) {
+        return categoryRepository.findById(categoryId);
     }
 
 
-    
+    @Override
     public Category createCategory(String newCategoryDescription) throws CategoryDuplicateException {
-        ArrayList<Category> categories = categoryRepository.getCategories();
-        if (categories.stream().anyMatch(category -> category.getDescription().equals(newCategoryDescription))) {
+        List<Category> categories = categoryRepository.findByDescription(newCategoryDescription);
+        if (!categories.isEmpty()) {
             throw new CategoryDuplicateException();
-    }
-        return categoryRepository.createCategory(newCategoryDescription);
+        }
+        return categoryRepository.save(new Category(newCategoryDescription));
     }
     
 }

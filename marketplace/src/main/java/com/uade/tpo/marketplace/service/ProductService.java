@@ -15,7 +15,7 @@ import com.uade.tpo.marketplace.exceptions.BadRequestException;
 import com.uade.tpo.marketplace.exceptions.ProductNotFoundException;
 import com.uade.tpo.marketplace.exceptions.ResourceNotFoundException;
 import com.uade.tpo.marketplace.extra.AppMappers;
-import com.uade.tpo.marketplace.repository.CategoryRepository;
+import com.uade.tpo.marketplace.repository.CategoryRepositoryOLD;
 import com.uade.tpo.marketplace.repository.interfaces.ICategoryRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IDigitalKeyRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IProductRepository;
@@ -23,102 +23,102 @@ import com.uade.tpo.marketplace.repository.interfaces.IProductRepository;
 @Service
 public class ProductService {
     
-    private IProductRepository productRepository;
-    private ICategoryRepository categoryRepository;
-    private IDigitalKeyRepository digitalKeyRepository;
+    // private IProductRepository productRepository;
+    // private ICategoryRepository categoryRepository;
+    // private IDigitalKeyRepository digitalKeyRepository;
 
-    public ProductService(IProductRepository productRepository, ICategoryRepository categoryRepository, IDigitalKeyRepository digitalKeyRepository) {
-        this.productRepository = productRepository;
-        this.categoryRepository = categoryRepository;
-        this.digitalKeyRepository = digitalKeyRepository;
-    }
+    // public ProductService(IProductRepository productRepository, ICategoryRepository categoryRepository, IDigitalKeyRepository digitalKeyRepository) {
+    //     this.productRepository = productRepository;
+    //     this.categoryRepository = categoryRepository;
+    //     this.digitalKeyRepository = digitalKeyRepository;
+    // }
 
-    public List<ProductDto> listAllActiveProducts() {
-        List<Product> products = productRepository.getActiveProducts();
-        return products.stream()
-                .map(p -> {
-                    Integer stock = (int) digitalKeyRepository.countAvailableKeysByProductId(p.getId());
-                    return AppMappers.toProductDto(p, stock);
-                }).collect(Collectors.toList());
-    }
+    // public List<ProductDto> listAllActiveProducts() {
+    //     List<Product> products = productRepository.getActiveProducts();
+    //     return products.stream()
+    //             .map(p -> {
+    //                 Integer stock = (int) digitalKeyRepository.countAvailableKeysByProductId(p.getId());
+    //                 return AppMappers.toProductDto(p, stock);
+    //             }).collect(Collectors.toList());
+    // }
 
-    public ProductDto getProductById(Integer id) throws ProductNotFoundException {
-        Product p = productRepository.getProductById(id)
-                .orElseThrow(() -> new ProductNotFoundException());
-        Integer stock = (int) digitalKeyRepository.countAvailableKeysByProductId(p.getId());
-        return AppMappers.toProductDto(p, stock);
-    }
+    // public ProductDto getProductById(Long id) throws ProductNotFoundException {
+    //     Product p = productRepository.getProductById(id)
+    //             .orElseThrow(() -> new ProductNotFoundException());
+    //     Integer stock = (int) digitalKeyRepository.countAvailableKeysByProductId(p.getId());
+    //     return AppMappers.toProductDto(p, stock);
+    // }
 
 
-    public ProductDto createProduct(ProductCreateDto dto, Integer sellerId) {
+    // public ProductDto createProduct(ProductCreateDto dto, Long sellerId) {
 
-        Set<Category> cats = dto.categoryIds().stream()
-                .map(cid -> categoryRepository.getCategoryById(cid)
-                    .orElseThrow(() -> new BadRequestException("Categoría no encontrada: " + cid))) //TODO: Revisar si cambiar a CategoryNotFoundException
-                .collect(Collectors.toSet());
+    //     Set<Category> cats = dto.categoryIds().stream()
+    //             .map(cid -> categoryRepository.findById(cid)
+    //                 .orElseThrow(() -> new BadRequestException("Categoría no encontrada: " + cid))) //TODO: Revisar si cambiar a CategoryNotFoundException
+    //             .collect(Collectors.toSet());
 
-        Product p = Product.builder()
-                .sellerId(sellerId)
-                .title(dto.title())
-                .description(dto.description())
-                .price(dto.price())
-                .currency("USD")
-                .categories(cats)
-                .platform(dto.platform())
-                .releaseDate(dto.releaseDate())
-                .developer(dto.developer())
-                .publisher(dto.publisher())
-                .metacriticScore(dto.metacriticScore())
-                .active(true)
-                .build();
+    //     Product p = Product.builder()
+    //             .sellerId(sellerId)
+    //             .title(dto.title())
+    //             .description(dto.description())
+    //             .price(dto.price())
+    //             .currency("USD")
+    //             .categories(cats)
+    //             .platform(dto.platform())
+    //             .releaseDate(dto.releaseDate())
+    //             .developer(dto.developer())
+    //             .publisher(dto.publisher())
+    //             .metacriticScore(dto.metacriticScore())
+    //             .active(true)
+    //             .build();
 
-        Product saved = productRepository.createProduct(p);
+    //     Product saved = productRepository.createProduct(p);
 
     
 
-        Integer stock = (int) digitalKeyRepository.countAvailableKeysByProductId(saved.getId());
-        return AppMappers.toProductDto(saved, stock);
-    }
+    //     Integer stock = (int) digitalKeyRepository.countAvailableKeysByProductId(saved.getId());
+    //     return AppMappers.toProductDto(saved, stock);
+    // }
 
 
-    public ProductDto updateProduct(Integer productId, ProductUpdateDto dto, Integer requestingUserId) throws ProductNotFoundException {
-        Product p = productRepository.getProductById(productId)
-                .orElseThrow(() -> new ProductNotFoundException());
+    // public ProductDto updateProduct(Long productId, ProductUpdateDto dto, Long requestingUserId) throws ProductNotFoundException {
+    //     Product p = productRepository.getProductById(productId)
+    //             .orElseThrow(() -> new ProductNotFoundException());
 
   
-        if (dto.title() != null) p.setTitle(dto.title());
-        if (dto.description() != null) p.setDescription(dto.description());
-        if (dto.price() != null) p.setPrice(dto.price());
-        if (dto.platform() != null) p.setPlatform(dto.platform());
-        if (dto.releaseDate() != null) p.setReleaseDate(dto.releaseDate());
-        if (dto.developer() != null) p.setDeveloper(dto.developer());
-        if (dto.publisher() != null) p.setPublisher(dto.publisher());
-        if (dto.metacriticScore() != null) p.setMetacriticScore(dto.metacriticScore());
-        if (dto.active() != null) p.setActive(dto.active());
-        if (dto.categoryIds() != null) {
-            Set<Category> cats = dto.categoryIds().stream()
-                .map(cid -> categoryRepository.getCategoryById(cid)
-                    .orElseThrow(() -> new BadRequestException("Categoría no encontrada: " + cid))) //TODO: Revisar si cambiar a CategoryNotFoundException
-                .collect(Collectors.toSet());
-            p.setCategories(cats);
-        }
-        p.setUpdatedAt(java.time.Instant.now());
-        Product saved = productRepository.createProduct(p);
+    //     if (dto.title() != null) p.setTitle(dto.title());
+    //     if (dto.description() != null) p.setDescription(dto.description());
+    //     if (dto.price() != null) p.setPrice(dto.price());
+    //     if (dto.platform() != null) p.setPlatform(dto.platform());
+    //     if (dto.releaseDate() != null) p.setReleaseDate(dto.releaseDate());
+    //     if (dto.developer() != null) p.setDeveloper(dto.developer());
+    //     if (dto.publisher() != null) p.setPublisher(dto.publisher());
+    //     if (dto.metacriticScore() != null) p.setMetacriticScore(dto.metacriticScore());
+    //     if (dto.active() != null) p.setActive(dto.active());
+    //     if (dto.categoryIds() != null) {
+    //         Set<Category> cats = dto.categoryIds().stream()
+    //             .map(cid -> categoryRepository.findById(cid)
+    //                 .orElseThrow(() -> new BadRequestException("Categoría no encontrada: " + cid))) //TODO: Revisar si cambiar a CategoryNotFoundException
+    //             .collect(Collectors.toSet());
+    //         p.setCategories(cats);
+    //     }
+    //     p.setUpdatedAt(java.time.Instant.now());
+    //     Product saved = productRepository.createProduct(p);
 
      
 
-        Integer stock = (int) digitalKeyRepository.countAvailableKeysByProductId(saved.getId());
-        return AppMappers.toProductDto(saved, stock);
-    }
+    //     Integer stock = (int) digitalKeyRepository.countAvailableKeysByProductId(saved.getId());
+    //     return AppMappers.toProductDto(saved, stock);
+    // }
 
 
-    public void deleteProduct(Integer productId, Integer requestingUserId) throws ProductNotFoundException {
-        Product p = productRepository.getProductById(productId)
-                .orElseThrow(() -> new ProductNotFoundException());
+    // public void deleteProduct(Long productId, Long requestingUserId) throws ProductNotFoundException {
+    //     Product p = productRepository.getProductById(productId)
+    //             .orElseThrow(() -> new ProductNotFoundException());
 
-        p.setActive(false);
-        productRepository.createProduct(p);
+    //     p.setActive(false);
+    //     productRepository.createProduct(p);
    
-    }
+    // }
 
 }

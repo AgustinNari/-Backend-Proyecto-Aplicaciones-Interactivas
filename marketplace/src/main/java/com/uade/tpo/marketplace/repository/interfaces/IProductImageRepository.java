@@ -7,10 +7,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.uade.tpo.marketplace.entity.basic.ProductImage;
 
-
-public interface IProductImageRepository extends JpaRepository<ProductImage, Integer> {
-    List<ProductImage> getProductImagesByProductId(Integer productId);
-    Optional<ProductImage> getProductImageById(Integer id);
+public interface IProductImageRepository extends JpaRepository<ProductImage, Long>{
+    List<ProductImage> getProductImagesByProductId(Long productId);
+    Optional<ProductImage> getProductImageById(Long id);
     ProductImage creatProductImage(ProductImage img);
-    void deleteProductImageById(Integer id);
+    void deleteProductImageById(Long id);
 }

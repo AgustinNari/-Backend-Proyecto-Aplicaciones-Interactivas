@@ -2,9 +2,9 @@ package com.uade.tpo.marketplace.entity.dto;
 
 import java.time.Instant;
 public record ReviewDto(
-    Integer id,
-    Integer productId,
-    Integer buyerId,
+    Long id,
+    Long productId,
+    Long buyerId,
     Integer rating,
     String title,
     String comment,
