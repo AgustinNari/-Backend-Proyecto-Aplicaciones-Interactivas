@@ -1,42 +1,108 @@
 package com.uade.tpo.marketplace.entity.basic;
 
 
-import lombok.*;
-
+import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.hibernate.annotations.CreationTimestamp;
 
 import com.uade.tpo.marketplace.entity.enums.Role;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.OneToMany;
-
-import java.math.BigDecimal;
-import java.util.List;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@Table(name = "users",
+       indexes = {
+           @Index(columnList = "username"),
+           @Index(columnList = "email")
+       })
 public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+
+    @Column(nullable=false, length = 50, unique = true)
     private String username;
+
+    @Column(nullable=false, length = 150, unique = true)
     private String email;
+
+    @Column(name = "password_hash", nullable=false)
     private String passwordHash;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
     private Role role;
+
+    @Column(name = "display_name", length = 100)
     private String displayName;
+    
     private String phone;
+    
+    
+    @Column(nullable=false)
+    private String country;
+
+
+
+
+    //TODO:
+    //private String rating;
+
+
+
+
+    @Column(nullable = false)
     private boolean active = true;
-    private Instant createdAt = Instant.now();
+
+    @Column(name = "created_at", updatable = false)
+    @CreationTimestamp
+    private Instant createdAt;
+    
+    @Column(name = "last_login")
     private Instant lastLogin;
+    
+    @Column(name = "seller_balance", precision = 12, scale = 2)
     private BigDecimal sellerBalance = BigDecimal.ZERO;
 
-    @OneToMany (mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany (mappedBy = "buyer", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Order> orders;
+
+    @OneToMany(mappedBy = "seller",
+               fetch = FetchType.LAZY,         
+               orphanRemoval = false)    
+    private Set<Product> products = new HashSet<>();
+
+
+    public void addProduct(Product p) {
+        products.add(p);
+        p.setSeller(this);
+    }
+
+    public void removeProduct(Product p) {
+        products.remove(p);
+        p.setSeller(null);
+    }
 }

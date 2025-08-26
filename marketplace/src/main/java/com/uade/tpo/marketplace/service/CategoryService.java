@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import com.uade.tpo.marketplace.entity.basic.Category;
@@ -24,8 +26,8 @@ public class CategoryService implements ICategoryService {
 
     
     @Override
-    public List<Category> getCategories() {
-        return categoryRepository.findAll();
+    public Page<Category> getCategories(PageRequest pageable) {
+        return categoryRepository.findAll(pageable);
     }
     //Quiero que este metodo me traiga todas las categorias de la BD
 
@@ -43,7 +45,7 @@ public class CategoryService implements ICategoryService {
         if (!categories.isEmpty()) {
             throw new CategoryDuplicateException();
         }
-        return categoryRepository.save(new Category(newCategoryDescription));
+        return categoryRepository.save(new Category());
     }
     
 }

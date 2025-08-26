@@ -1,11 +1,12 @@
 package com.uade.tpo.marketplace.entity.basic;
 
-import lombok.*;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-import org.hibernate.annotations.ManyToAny;
+import org.hibernate.annotations.CreationTimestamp;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -13,32 +14,48 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@Table(name = "order_items")
 public class OrderItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    private Long orderId;
+    private Long id; 
     
-
-
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id2")
+    @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id", nullable = false)
+    private Product product;
+    
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "digital_key_id", unique = true)
+    private DigitalKey digitalKey;
 
-
-
-    private Long productId;
-    private Long digitalKeyId;
+    @Column(nullable = false)
     private Integer quantity = 1;
+
+    @Column(name = "unit_price", precision = 12, scale = 2, nullable = false)
     private BigDecimal unitPrice;
+
+    @Column(name = "line_total", precision = 12, scale = 2, nullable = false)
     private BigDecimal lineTotal;
-    private Instant createdAt = Instant.now();
+
+    @Column(name = "created_at", updatable = false)
+    @CreationTimestamp
+    private Instant createdAt;
+
+    @OneToOne(mappedBy = "orderItem", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private Review review;
 }

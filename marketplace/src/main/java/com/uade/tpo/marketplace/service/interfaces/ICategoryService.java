@@ -1,18 +1,19 @@
 package com.uade.tpo.marketplace.service.interfaces;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 import com.uade.tpo.marketplace.entity.basic.Category;
 import com.uade.tpo.marketplace.exceptions.CategoryDuplicateException;
 
 public interface  ICategoryService {
 
-    public List<Category> getCategories();
+    Page<Category> getCategories(PageRequest pageable);
 
-    public Optional<Category> getCategoryById(Long id);
+    Optional<Category> getCategoryById(Long id);
 
-    public Category createCategory(String newCategoryDescription) throws CategoryDuplicateException;
+    Category createCategory(String newCategoryDescription) throws CategoryDuplicateException;
 
 }
