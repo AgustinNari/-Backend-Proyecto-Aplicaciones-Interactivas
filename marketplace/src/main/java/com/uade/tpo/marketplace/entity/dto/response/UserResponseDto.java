@@ -5,7 +5,8 @@ import java.time.Instant;
 
 public record UserResponseDto(
     Long id,
-    String username,
+    String firstName,
+    String lastName,
     String email,
     String role,
     String displayName,

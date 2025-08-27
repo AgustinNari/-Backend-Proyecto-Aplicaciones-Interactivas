@@ -1,9 +1,9 @@
 package com.uade.tpo.marketplace.entity.dto;
 
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotBlank;
 
 public record AuthLoginDto(
-    @NotBlank String usernameOrEmail,
+    @NotBlank String email,
     @NotBlank String password
 ) {}

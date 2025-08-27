@@ -27,7 +27,7 @@ public interface IUserService {
 
     Optional<UserResponseDto> getUserById(Long id);
 
-    Optional<UserResponseDto> getUserByUsername(String username);
+    Optional<UserResponseDto> getUserByMail(String email);
 
     UserResponseDto updateUser(Long id, UserUpdateDto dto, Long requestingUserId)
             throws ResourceNotFoundException, UnauthorizedException, DuplicateResourceException;

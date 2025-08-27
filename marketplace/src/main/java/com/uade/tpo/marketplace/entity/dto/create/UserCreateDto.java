@@ -7,7 +7,10 @@ import jakarta.validation.constraints.Size;
 
 public record UserCreateDto(
     @NotBlank
-    String username,
+    String firstName,
+
+    @NotBlank
+    String lastName,
 
     @NotBlank @Email
     String email,
