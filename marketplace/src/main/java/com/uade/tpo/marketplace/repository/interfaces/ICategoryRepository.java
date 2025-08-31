@@ -12,6 +12,13 @@ import com.uade.tpo.marketplace.entity.basic.Category;
 @Repository
 public interface ICategoryRepository extends JpaRepository<Category, Long> {
     
+    
+    List<Category> findByName(String name);
+
+    boolean existsByName(String name);
+
+
+
     // List<Category> getCategories();
     // Optional<Category> getCategoryById(Long id);
     // Optional<Category> getCategoryByName(String name);
