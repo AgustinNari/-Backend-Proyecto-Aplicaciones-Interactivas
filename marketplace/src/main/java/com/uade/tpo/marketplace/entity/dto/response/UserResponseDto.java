@@ -9,7 +9,6 @@ public record UserResponseDto(
     String lastName,
     String email,
     String role,
-    String displayName,
     String phone,
     String country,
     boolean active,

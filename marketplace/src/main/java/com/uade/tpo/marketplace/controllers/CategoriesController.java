@@ -16,14 +16,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.uade.tpo.marketplace.entity.basic.Category;
-import com.uade.tpo.marketplace.entity.dto.response.CategoryResponseDto;
+import com.uade.tpo.marketplace.entity.dto.create.CategoryCreateDto;
 import com.uade.tpo.marketplace.exceptions.CategoryDuplicateException;
 import com.uade.tpo.marketplace.service.interfaces.ICategoryService;
+
+import jakarta.validation.Valid;
 
 
 //El sistema ira recorriendo y viendo las annotations para ver que hacer en cada parte y como tratarlo
 @RestController //Esto marca que es un endpoint HTTP, le indica al framework, donde debe ir a buscar, se refiere a que la capa recibe tráfico HTTP, y más específicamente esta clase
-@RequestMapping("categories") //localhost:4002/categories
+@RequestMapping("/categories") //localhost:4002/categories
 //Esto de arriba indica que el endpoint es /categories, indicamos el nombre del endpoint
 public class CategoriesController {
 
@@ -45,6 +47,7 @@ public class CategoriesController {
 
     //Pero quiero poder indicar un numero para que me devuleva solo alguna categoria tambien
 
+
     @GetMapping("{categoryId}") //localhost:4002/categories/1,2,3 y así
     public ResponseEntity<Category> getCategoryById(@PathVariable Long categoryId) {
         Optional<Category> result = categoryService.getCategoryById(categoryId);
@@ -55,13 +58,16 @@ public class CategoriesController {
         return ResponseEntity.noContent().build();
     }
 
-
-    @PostMapping()
-    public ResponseEntity<Object> createCategory(@RequestBody CategoryResponseDto categoryRequest)
+    @PostMapping
+    public ResponseEntity<Category> createCategory(@Valid @RequestBody CategoryCreateDto categoryCreateDto)
             throws CategoryDuplicateException {
-        Category result = categoryService.createCategory(categoryRequest.getDescription());
+        Category result = categoryService.createCategory(categoryCreateDto.description());
       
         return ResponseEntity.created(URI.create("categories/" + result.getId())).body(result);
     }
+
+
+
+
     
 }

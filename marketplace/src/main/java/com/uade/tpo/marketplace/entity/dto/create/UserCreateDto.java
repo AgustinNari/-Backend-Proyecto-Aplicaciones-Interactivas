@@ -21,7 +21,7 @@ public record UserCreateDto(
     @NotNull
     String role,
 
-    String displayName,
+
     String phone,
 
     @NotBlank

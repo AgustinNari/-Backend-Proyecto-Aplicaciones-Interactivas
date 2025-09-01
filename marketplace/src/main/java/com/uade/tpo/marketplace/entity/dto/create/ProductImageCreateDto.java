@@ -1,5 +1,7 @@
 package com.uade.tpo.marketplace.entity.dto.create;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -8,9 +10,8 @@ public record ProductImageCreateDto(
     Long productId,
 
     @NotBlank
-    String url,
+    String name,
 
-    String altText,
-
-    Boolean isPrimary
+    @NotBlank
+    MultipartFile file
 ) {}

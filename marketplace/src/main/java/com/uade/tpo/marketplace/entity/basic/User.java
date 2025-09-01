@@ -3,12 +3,17 @@ package com.uade.tpo.marketplace.entity.basic;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.uade.tpo.marketplace.entity.enums.Role;
 
 import jakarta.persistence.CascadeType;
@@ -37,14 +42,15 @@ import lombok.NoArgsConstructor;
            @Index(columnList = "last_name"),
            @Index(columnList = "email")
        })
-public class User {
+public class User implements UserDetails {
 
-    public User(String firstName, String lastName, String email, String password, Role role) {
+    public User(String firstName, String lastName, String email, String password, Role role, String country) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.password = password;
         this.role = role;
+        this.country = country;
     }
 
     @Id
@@ -61,15 +67,12 @@ public class User {
     @Column(nullable=false, length = 150, unique = true)
     private String email;
 
-    @Column(name = "password", nullable=false)
+    @Column(nullable=false)
     private String password;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Role role;
-
-    @Column(name = "display_name", length = 100)
-    private String displayName;
     
     private String phone;
     
@@ -116,5 +119,17 @@ public class User {
     public void removeProduct(Product p) {
         products.remove(p);
         p.setSeller(null);
+    }
+
+    @Override
+    @JsonIgnore
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
+    }
+
+    @Override
+    @JsonIgnore
+    public String getUsername() {
+        return this.email;
     }
 }

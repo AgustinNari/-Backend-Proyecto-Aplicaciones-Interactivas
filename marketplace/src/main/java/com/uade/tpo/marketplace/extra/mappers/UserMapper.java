@@ -20,7 +20,6 @@ public class UserMapper {
         if (dto.role() != null) {
             try { u.setRole(Role.valueOf(dto.role())); } catch (Exception ignored) {}
         }
-        u.setDisplayName(dto.displayName());
         u.setPhone(dto.phone());
         u.setCountry(dto.country());
         return u;
@@ -29,7 +28,6 @@ public class UserMapper {
     public void updateFromDto(UserUpdateDto dto, User entity){
         if (dto == null || entity == null) return;
         if (dto.email() != null) entity.setEmail(dto.email());
-        if (dto.displayName() != null) entity.setDisplayName(dto.displayName());
         if (dto.phone() != null) entity.setPhone(dto.phone());
         if (dto.country() != null) entity.setCountry(dto.country());
         if (dto.active() != null) entity.setActive(dto.active());
@@ -42,7 +40,7 @@ public class UserMapper {
         return new UserResponseDto(
             u.getId(), u.getFirstName(), u.getLastName(), u.getEmail(),
             u.getRole() == null ? null : u.getRole().name(),
-            u.getDisplayName(), u.getPhone(), u.getCountry(),
+            u.getPhone(), u.getCountry(),
             u.isActive(), u.getCreatedAt(), u.getLastLogin(), u.getSellerBalance(),
             productCount
         );

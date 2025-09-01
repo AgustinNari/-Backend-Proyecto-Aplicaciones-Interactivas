@@ -1,9 +1,7 @@
 package com.uade.tpo.marketplace.entity.basic;
 
 
-import java.time.Instant;
-
-import org.hibernate.annotations.CreationTimestamp;
+import java.sql.Blob;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -28,20 +26,18 @@ public class ProductImage {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
+    private String name;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    @Column(nullable = false, length = 1000)
-    private String url;
+    @Column(nullable = false)
+    private Blob image;
 
-    @Column(length = 200)
-    private String altText;
+    public void setName(String name) {
+        this.name = name;
+    }
 
-    @Column(name = "is_primary", nullable = false)
-    private boolean isPrimary = false;
-
-    @Column(name = "created_at", updatable = false)
-    @CreationTimestamp
-    private Instant createdAt;
 }

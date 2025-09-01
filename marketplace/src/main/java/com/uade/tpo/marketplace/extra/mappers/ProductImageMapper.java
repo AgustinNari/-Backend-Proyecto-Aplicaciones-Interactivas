@@ -1,6 +1,14 @@
 package com.uade.tpo.marketplace.extra.mappers;
 
+import java.io.IOException;
+import java.sql.Blob;
+import java.sql.SQLException;
+import java.util.Base64;
+
+import javax.sql.rowset.serial.SerialBlob;
+
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.uade.tpo.marketplace.entity.basic.Product;
 import com.uade.tpo.marketplace.entity.basic.ProductImage;
@@ -11,32 +19,58 @@ import com.uade.tpo.marketplace.entity.dto.update.ProductImageUpdateDto;
 @Component
 public class ProductImageMapper {
 
-    public ProductImage toEntity(ProductImageCreateDto dto){
+    public ProductImage toEntity(ProductImageCreateDto dto) {
         if (dto == null) return null;
+
         ProductImage img = new ProductImage();
-        img.setUrl(dto.url());
-        img.setAltText(dto.altText());
-        img.setPrimary(Boolean.TRUE.equals(dto.isPrimary()));
-        // Producto como placeholder (service debe cargar el producto real)
+        img.setName(dto.name());
+
         if (dto.productId() != null) {
             Product p = new Product();
             p.setId(dto.productId());
             img.setProduct(p);
         }
+
+        MultipartFile file = dto.file();
+        if (file != null && !file.isEmpty()) {
+            img.setImage(multipartFileToBlob(file));
+        }
+
         return img;
     }
 
-    public void updateFromDto(ProductImageUpdateDto dto, ProductImage entity){
+
+
+    public void updateFromDto(ProductImageUpdateDto dto, ProductImage entity) {
         if (dto == null || entity == null) return;
-        if (dto.url() != null) entity.setUrl(dto.url());
-        if (dto.altText() != null) entity.setAltText(dto.altText());
-        if (dto.isPrimary() != null) entity.setPrimary(dto.isPrimary());
+
+        if (dto.name() != null) {
+            entity.setName(dto.name());
+        }
+
+        MultipartFile file = dto.file();
+        if (file != null && !file.isEmpty()) {
+            entity.setImage(multipartFileToBlob(file));
+        }
     }
 
-    public ProductImageResponseDto toResponse(ProductImage img){
+    public ProductImageResponseDto toResponse(ProductImage img) {
         if (img == null) return null;
+
         Long productId = img.getProduct() != null ? img.getProduct().getId() : null;
-        return new ProductImageResponseDto(img.getId(), productId, img.getUrl(), img.getAltText(), img.isPrimary(), img.getCreatedAt());
+        String base64File = null;
+
+        Blob blob = img.getImage();
+        if (blob != null) {
+            base64File = blobToBase64(blob);
+        }
+
+        return new ProductImageResponseDto(
+            img.getId(),
+            productId,
+            img.getName(),
+            base64File
+        );
     }
 
     public Product productFromId(Long id){
@@ -45,4 +79,29 @@ public class ProductImageMapper {
         p.setId(id);
         return p;
     }
+
+
+    private Blob multipartFileToBlob(MultipartFile file) {
+        try {
+            byte[] bytes = file.getBytes();
+            return new SerialBlob(bytes);
+        } catch (IOException | SQLException e) {
+            throw new RuntimeException("Error al convertir MultipartFile a Blob", e);
+        }
+    }
+
+    private String blobToBase64(Blob blob) {
+        try {
+            long length = blob.length();
+            if (length == 0) return null;
+            if (length > Integer.MAX_VALUE) {
+                throw new RuntimeException("Blob demasiado grande para convertir a byte[]");
+            }
+            byte[] bytes = blob.getBytes(1, (int) length);
+            return Base64.getEncoder().encodeToString(bytes);
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al leer los bytes del Blob", e);
+        }
+    }
+
 }

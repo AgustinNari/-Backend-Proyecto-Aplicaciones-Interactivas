@@ -28,7 +28,8 @@ public class SecurityConfig {
                                 .authorizeHttpRequests(req -> req.requestMatchers("/api/v1/auth/**") //TODO: Todos estos requestMatchers son de ejemplo/prueba
                                                 .permitAll()
                                                 .requestMatchers("/cart/**").hasRole("BUYER")
-                                                .requestMatchers("/categories/**").hasAnyRole("SELLER", "ADMIN")
+                                                .requestMatchers(HttpMethod.POST, "/categories/**").hasAnyRole("ADMIN", "SELLER")
+                                                .requestMatchers(HttpMethod.GET, "/categories/**").permitAll()
                                                 .requestMatchers(HttpMethod.POST, "/products/**").hasRole("SELLER")
                                                 .requestMatchers(HttpMethod.GET, "/products/**").permitAll()
                                                 .anyRequest()

@@ -1,7 +1,10 @@
 package com.uade.tpo.marketplace.entity.dto.update;
 
+import org.springframework.web.multipart.MultipartFile;
+
 public record ProductImageUpdateDto(
-    String url,
-    String altText,
-    Boolean isPrimary
+    Long id,
+    String name,
+    MultipartFile file
+    
 ) {}

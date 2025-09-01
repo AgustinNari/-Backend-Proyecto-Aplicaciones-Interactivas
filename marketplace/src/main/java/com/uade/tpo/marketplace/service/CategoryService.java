@@ -1,6 +1,5 @@
 package com.uade.tpo.marketplace.service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -8,10 +7,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.uade.tpo.marketplace.entity.basic.Category;
 import com.uade.tpo.marketplace.exceptions.CategoryDuplicateException;
-import com.uade.tpo.marketplace.repository.CategoryRepositoryOLD;
 import com.uade.tpo.marketplace.repository.interfaces.ICategoryRepository;
 import com.uade.tpo.marketplace.service.interfaces.ICategoryService;
 
@@ -39,13 +38,14 @@ public class CategoryService implements ICategoryService {
     }
 
 
+    @Transactional (rollbackFor = Throwable.class)
     @Override
     public Category createCategory(String newCategoryDescription) throws CategoryDuplicateException {
         List<Category> categories = categoryRepository.findByDescription(newCategoryDescription);
         if (!categories.isEmpty()) {
             throw new CategoryDuplicateException();
         }
-        return categoryRepository.save(new Category());
+        return categoryRepository.save(new Category(newCategoryDescription));
     }
     
 }

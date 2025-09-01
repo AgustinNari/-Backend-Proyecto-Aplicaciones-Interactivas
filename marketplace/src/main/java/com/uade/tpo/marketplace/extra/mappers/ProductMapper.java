@@ -1,6 +1,7 @@
 package com.uade.tpo.marketplace.extra.mappers;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -8,10 +9,10 @@ import org.springframework.stereotype.Component;
 
 import com.uade.tpo.marketplace.entity.basic.Category;
 import com.uade.tpo.marketplace.entity.basic.Product;
-import com.uade.tpo.marketplace.entity.basic.ProductImage;
 import com.uade.tpo.marketplace.entity.basic.User;
 import com.uade.tpo.marketplace.entity.dto.create.ProductCreateDto;
 import com.uade.tpo.marketplace.entity.dto.response.CategoryResponseDto;
+import com.uade.tpo.marketplace.entity.dto.response.ProductImageResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.ProductResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.ProductUpdateDto;
 
@@ -19,11 +20,11 @@ import com.uade.tpo.marketplace.entity.dto.update.ProductUpdateDto;
 public class ProductMapper {
 
     private final CategoryMapper categoryMapper;
-    private final ProductImageMapper imageMapper;
+    private final ProductImageMapper productImageMapper;
 
-    public ProductMapper(CategoryMapper categoryMapper, ProductImageMapper imageMapper) {
+    public ProductMapper(CategoryMapper categoryMapper, ProductImageMapper productImageMapper) {
         this.categoryMapper = categoryMapper;
-        this.imageMapper = imageMapper;
+        this.productImageMapper = productImageMapper;
     }
 
     public Product toEntity(ProductCreateDto dto){
@@ -86,37 +87,51 @@ public class ProductMapper {
 
  
     public ProductResponseDto toResponse(Product product){
-        if (product == null) return null;
-        Set<CategoryResponseDto> categoryDtos = product.getCategories() == null ? Set.of() :
-            product.getCategories().stream().map(categoryMapper::toResponse).collect(Collectors.toSet());
-      
-        List<String> imageUrls = product.getImages() == null ? java.util.List.of() :
-            product.getImages().stream().map(ProductImage::getUrl).collect(Collectors.toList());
-        Long sellerId = product.getSeller() != null ? product.getSeller().getId() : null;
-        return new ProductResponseDto(
-            product.getId(),
-            sellerId,
-            product.getSku(),
-            product.getTitle(),
-            product.getDescription(),
-            product.getPrice(),
-            product.getCurrency(),
-            categoryDtos,
-            product.isActive(),
-            product.getCreatedAt(),
-            product.getUpdatedAt(),
-            product.getPlatform(),
-            product.getRegion(),
-            product.getMinPurchaseQuantity(),
-            product.getMaxPurchaseQuantity(),
-            product.getReleaseDate(),
-            product.getDeveloper(),
-            product.getPublisher(),
-            product.getMetacriticScore(),
-            null, 
-            imageUrls
-        );
-    }
+    if (product == null) return null;
+
+    Set<CategoryResponseDto> categoryDtos = product.getCategories() == null
+        ? Set.of()
+        : product.getCategories().stream()
+            .map(categoryMapper::toResponse)
+            .collect(Collectors.toSet());
+
+   
+    List<String> imageFiles = product.getImages() == null
+        ? List.of()
+        : product.getImages().stream()
+            .map(productImageMapper::toResponse)     
+            .filter(Objects::nonNull)
+            .map(ProductImageResponseDto::file)     
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
+   
+
+    Long sellerId = product.getSeller() != null ? product.getSeller().getId() : null;
+
+    return new ProductResponseDto(
+        product.getId(),
+        sellerId,
+        product.getSku(),
+        product.getTitle(),
+        product.getDescription(),
+        product.getPrice(),
+        product.getCurrency(),
+        categoryDtos,
+        product.isActive(),
+        product.getCreatedAt(),
+        product.getUpdatedAt(),
+        product.getPlatform(),
+        product.getRegion(),
+        product.getMinPurchaseQuantity(),
+        product.getMaxPurchaseQuantity(),
+        product.getReleaseDate(),
+        product.getDeveloper(),
+        product.getPublisher(),
+        product.getMetacriticScore(),
+        null,
+        imageFiles
+    );
+}
 
    
     public ProductResponseDto toResponse(Product product, int availableStock){
