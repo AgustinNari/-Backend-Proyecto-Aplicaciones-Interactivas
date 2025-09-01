@@ -16,5 +16,6 @@ public record DiscountUpdateDto(
     Instant endsAt,
     Integer maxUses,
     Integer perUserLimit,
-    Boolean active
+    Boolean active,
+    Instant expiresAt
 ) {}

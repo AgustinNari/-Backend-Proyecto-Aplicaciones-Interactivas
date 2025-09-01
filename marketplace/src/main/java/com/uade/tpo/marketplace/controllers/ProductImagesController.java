@@ -36,8 +36,8 @@ public class ProductImagesController {
     }
 
     @PostMapping()
-    public ProductImageResponseDto addImage(ProductImageCreateDto request) throws IOException, SerialException, SQLException, ResourceNotFoundException, BadRequestException, UnauthorizedException {
-        ProductImageResponseDto image = productImageService.addImage(request);
+    public ProductImageResponseDto addImage(ProductImageCreateDto request, Long requestingUserId) throws IOException, SerialException, SQLException, ResourceNotFoundException, BadRequestException, UnauthorizedException {
+        ProductImageResponseDto image = productImageService.addImage(request, requestingUserId);
         return image;
     }
 

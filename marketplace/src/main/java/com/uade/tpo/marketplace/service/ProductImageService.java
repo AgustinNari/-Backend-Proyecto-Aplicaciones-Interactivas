@@ -33,19 +33,19 @@ public class ProductImageService implements IProductImageService {
 
     @Transactional (rollbackFor = Throwable.class)
     @Override
-    public ProductImageResponseDto addImage(ProductImageCreateDto dto) throws ResourceNotFoundException, BadRequestException, UnauthorizedException {
+    public ProductImageResponseDto addImage(ProductImageCreateDto dto, Long requestingUserId) throws ResourceNotFoundException, BadRequestException, UnauthorizedException {
         ProductImage img = productImageRepository.save(productImageMapper.toEntity(dto));
         return productImageMapper.toResponse(img);
     }
 
     @Override
-    public ProductImageResponseDto updateImage(ProductImageUpdateDto dto) throws ResourceNotFoundException, UnauthorizedException {
+    public ProductImageResponseDto updateImage(ProductImageUpdateDto dto, Long requestingUserId) throws ResourceNotFoundException, UnauthorizedException {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public void deleteImage(Long imageId) throws ResourceNotFoundException, UnauthorizedException {
+    public void deleteImage(Long imageId, Long requestingUserId) throws ResourceNotFoundException, UnauthorizedException {
         // TODO Auto-generated method stub
         
     }

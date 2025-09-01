@@ -11,14 +11,14 @@ import com.uade.tpo.marketplace.exceptions.UnauthorizedException;
 
 public interface IProductImageService {
 
-    
-    ProductImageResponseDto addImage(ProductImageCreateDto dto)
+
+    ProductImageResponseDto addImage(ProductImageCreateDto dto, Long requestingUserId)
             throws ResourceNotFoundException, BadRequestException, UnauthorizedException;
 
-    ProductImageResponseDto updateImage(ProductImageUpdateDto dto)
+    ProductImageResponseDto updateImage(ProductImageUpdateDto dto, Long requestingUserId)
             throws ResourceNotFoundException, UnauthorizedException;
 
-    void deleteImage(Long imageId) throws ResourceNotFoundException, UnauthorizedException;
+    void deleteImage(Long imageId, Long requestingUserId) throws ResourceNotFoundException, UnauthorizedException;
 
     List<ProductImageResponseDto> getImagesByProductId(Long productId);
 

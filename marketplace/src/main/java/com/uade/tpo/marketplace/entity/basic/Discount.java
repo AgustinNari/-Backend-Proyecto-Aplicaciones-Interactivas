@@ -77,4 +77,7 @@ public class Discount {
     @Column(name = "created_at", updatable = false)
     @CreationTimestamp
     private Instant createdAt;
+
+    @Column(name = "expires_at", nullable = true)
+    private Instant expiresAt;
 }

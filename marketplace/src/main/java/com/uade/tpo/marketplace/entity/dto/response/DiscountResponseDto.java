@@ -18,5 +18,6 @@ public record DiscountResponseDto(
     Integer maxUses,
     Integer perUserLimit,
     boolean active,
-    Instant createdAt
+    Instant createdAt,
+    Instant expiresAt
 ) {}
