@@ -98,5 +98,17 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<OrderItem> orderItems = new HashSet<>();
 
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Set<DigitalKey> digitalKeys = new HashSet<>();
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Set<Review> reviews = new HashSet<>();
+
+    @OneToMany(mappedBy = "targetProduct", fetch = FetchType.LAZY)
+    private Set<Discount> discounts = new HashSet<>();
+
+    public void setSeller(User seller) {
+        this.seller = seller;
+    }
 
 }

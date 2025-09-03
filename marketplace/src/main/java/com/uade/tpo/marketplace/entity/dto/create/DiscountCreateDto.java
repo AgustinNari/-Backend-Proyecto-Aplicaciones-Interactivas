@@ -24,10 +24,11 @@ public record DiscountCreateDto(
     Long targetProductId,
     Long targetCategoryId,
     Long targetSellerId,
-
     Integer minQuantity,
     Instant startsAt,
     Instant endsAt,
+    BigDecimal minPrice,
+    BigDecimal maxPrice,
     Integer maxUses,
     Integer perUserLimit,
     Boolean active,

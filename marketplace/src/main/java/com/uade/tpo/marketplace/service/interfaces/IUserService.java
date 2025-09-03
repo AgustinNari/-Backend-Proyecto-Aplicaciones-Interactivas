@@ -5,13 +5,9 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import com.uade.tpo.marketplace.entity.dto.AuthLoginDto;
-import com.uade.tpo.marketplace.entity.dto.AuthResponseDto;
-import com.uade.tpo.marketplace.entity.dto.create.UserCreateDto;
 import com.uade.tpo.marketplace.entity.dto.response.UserResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.UserUpdateDto;
 import com.uade.tpo.marketplace.entity.enums.Role;
-import com.uade.tpo.marketplace.exceptions.BadRequestException;
 import com.uade.tpo.marketplace.exceptions.DuplicateResourceException;
 import com.uade.tpo.marketplace.exceptions.ResourceNotFoundException;
 import com.uade.tpo.marketplace.exceptions.UnauthorizedException;
@@ -20,7 +16,7 @@ public interface IUserService {
 
 
 
-    //TODO: ¿Reemplazar todo register y authenticate en AuthenticationService?
+    //TODO: ¿Reemplazar todo register y authenticate y usar únicamete el que está en AuthenticationService?
     // UserResponseDto register(UserCreateDto dto) throws DuplicateResourceException, BadRequestException;
 
 

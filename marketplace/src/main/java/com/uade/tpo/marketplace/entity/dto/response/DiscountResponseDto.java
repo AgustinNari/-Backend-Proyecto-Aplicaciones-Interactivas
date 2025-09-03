@@ -15,6 +15,8 @@ public record DiscountResponseDto(
     Integer minQuantity,
     Instant startsAt,
     Instant endsAt,
+    BigDecimal minPrice,
+    BigDecimal maxPrice,
     Integer maxUses,
     Integer perUserLimit,
     boolean active,

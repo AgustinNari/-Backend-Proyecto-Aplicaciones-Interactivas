@@ -3,6 +3,8 @@ package com.uade.tpo.marketplace.entity.basic;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -20,6 +22,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -30,12 +33,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Entity
 @Table(name = "discounts",
-       indexes = {@Index(columnList = "code")})
+        indexes = {@Index(columnList = "code")})
 public class Discount {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-  
+    
     @Column(length = 100, unique = true)
     private String code;
 
@@ -70,7 +73,15 @@ public class Discount {
     @Column(name = "starts_at")
     private Instant startsAt;
     
+    @Column(name = "ends_at")
     private Instant endsAt;
+
+    @Column(name = "min_price")
+    private BigDecimal minPrice;
+
+    @Column(name = "max_price")
+    private BigDecimal maxPrice;
+
     private Integer maxUses;
     private Integer perUserLimit;
 
@@ -83,4 +94,10 @@ public class Discount {
 
     @Column(name = "expires_at", nullable = true)
     private Instant expiresAt;
+
+    @OneToMany(mappedBy = "discount", fetch = FetchType.LAZY)
+    private Set<Order> orders = new HashSet<>();
+
+    @OneToMany(mappedBy = "discount", fetch = FetchType.LAZY)
+    private Set<OrderItem> orderItems = new HashSet<>();
 }

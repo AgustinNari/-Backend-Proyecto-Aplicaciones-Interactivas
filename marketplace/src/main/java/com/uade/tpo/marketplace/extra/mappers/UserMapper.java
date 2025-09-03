@@ -4,6 +4,8 @@ import org.springframework.stereotype.Component;
 
 import com.uade.tpo.marketplace.entity.basic.User;
 import com.uade.tpo.marketplace.entity.dto.create.UserCreateDto;
+import com.uade.tpo.marketplace.entity.dto.response.BuyerResponseDto;
+import com.uade.tpo.marketplace.entity.dto.response.SellerResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.UserResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.UserUpdateDto;
 import com.uade.tpo.marketplace.entity.enums.Role;
@@ -37,13 +39,32 @@ public class UserMapper {
 
     public UserResponseDto toResponse(User u){
         if (u == null) return null;
-        int productCount = u.getProducts() == null ? 0 : u.getProducts().size();
         return new UserResponseDto(
             u.getId(), u.getDisplayName(), u.getFirstName(), u.getLastName(), u.getEmail(),
             u.getRole() == null ? null : u.getRole().name(),
             u.getPhone(), u.getCountry(),
-            u.isActive(), u.getCreatedAt(), u.getLastLogin(), u.getSellerBalance(),
-            productCount
+            u.isActive(), u.getCreatedAt(), u.getLastLogin()
+        );
+    }
+
+    public SellerResponseDto toSellerResponse(User u){
+        if (u == null) return null;
+        return new SellerResponseDto(
+            u.getId(), u.getDisplayName(), u.getFirstName(), u.getLastName(), u.getEmail(),
+            u.getRole() == null ? null : u.getRole().name(),
+            u.getPhone(), u.getCountry(),
+            u.isActive(), u.getCreatedAt(), u.getLastLogin(),
+            u.getSellerRating()
+        );
+    }
+
+    public BuyerResponseDto toBuyerResponse(User u){
+        if (u == null) return null;
+        return new BuyerResponseDto(
+            u.getId(), u.getDisplayName(), u.getFirstName(), u.getLastName(), u.getEmail(),
+            u.getRole() == null ? null : u.getRole().name(),
+            u.getPhone(), u.getCountry(),
+            u.isActive(), u.getCreatedAt(), u.getLastLogin()
         );
     }
 }

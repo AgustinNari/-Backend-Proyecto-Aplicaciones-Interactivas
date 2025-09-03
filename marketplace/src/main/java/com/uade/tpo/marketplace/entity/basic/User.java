@@ -1,7 +1,6 @@
 package com.uade.tpo.marketplace.entity.basic;
 
 
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.HashSet;
@@ -37,11 +36,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Entity
 @Table(name = "users",
-       indexes = {
-           @Index(columnList = "first_name"),
-           @Index(columnList = "last_name"),
-           @Index(columnList = "email")
-       })
+        indexes = {
+            @Index(columnList = "first_name"),
+            @Index(columnList = "last_name"),
+            @Index(columnList = "email")
+        })
 public class User implements UserDetails {
 
     public User(String displayName, String firstName, String lastName, String email, String password, Role role, String country) {
@@ -87,8 +86,8 @@ public class User implements UserDetails {
 
 
     //TODO:
-    //@Column (name = "seller_rating")
-    //private Integer sellerRating;
+    @Column (name = "seller_rating")
+    private Integer sellerRating;
 
 
 
@@ -102,18 +101,24 @@ public class User implements UserDetails {
     
     @Column(name = "last_login")
     private Instant lastLogin;
-    
-    @Column(name = "seller_balance", precision = 12, scale = 2)
-    private BigDecimal sellerBalance = BigDecimal.ZERO;
 
-    @OneToMany (mappedBy = "buyer", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy="buyer", fetch = FetchType.LAZY)
+    private Set<Review> buyerReviews = new HashSet<>();
+
+    @OneToMany(mappedBy="seller", fetch = FetchType.LAZY)
+    private Set<Review> sellerReviews = new HashSet<>();
+
+    @OneToMany(mappedBy = "buyer", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Order> orders;
 
     @OneToMany(mappedBy = "seller",
-               fetch = FetchType.LAZY,         
-               orphanRemoval = false)    
+                fetch = FetchType.LAZY,         
+                orphanRemoval = false)    
     private Set<Product> products = new HashSet<>();
 
+
+    @OneToMany(mappedBy = "targetSeller", fetch = FetchType.LAZY)
+    private Set<Discount> discounts = new HashSet<>();
 
     public void addProduct(Product p) {
         products.add(p);
@@ -136,4 +141,5 @@ public class User implements UserDetails {
     public String getUsername() {
         return this.email;
     }
+
 }

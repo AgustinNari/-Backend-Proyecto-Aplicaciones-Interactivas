@@ -38,6 +38,8 @@ public class DiscountMapper {
         d.setMinQuantity(dto.minQuantity());
         d.setStartsAt(dto.startsAt());
         d.setEndsAt(dto.endsAt());
+        d.setMinPrice(dto.minPrice());
+        d.setMaxPrice(dto.maxPrice());
         d.setMaxUses(dto.maxUses());
         d.setPerUserLimit(dto.perUserLimit());
         if (dto.active() != null) d.setActive(dto.active());
@@ -61,6 +63,8 @@ public class DiscountMapper {
         if (dto.minQuantity() != null) entity.setMinQuantity(dto.minQuantity());
         if (dto.startsAt() != null) entity.setStartsAt(dto.startsAt());
         if (dto.endsAt() != null) entity.setEndsAt(dto.endsAt());
+        if (dto.minPrice() != null) entity.setMinPrice(dto.minPrice());
+        if (dto.maxPrice() != null) entity.setMaxPrice(dto.maxPrice());
         if (dto.maxUses() != null) entity.setMaxUses(dto.maxUses());
         if (dto.perUserLimit() != null) entity.setPerUserLimit(dto.perUserLimit());
         if (dto.active() != null) entity.setActive(dto.active());
@@ -77,6 +81,7 @@ public class DiscountMapper {
         return new DiscountResponseDto(d.getId(), d.getCode(), type, d.getValue(), scope,
                 targetProductId, targetCategoryId, targetSellerId,
                 d.getMinQuantity(), d.getStartsAt(), d.getEndsAt(),
+                d.getMinPrice(), d.getMaxPrice(),
                 d.getMaxUses(), d.getPerUserLimit(), d.isActive(), d.getCreatedAt(), d.getExpiresAt());
     }
 }

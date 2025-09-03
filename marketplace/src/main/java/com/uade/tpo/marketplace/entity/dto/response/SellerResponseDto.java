@@ -2,7 +2,7 @@ package com.uade.tpo.marketplace.entity.dto.response;
 
 import java.time.Instant;
 
-public record UserResponseDto(
+public record SellerResponseDto(
     Long id,
     String displayName,
     String firstName,
@@ -13,5 +13,9 @@ public record UserResponseDto(
     String country,
     boolean active,
     Instant createdAt,
-    Instant lastLogin
-) {}
+    Instant lastLogin,
+    Integer sellerRating
+    //TODO: Agregar products acá???
+) {
+
+}
