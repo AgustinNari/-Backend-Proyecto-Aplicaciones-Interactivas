@@ -32,5 +32,6 @@ public record DiscountCreateDto(
     Integer maxUses,
     Integer perUserLimit,
     Boolean active,
-    Instant expiresAt
+    Instant expiresAt,
+    Long targetBuyerId
 ) {}

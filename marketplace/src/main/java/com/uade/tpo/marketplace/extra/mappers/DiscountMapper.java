@@ -44,6 +44,9 @@ public class DiscountMapper {
         d.setPerUserLimit(dto.perUserLimit());
         if (dto.active() != null) d.setActive(dto.active());
         d.setExpiresAt(dto.expiresAt());
+        if (dto.targetBuyerId() != null) {
+            User u = new User(); u.setId(dto.targetBuyerId()); d.setTargetBuyer(u);
+        }
         return d;
     }
 
@@ -69,6 +72,7 @@ public class DiscountMapper {
         if (dto.perUserLimit() != null) entity.setPerUserLimit(dto.perUserLimit());
         if (dto.active() != null) entity.setActive(dto.active());
         if (dto.expiresAt() != null) entity.setExpiresAt(dto.expiresAt());
+        if (dto.targetBuyerId() != null) { User u = new User(); u.setId(dto.targetBuyerId()); entity.setTargetBuyer(u); }
     }
 
     public DiscountResponseDto toResponse(Discount d){
@@ -82,6 +86,6 @@ public class DiscountMapper {
                 targetProductId, targetCategoryId, targetSellerId,
                 d.getMinQuantity(), d.getStartsAt(), d.getEndsAt(),
                 d.getMinPrice(), d.getMaxPrice(),
-                d.getMaxUses(), d.getPerUserLimit(), d.isActive(), d.getCreatedAt(), d.getExpiresAt());
+                d.getMaxUses(), d.getPerUserLimit(), d.isActive(), d.getCreatedAt(), d.getExpiresAt(), d.getTargetBuyer().getId());
     }
 }

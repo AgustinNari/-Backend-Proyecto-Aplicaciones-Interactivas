@@ -1,5 +1,6 @@
 package com.uade.tpo.marketplace.entity.dto.response;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 public record BuyerResponseDto(    
@@ -13,7 +14,8 @@ public record BuyerResponseDto(
     String country,
     boolean active,
     Instant createdAt,
-    Instant lastLogin
+    Instant lastLogin,
+    BigDecimal buyerBalance
     //TODO: Agregar orders acá???
     ) {
 

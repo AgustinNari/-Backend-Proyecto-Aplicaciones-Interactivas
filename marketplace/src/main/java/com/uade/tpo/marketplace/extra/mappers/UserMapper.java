@@ -64,7 +64,7 @@ public class UserMapper {
             u.getId(), u.getDisplayName(), u.getFirstName(), u.getLastName(), u.getEmail(),
             u.getRole() == null ? null : u.getRole().name(),
             u.getPhone(), u.getCountry(),
-            u.isActive(), u.getCreatedAt(), u.getLastLogin()
+            u.isActive(), u.getCreatedAt(), u.getLastLogin(), u.getBuyerBalance()
         );
     }
 }

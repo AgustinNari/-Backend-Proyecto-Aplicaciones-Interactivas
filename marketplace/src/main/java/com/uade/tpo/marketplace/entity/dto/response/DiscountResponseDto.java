@@ -21,5 +21,6 @@ public record DiscountResponseDto(
     Integer perUserLimit,
     boolean active,
     Instant createdAt,
-    Instant expiresAt
+    Instant expiresAt,
+    Long targetBuyerId
 ) {}
