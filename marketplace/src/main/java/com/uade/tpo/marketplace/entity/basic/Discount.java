@@ -100,4 +100,9 @@ public class Discount {
 
     @OneToMany(mappedBy = "discount", fetch = FetchType.LAZY)
     private Set<OrderItem> orderItems = new HashSet<>();
+
+    //TODO: Agregar correspondencia en Repositories, de esto y capaz algunas cosas más de lo nuevo agregado
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "target_buyer_id")
+    private User targetBuyer;
 }

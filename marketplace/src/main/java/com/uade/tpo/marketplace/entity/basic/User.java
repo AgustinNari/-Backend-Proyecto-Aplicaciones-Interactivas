@@ -1,6 +1,7 @@
 package com.uade.tpo.marketplace.entity.basic;
 
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.HashSet;
@@ -78,10 +79,16 @@ public class User implements UserDetails {
     
     private String phone;
     
-    
+
     @Column(nullable=false)
     private String country;
 
+    //TODO: Agregar correspondencias en DTOS, Mappers y demás
+    @Column(name = "buyer_balance")
+    private BigDecimal buyerBalance;
+
+    @OneToMany(mappedBy = "targetBuyer", fetch = FetchType.LAZY)
+    private Set<Discount> coupons = new HashSet<>();
 
 
 
