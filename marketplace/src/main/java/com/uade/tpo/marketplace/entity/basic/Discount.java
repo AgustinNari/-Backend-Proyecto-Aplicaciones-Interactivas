@@ -66,7 +66,10 @@ public class Discount {
     @Column(name = "min_quantity")
     private Integer minQuantity;
     
+
+    @Column(name = "starts_at")
     private Instant startsAt;
+    
     private Instant endsAt;
     private Integer maxUses;
     private Integer perUserLimit;

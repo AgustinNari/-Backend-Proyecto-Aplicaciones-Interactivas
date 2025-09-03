@@ -20,10 +20,11 @@ public interface IUserService {
 
 
 
-    UserResponseDto register(UserCreateDto dto) throws DuplicateResourceException, BadRequestException;
+    //TODO: ¿Reemplazar todo register y authenticate en AuthenticationService?
+    // UserResponseDto register(UserCreateDto dto) throws DuplicateResourceException, BadRequestException;
 
 
-    AuthResponseDto login(AuthLoginDto dto) throws UnauthorizedException, ResourceNotFoundException;
+    // AuthResponseDto login(AuthLoginDto dto) throws UnauthorizedException, ResourceNotFoundException;
 
     Optional<UserResponseDto> getUserById(Long id);
 
@@ -33,5 +34,7 @@ public interface IUserService {
             throws ResourceNotFoundException, UnauthorizedException, DuplicateResourceException;
 
     Page<UserResponseDto> getUsers(Pageable pageable, Optional<Role> roleFilter);
+
+    Page<UserResponseDto> getUsersByRole(Pageable pageable, Role role);
 }
 

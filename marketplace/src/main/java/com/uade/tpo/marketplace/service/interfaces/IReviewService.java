@@ -2,6 +2,7 @@ package com.uade.tpo.marketplace.service.interfaces;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.util.Pair;
 
 import com.uade.tpo.marketplace.entity.dto.create.ReviewCreateDto;
 import com.uade.tpo.marketplace.entity.dto.response.ReviewResponseDto;
@@ -23,4 +24,6 @@ public interface IReviewService {
     Page<ReviewResponseDto> getReviewsByUser(Long userId, Pageable pageable) throws ResourceNotFoundException;
  
     Page<ReviewResponseDto> getAllReviews(Pageable pageable);
+
+    Pair<Double, Long> getAverageRatingAndCountByProduct(Long productId) throws ResourceNotFoundException;
 }

@@ -1,6 +1,9 @@
 package com.uade.tpo.marketplace.repository.interfaces;
 
-import java.util.List;
+import java.util.Optional;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,18 +16,21 @@ public interface ICategoryRepository extends JpaRepository<Category, Long> {
 
 
     @Query("SELECT c FROM Category c WHERE c.description = :description")
-    List<Category> findByDescription(@Param("description") String description);
-    
+    Optional<Category> findByDescription(@Param("description") String description);
 
-    boolean existsByDescription(String description);
+    @Query("SELECT COUNT(c) > 0 FROM Category c WHERE LOWER(c.description) = LOWER(:description)")
+    boolean existsByDescriptionIgnoreCase(String description);
+
+    @Query("SELECT c FROM Category c WHERE LOWER(c.description) LIKE LOWER(CONCAT('%', :term, '%'))")
+    Page<Category> findByDescriptionContainingIgnoreCase(@Param("term") String term, Pageable pageable);
     
 
     @Query("SELECT c FROM Category c WHERE LOWER(c.description) LIKE LOWER(CONCAT('%', :term, '%'))")
-    List<Category> searchByDescriptionContaining(@Param("term") String term);
+    Page<Category> searchByDescriptionContaining(@Param("term") String term, Pageable pageable);
     
 
     @Query("SELECT p FROM Product p JOIN p.categories c WHERE c.description = :description")
-    List<Product> findProductsByCategoryDescription(@Param("description") String description);
+    Page<Product> findProductsByCategoryDescription(@Param("description") String description, Pageable pageable);
     
 
 

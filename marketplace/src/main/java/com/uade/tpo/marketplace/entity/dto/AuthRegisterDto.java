@@ -6,6 +6,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 public record AuthRegisterDto(
+    @NotBlank @Size(min=3, max=100) String displayName,
     @NotBlank @Size(min=3, max=50) String firstName,
     @NotBlank @Size(min=3, max=50) String lastName,
     @NotBlank @Email String email,

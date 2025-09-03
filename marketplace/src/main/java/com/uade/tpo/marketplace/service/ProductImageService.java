@@ -2,6 +2,7 @@ package com.uade.tpo.marketplace.service;
 
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -63,6 +64,13 @@ public class ProductImageService implements IProductImageService {
                 .encodeToString(img.getImage().getBytes(1, (int) img.getImage().length()));
         
         return new ProductImageResponseDto(img.getId(), img.getProduct().getId(), img.getName(), encodedString);
+    }
+
+    @Override
+    public Optional<ProductImageResponseDto> getPrimaryImageByProductId(Long productId)
+            throws ResourceNotFoundException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getPrimaryImageByProductId'");
     }
 
 

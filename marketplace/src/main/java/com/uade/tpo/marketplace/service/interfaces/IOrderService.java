@@ -15,23 +15,25 @@ import com.uade.tpo.marketplace.exceptions.UnauthorizedException;
 public interface IOrderService {
 
 
-    OrderResponseDto createOrder(OrderCreateDto dto, Long buyerId)
-            throws ResourceNotFoundException, InsufficientStockException, BadRequestException;
+        OrderResponseDto createOrder(OrderCreateDto dto, Long buyerId)
+                throws ResourceNotFoundException, InsufficientStockException, BadRequestException;
 
-    Optional<OrderResponseDto> getOrderById(Long id, Long requestingUserId) throws ResourceNotFoundException, UnauthorizedException;
+        Optional<OrderResponseDto> getOrderById(Long id, Long requestingUserId) throws ResourceNotFoundException, UnauthorizedException;
 
-    Page<OrderResponseDto> getOrdersByBuyer(Long buyerId, Pageable pageable);
+        Page<OrderResponseDto> getOrdersByBuyer(Long buyerId, Pageable pageable);
 
-    Page<OrderResponseDto> getOrdersBySeller(Long sellerId, Pageable pageable);
+        Page<OrderResponseDto> getOrdersBySeller(Long sellerId, Pageable pageable);
 
-    Page<OrderResponseDto> getAllOrders(Pageable pageable);
+        Page<OrderResponseDto> getAllOrders(Pageable pageable);
 
-    void cancelOrder(Long orderId, Long requestingUserId) throws ResourceNotFoundException, UnauthorizedException, BadRequestException;
-
-
-    void refundOrder(Long orderId, Long performedByUserId, String reason) throws ResourceNotFoundException, UnauthorizedException;
+        void cancelOrder(Long orderId, Long requestingUserId) throws ResourceNotFoundException, UnauthorizedException, BadRequestException;
 
 
-    OrderResponseDto updateOrderStatus(Long orderId, String status, Long performedByUserId)
-            throws ResourceNotFoundException, UnauthorizedException, BadRequestException;
+        void refundOrder(Long orderId, Long performedByUserId, String reason) throws ResourceNotFoundException, UnauthorizedException;
+
+        OrderResponseDto completeOrder(Long orderId, Long performedByUserId)
+                throws ResourceNotFoundException, UnauthorizedException, BadRequestException;
+
+        OrderResponseDto updateOrderStatus(Long orderId, String status, Long performedByUserId)
+                throws ResourceNotFoundException, UnauthorizedException, BadRequestException;
 }

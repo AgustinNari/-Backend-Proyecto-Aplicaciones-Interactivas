@@ -58,6 +58,12 @@ public class Order {
     @Column(length = 20, nullable = false)
     private OrderStatus status = OrderStatus.PENDING;
 
+    // @Column(name = "billing_address", columnDefinition = "TEXT", nullable = false)
+    // private String billingAddress;
+
+    // @Column(name = "currency", length = 3, nullable = false)
+    // private String currency = "USD";
+
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "discount_id")

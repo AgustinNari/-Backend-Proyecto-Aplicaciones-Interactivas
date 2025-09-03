@@ -44,7 +44,8 @@ import lombok.NoArgsConstructor;
        })
 public class User implements UserDetails {
 
-    public User(String firstName, String lastName, String email, String password, Role role, String country) {
+    public User(String displayName, String firstName, String lastName, String email, String password, Role role, String country) {
+        this.displayName = displayName;
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
@@ -57,6 +58,8 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "display_name", nullable=false, length = 100, unique = true)
+    private String displayName;
 
     @Column(name = "first_name", nullable=false, length = 50)
     private String firstName;
@@ -84,7 +87,8 @@ public class User implements UserDetails {
 
 
     //TODO:
-    //private String rating;
+    //@Column (name = "seller_rating")
+    //private Integer sellerRating;
 
 
 

@@ -2,6 +2,8 @@ package com.uade.tpo.marketplace.entity.basic;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -14,6 +16,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -38,10 +41,9 @@ public class OrderItem {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
-    
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "digital_key_id", unique = true)
-    private DigitalKey digitalKey;
+
+    @OneToMany(mappedBy = "orderItem", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<DigitalKey> digitalKeys = new ArrayList<>();
 
     @Column(nullable = false)
     private Integer quantity = 1;
@@ -51,6 +53,13 @@ public class OrderItem {
 
     @Column(name = "line_total", precision = 12, scale = 2, nullable = false)
     private BigDecimal lineTotal;
+
+    @Column(name = "discount_amount", precision = 12, scale = 2)
+    private BigDecimal discountAmount = BigDecimal.ZERO;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "discount_id")
+    private Discount discount;
 
     @Column(name = "created_at", updatable = false)
     @CreationTimestamp

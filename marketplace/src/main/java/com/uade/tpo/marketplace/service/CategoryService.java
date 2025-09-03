@@ -41,8 +41,8 @@ public class CategoryService implements ICategoryService {
     @Transactional (rollbackFor = Throwable.class)
     @Override
     public Category createCategory(String newCategoryDescription) throws CategoryDuplicateException {
-        List<Category> categories = categoryRepository.findByDescription(newCategoryDescription);
-        if (!categories.isEmpty()) {
+        Optional<Category> category = categoryRepository.findByDescription(newCategoryDescription);
+        if (category.isPresent()) {
             throw new CategoryDuplicateException();
         }
         return categoryRepository.save(new Category(newCategoryDescription));

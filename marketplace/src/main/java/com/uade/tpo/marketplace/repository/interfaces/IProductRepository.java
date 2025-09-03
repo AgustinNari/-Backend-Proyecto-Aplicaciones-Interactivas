@@ -2,6 +2,9 @@ package com.uade.tpo.marketplace.repository.interfaces;
 
 import java.math.BigDecimal;
 import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,38 +15,38 @@ import com.uade.tpo.marketplace.entity.basic.Product;
 public interface IProductRepository extends JpaRepository<Product, Long> {
 
 
-    List<Product> findBySellerId(Long sellerId);
-    List<Product> findByActiveTrue();
-    List<Product> findByPlatform(String platform);
-    List<Product> findByRegion(String region);
-    List<Product> findByPriceBetween(BigDecimal minPrice, BigDecimal maxPrice);
-    List<Product> findByActiveTrueOrderByPriceAsc();
-    List<Product> findByActiveTrueOrderByPriceDesc();
+    Page<Product> findBySellerId(Long sellerId, Pageable pageable);
+    Page<Product> findByActiveTrue(Pageable pageable);
+    Page<Product> findByPlatform(String platform, Pageable pageable);
+    Page<Product> findByRegion(String region, Pageable pageable);
+    Page<Product> findByPriceBetween(BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable);
+    Page<Product> findByActiveTrueOrderByPriceAsc(Pageable pageable);
+    Page<Product> findByActiveTrueOrderByPriceDesc(Pageable pageable);
     
     @Query("SELECT p FROM Product p JOIN p.categories c WHERE c.id = :categoryId")
-    List<Product> findByCategoryId(@Param("categoryId") Long categoryId);
+    Page<Product> findByCategoryId(@Param("categoryId") Long categoryId, Pageable pageable);
     
     @Query("SELECT p FROM Product p JOIN p.categories c WHERE LOWER(c.description) = LOWER(:categoryName)")
-    List<Product> findByCategoryName(@Param("categoryName") String categoryName);
+    Page<Product> findByCategoryName(@Param("categoryName") String categoryName, Pageable pageable);
     
     @Query("SELECT p FROM Product p WHERE p.metacriticScore >= :minScore")
-    List<Product> findByMinMetacriticScore(@Param("minScore") Integer minScore);
+    Page<Product> findByMinMetacriticScore(@Param("minScore") Integer minScore, Pageable pageable);
     
     @Query("SELECT p FROM Product p WHERE YEAR(p.releaseDate) = :year")
-    List<Product> findByReleaseYear(@Param("year") Integer year);
+    Page<Product> findByReleaseYear(@Param("year") Integer year, Pageable pageable);
     
     @Query("SELECT p FROM Product p WHERE LOWER(p.title) LIKE LOWER(CONCAT('%', :title, '%'))")
-    List<Product> findByTitleContainingIgnoreCase(@Param("title") String title);
+    Page<Product> findByTitleContainingIgnoreCase(@Param("title") String title, Pageable pageable);
     
     @Query("SELECT p FROM Product p JOIN p.categories c WHERE c.id IN :categoryIds")
-    List<Product> findByCategoryIds(@Param("categoryIds") List<Long> categoryIds);
+    Page<Product> findByCategoryIds(@Param("categoryIds") List<Long> categoryIds, Pageable pageable);
     
     @Query("SELECT p FROM Product p WHERE SIZE(p.images) > 0")
-    List<Product> findProductsWithImages();
+    Page<Product> findProductsWithImages(Pageable pageable);
     
     @Query("SELECT p, COUNT(oi), SUM(oi.quantity) FROM Product p JOIN p.orderItems oi GROUP BY p ORDER BY SUM(oi.quantity) DESC")
-    List<Object[]> findBestSellingProducts();
+    Page<Object[]> findBestSellingProducts(Pageable pageable);
     
     @Query("SELECT p.id, p.title, SUM(oi.lineTotal) FROM Product p JOIN p.orderItems oi GROUP BY p.id, p.title")
-    List<Object[]> getSalesByProduct();
+    Page<Object[]> getSalesByProduct(Pageable pageable);
 }

@@ -6,6 +6,10 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record UserCreateDto(
+
+    @NotBlank
+    String displayName,
+
     @NotBlank
     String firstName,
 

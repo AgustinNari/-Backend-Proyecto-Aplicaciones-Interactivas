@@ -1,7 +1,9 @@
 package com.uade.tpo.marketplace.repository.interfaces;
 
-import java.util.List;
 import java.util.Optional;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,21 +15,21 @@ import com.uade.tpo.marketplace.entity.enums.Role;
 public interface IUserRepository extends JpaRepository<User, Long> {
 
 
-    List<User> findByRole(Role role);
+    Page<User> findByRole(Role role, Pageable pageable);
     
 
-    @Query("SELECT u FROM User u WHERE LOWER(u.username) = LOWER(:username)")
-    Optional<User> findByUsernameIgnoreCase(@Param("username") String username);
+    @Query("SELECT u FROM User u WHERE LOWER(u.displayName) = LOWER(:displayName)")
+    Optional<User> findByDisplayNameIgnoreCase(@Param("displayName") String displayName);
     
     Optional<User> findByEmail(String email);
     
     @Query("SELECT u FROM User u WHERE LOWER(u.email) = LOWER(:email)")
     Optional<User> findByEmailIgnoreCase(@Param("email") String email);
     
-    List<User> findByActiveTrue();
+    Page<User> findByActiveTrue(Pageable pageable);
     
-    @Query("SELECT COUNT(u) > 0 FROM User u WHERE LOWER(u.username) = LOWER(:username)")
-    boolean existsByUsernameIgnoreCase(@Param("username") String username);
+    @Query("SELECT COUNT(u) > 0 FROM User u WHERE LOWER(u.displayName) = LOWER(:displayName)")
+    boolean existsByDisplayNameIgnoreCase(@Param("displayName") String displayName);
     
     @Query("SELECT COUNT(u) > 0 FROM User u WHERE LOWER(u.email) = LOWER(:email)")
     boolean existsByEmailIgnoreCase(@Param("email") String email);
@@ -36,8 +38,11 @@ public interface IUserRepository extends JpaRepository<User, Long> {
     Optional<User> findByIdWithOrders(@Param("userId") Long userId);
     
     @Query("SELECT u FROM User u WHERE u.role = 'SELLER' AND SIZE(u.products) > 0")
-    List<User> findSellersWithProducts();
+    Page<User> findSellersWithProducts(Pageable pageable);
+
+    @Query("SELECT u FROM User u WHERE u.role = :role AND SIZE(u.products) > 0")
+    Page<User> findUsersByRoleAndHasProducts(@Param("role") Role role, Pageable pageable);
     
 
-    List<User> findByCountry(String country);
+    Page<User> findByCountry(String country, Pageable pageable);
 }

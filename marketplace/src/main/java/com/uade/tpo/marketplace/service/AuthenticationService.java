@@ -12,13 +12,16 @@ import com.uade.tpo.marketplace.controllers.auth.AuthenticationResponse;
 import com.uade.tpo.marketplace.controllers.auth.RegisterRequest;
 import com.uade.tpo.marketplace.controllers.config.JwtService;
 import com.uade.tpo.marketplace.entity.basic.User;
+import com.uade.tpo.marketplace.exceptions.ResourceNotFoundException;
 import com.uade.tpo.marketplace.repository.interfaces.IUserRepository;
+import com.uade.tpo.marketplace.service.interfaces.IAuthenticationService;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class AuthenticationService {
+public class AuthenticationService implements IAuthenticationService{
+
         private final IUserRepository repository;
         private final PasswordEncoder passwordEncoder;
         private final JwtService jwtService;
@@ -27,6 +30,7 @@ public class AuthenticationService {
         @Transactional (rollbackFor = Throwable.class)
         public AuthenticationResponse register(RegisterRequest request) {
                 var user = new User(
+                                request.getDisplayName(),
                                 request.getFirstName(),
                                 request.getLastName(),
                                 request.getEmail(),
@@ -54,4 +58,10 @@ public class AuthenticationService {
                                 .accessToken(jwtToken)
                                 .build();
         }
+
+        @Override
+        public void changePassword(Long userId, String currentPassword, String newPassword) throws ResourceNotFoundException {
+                // TODO Auto-generated method stub
+        }
+        
 }

@@ -14,6 +14,7 @@ public class UserMapper {
     public User toEntity(UserCreateDto dto){
         if (dto == null) return null;
         User u = new User();
+        u.setDisplayName(dto.displayName());
         u.setFirstName(dto.firstName());
         u.setLastName(dto.lastName());
         u.setEmail(dto.email());
@@ -38,7 +39,7 @@ public class UserMapper {
         if (u == null) return null;
         int productCount = u.getProducts() == null ? 0 : u.getProducts().size();
         return new UserResponseDto(
-            u.getId(), u.getFirstName(), u.getLastName(), u.getEmail(),
+            u.getId(), u.getDisplayName(), u.getFirstName(), u.getLastName(), u.getEmail(),
             u.getRole() == null ? null : u.getRole().name(),
             u.getPhone(), u.getCountry(),
             u.isActive(), u.getCreatedAt(), u.getLastLogin(), u.getSellerBalance(),

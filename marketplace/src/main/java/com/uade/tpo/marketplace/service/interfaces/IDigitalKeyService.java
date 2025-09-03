@@ -13,17 +13,17 @@ import com.uade.tpo.marketplace.exceptions.ResourceNotFoundException;
 import com.uade.tpo.marketplace.exceptions.UnauthorizedException;
 
 public interface IDigitalKeyService {
-    
-    List<DigitalKeyResponseDto> uploadKeys(Long productId, List<String> keyCodes, Long uploaderId)
-            throws ResourceNotFoundException, InsufficientStockException, DigitalKeyDuplicateException;
+        
+        List<DigitalKeyResponseDto> uploadKeys(Long productId, List<String> keyCodes, Long uploaderId)
+                throws ResourceNotFoundException, InsufficientStockException, DigitalKeyDuplicateException;
 
- 
-    int countAvailableKeysByProductId(Long productId);
-
-
-    void markKeysSold(List<Long> digitalKeyIds, Long orderItemId) throws ResourceNotFoundException;
+        
+        int countAvailableKeysByProductId(Long productId);
 
 
-    Page<DigitalKeyResponseDto> getKeysByProduct(Long productId, Pageable pageable, Long requestingUserId)
-            throws ResourceNotFoundException, UnauthorizedException;
+        void markKeysSold(List<Long> digitalKeyIds, Long orderItemId) throws ResourceNotFoundException;
+
+
+        Page<DigitalKeyResponseDto> getKeysByProduct(Long productId, Pageable pageable, Long requestingUserId)
+                throws ResourceNotFoundException, UnauthorizedException;
 }

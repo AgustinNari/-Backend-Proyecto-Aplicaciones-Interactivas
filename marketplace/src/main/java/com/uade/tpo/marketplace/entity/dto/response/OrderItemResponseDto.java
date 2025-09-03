@@ -1,6 +1,7 @@
 package com.uade.tpo.marketplace.entity.dto.response;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public record OrderItemResponseDto(
     Long id,
@@ -9,6 +10,5 @@ public record OrderItemResponseDto(
     BigDecimal unitPrice,
     Integer quantity,
     BigDecimal lineTotal,
-    String keyCode,
-    String keyMask
+    List<OrderItemDigitalKeyResponseDto> digitalKeys
 ) {}
