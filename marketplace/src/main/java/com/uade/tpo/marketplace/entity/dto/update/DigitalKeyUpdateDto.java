@@ -1,7 +1,8 @@
 package com.uade.tpo.marketplace.entity.dto.update;
 
+import jakarta.validation.constraints.NotBlank;
+
 public record DigitalKeyUpdateDto(
-    Long id,
-    String keyMask,
+    @NotBlank String keyMask,
     String status
 ) {}

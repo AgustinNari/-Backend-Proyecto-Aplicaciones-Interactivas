@@ -24,10 +24,10 @@ public interface IProductRepository extends JpaRepository<Product, Long> {
     Page<Product> findByActiveTrueOrderByPriceAsc(Pageable pageable);
     Page<Product> findByActiveTrueOrderByPriceDesc(Pageable pageable);
     
-    @Query("SELECT p FROM Product p JOIN p.categories c WHERE c.id = :categoryId")
+    @Query("SELECT DISTINCT p FROM Product p JOIN p.categories c WHERE c.id = :categoryId")
     Page<Product> findByCategoryId(@Param("categoryId") Long categoryId, Pageable pageable);
     
-    @Query("SELECT p FROM Product p JOIN p.categories c WHERE LOWER(c.description) = LOWER(:categoryName)")
+    @Query("SELECT DISTINCT p FROM Product p JOIN p.categories c WHERE LOWER(c.description) = LOWER(:categoryName)")
     Page<Product> findByCategoryName(@Param("categoryName") String categoryName, Pageable pageable);
     
     @Query("SELECT p FROM Product p WHERE p.metacriticScore >= :minScore")
@@ -41,9 +41,12 @@ public interface IProductRepository extends JpaRepository<Product, Long> {
     
 
     //TODO: Acá usar la tabla product_category generada por la relación ManyToMany???
-    @Query("SELECT p FROM Product p JOIN p.categories c WHERE c.id IN :categoryIds")
+    @Query("SELECT DISTINCT p FROM Product p JOIN p.categories c WHERE c.id IN :categoryIds")
     Page<Product> findByCategoryIds(@Param("categoryIds") List<Long> categoryIds, Pageable pageable);
-    
+
+    @Query("SELECT p FROM Product p JOIN p.categories c WHERE c.id IN :categoryIds GROUP BY p.id HAVING COUNT(DISTINCT c.id) = :#{#categoryIds.size()}")
+    Page<Product> findByAllCategoryIds(@Param("categoryIds") List<Long> categoryIds, Pageable pageable);
+        
     @Query("SELECT p FROM Product p WHERE SIZE(p.images) > 0")
     Page<Product> findProductsWithImages(Pageable pageable);
     

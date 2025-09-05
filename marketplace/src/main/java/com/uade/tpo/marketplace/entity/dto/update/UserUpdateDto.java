@@ -1,9 +1,9 @@
 package com.uade.tpo.marketplace.entity.dto.update;
 
 public record UserUpdateDto(
-    String email,
-    String password,
+    String displayName,
+    String firstName,
+    String lastName,
     String phone,
-    String country,
-    Boolean active
+    String country
 ) {}

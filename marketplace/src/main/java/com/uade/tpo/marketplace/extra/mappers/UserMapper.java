@@ -30,10 +30,11 @@ public class UserMapper {
 
     public void updateFromDto(UserUpdateDto dto, User entity){
         if (dto == null || entity == null) return;
-        if (dto.email() != null) entity.setEmail(dto.email());
+        if (dto.displayName() != null) entity.setDisplayName(dto.displayName());
+        if (dto.firstName() != null) entity.setFirstName(dto.firstName());
+        if (dto.lastName() != null) entity.setLastName(dto.lastName());
         if (dto.phone() != null) entity.setPhone(dto.phone());
         if (dto.country() != null) entity.setCountry(dto.country());
-        if (dto.active() != null) entity.setActive(dto.active());
 
     }
 

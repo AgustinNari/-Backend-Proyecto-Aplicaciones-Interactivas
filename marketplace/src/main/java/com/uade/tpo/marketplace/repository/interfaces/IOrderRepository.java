@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+
 import com.uade.tpo.marketplace.entity.basic.Order;
 import com.uade.tpo.marketplace.entity.enums.OrderStatus;
 
@@ -25,14 +26,11 @@ public interface IOrderRepository extends JpaRepository<Order, Long> {
     
     Page<Order> findByBuyerId(Long buyerId, Pageable pageable);
 
-    @Query("SELECT o FROM Order o JOIN o.items i WHERE i.product.seller.id = :sellerId")
+    @Query("SELECT DISTINCT o FROM Order o JOIN o.items i WHERE i.product.seller.id = :sellerId")
     Page<Order> findBySellerId(@Param("sellerId") Long sellerId, Pageable pageable);
     
     @Query("SELECT o FROM Order o LEFT JOIN FETCH o.items i LEFT JOIN FETCH i.product WHERE o.id = :orderId")
     Optional<Order> findOrderWithItemsAndProducts(@Param("orderId") Long orderId);
-    
-    @Query("SELECT o FROM Order o LEFT JOIN FETCH o.items WHERE o.buyer.id = :buyerId ORDER BY o.createdAt DESC")
-    Page<Order> findByBuyerIdWithItems(@Param("buyerId") Long buyerId, Pageable pageable);
     
     @Query("SELECT o FROM Order o LEFT JOIN FETCH o.items i LEFT JOIN FETCH i.digitalKeys dk WHERE o.id = :orderId")
     Optional<Order> findOrderWithItemsAndKeys(@Param("orderId") Long orderId);
