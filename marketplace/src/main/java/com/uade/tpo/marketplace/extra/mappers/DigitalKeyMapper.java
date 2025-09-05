@@ -30,7 +30,7 @@ public class DigitalKeyMapper {
         if (dto.keyMask() != null) entity.setKeyMask(dto.keyMask());
         if (dto.status() != null) {
             try {
-                entity.setStatus(Enum.valueOf(KeyStatus.class, dto.status()));
+                entity.setStatus(dto.status());
             } catch (Exception ignored) {}
         }
     }
@@ -38,7 +38,7 @@ public class DigitalKeyMapper {
     public DigitalKeyResponseDto toResponse(DigitalKey key){
         if (key == null) return null;
         Long productId = key.getProduct() != null ? key.getProduct().getId() : null;
-        String status = key.getStatus() == null ? null : key.getStatus().name();
+        KeyStatus status = key.getStatus() == null ? null : key.getStatus();
         return new DigitalKeyResponseDto(key.getId(), productId, key.getKeyMask(), status, key.getSoldAt(), key.getCreatedAt(), key.getKeyCode());
     }
 }

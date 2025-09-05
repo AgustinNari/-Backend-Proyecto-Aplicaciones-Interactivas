@@ -12,9 +12,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
 public record ProductCreateDto(
-    @NotNull
-    Long sellerId,
-
+    
     String sku,
 
     @NotBlank

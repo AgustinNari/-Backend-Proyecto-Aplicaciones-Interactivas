@@ -3,12 +3,15 @@ package com.uade.tpo.marketplace.entity.dto.response;
 import java.math.BigDecimal;
 import java.time.Instant;
 
+import com.uade.tpo.marketplace.entity.enums.DiscountScope;
+import com.uade.tpo.marketplace.entity.enums.DiscountType;
+
 public record DiscountResponseDto(
     Long id,
     String code,
-    String type,
+    DiscountType type,
     BigDecimal value,
-    String scope,
+    DiscountScope scope,
     Long targetProductId,
     Long targetCategoryId,
     Long targetSellerId,
@@ -19,7 +22,7 @@ public record DiscountResponseDto(
     BigDecimal maxPrice,
     Integer maxUses,
     Integer perUserLimit,
-    boolean active,
+    Boolean active,
     Instant createdAt,
     Instant expiresAt,
     Long targetBuyerId

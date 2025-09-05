@@ -17,7 +17,7 @@ import com.uade.tpo.marketplace.entity.dto.response.OrderItemResponseDto;
 public class OrderItemMapper {
 
  
-    public OrderItemResponseDto toResponse(OrderItem item, boolean includeKeyCode){
+    public OrderItemResponseDto toResponse(OrderItem item, Boolean includeKeyCode){
         if (item == null) return null;
 
         Long productId = item.getProduct() != null ? item.getProduct().getId() : null;

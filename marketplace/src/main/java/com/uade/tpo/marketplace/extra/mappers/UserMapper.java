@@ -8,7 +8,6 @@ import com.uade.tpo.marketplace.entity.dto.response.BuyerResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.SellerResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.UserResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.UserUpdateDto;
-import com.uade.tpo.marketplace.entity.enums.Role;
 
 @Component
 public class UserMapper {
@@ -21,7 +20,7 @@ public class UserMapper {
         u.setLastName(dto.lastName());
         u.setEmail(dto.email());
         if (dto.role() != null) {
-            try { u.setRole(Role.valueOf(dto.role())); } catch (Exception ignored) {}
+            try { u.setRole(dto.role()); } catch (Exception ignored) {}
         }
         u.setPhone(dto.phone());
         u.setCountry(dto.country());
@@ -42,7 +41,7 @@ public class UserMapper {
         if (u == null) return null;
         return new UserResponseDto(
             u.getId(), u.getDisplayName(), u.getFirstName(), u.getLastName(), u.getEmail(),
-            u.getRole() == null ? null : u.getRole().name(),
+            u.getRole() == null ? null : u.getRole(),
             u.getPhone(), u.getCountry(),
             u.isActive(), u.getCreatedAt(), u.getLastLogin()
         );
@@ -52,7 +51,7 @@ public class UserMapper {
         if (u == null) return null;
         return new SellerResponseDto(
             u.getId(), u.getDisplayName(), u.getFirstName(), u.getLastName(), u.getEmail(),
-            u.getRole() == null ? null : u.getRole().name(),
+            u.getRole() == null ? null : u.getRole(),
             u.getPhone(), u.getCountry(),
             u.isActive(), u.getCreatedAt(), u.getLastLogin(),
             u.getSellerRating()
@@ -63,7 +62,7 @@ public class UserMapper {
         if (u == null) return null;
         return new BuyerResponseDto(
             u.getId(), u.getDisplayName(), u.getFirstName(), u.getLastName(), u.getEmail(),
-            u.getRole() == null ? null : u.getRole().name(),
+            u.getRole() == null ? null : u.getRole(),
             u.getPhone(), u.getCountry(),
             u.isActive(), u.getCreatedAt(), u.getLastLogin(), u.getBuyerBalance()
         );

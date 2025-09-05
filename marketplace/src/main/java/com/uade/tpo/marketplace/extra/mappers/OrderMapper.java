@@ -18,18 +18,18 @@ public class OrderMapper {
         this.orderItemMapper = orderItemMapper;
     }
 
-    public OrderResponseDto toResponse(Order order, boolean includeKeyCodes){
+    public OrderResponseDto toResponse(Order order, Boolean includeKeyCodes){
         if (order == null) return null;
         Long buyerId = order.getBuyer() != null ? order.getBuyer().getId() : null;
         List<OrderItemResponseDto> items =
             order.getItems() == null ? java.util.List.of() :
                 order.getItems().stream()
-                     .map(oi -> orderItemMapper.toResponse(oi, includeKeyCodes))
-                     .collect(Collectors.toList());
+                        .map(oi -> orderItemMapper.toResponse(oi, includeKeyCodes))
+                        .collect(Collectors.toList());
         return new OrderResponseDto(
             order.getId(), buyerId, order.getSubtotal(), order.getTotalAmount(),
-            order.getDiscountAmount(), order.getTaxAmount(),
-            order.getStatus() == null ? null : order.getStatus().name(),
+            order.getDiscountAmount(),
+            order.getStatus() == null ? null : order.getStatus(),
             items, order.getCreatedAt(), order.getCompletedAt(), order.getNotes()
         );
     }

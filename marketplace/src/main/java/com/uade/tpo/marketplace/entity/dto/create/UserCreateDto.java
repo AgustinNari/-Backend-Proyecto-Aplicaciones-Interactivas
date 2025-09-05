@@ -1,5 +1,7 @@
 package com.uade.tpo.marketplace.entity.dto.create;
 
+import com.uade.tpo.marketplace.entity.enums.Role;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -23,7 +25,7 @@ public record UserCreateDto(
     String password,
 
     @NotNull
-    String role,
+    Role role,
 
 
     String phone,
