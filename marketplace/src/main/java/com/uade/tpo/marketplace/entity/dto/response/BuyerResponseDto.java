@@ -3,16 +3,18 @@ package com.uade.tpo.marketplace.entity.dto.response;
 import java.math.BigDecimal;
 import java.time.Instant;
 
+import com.uade.tpo.marketplace.entity.enums.Role;
+
 public record BuyerResponseDto(    
     Long id,
     String displayName,
     String firstName,
     String lastName,
     String email,
-    String role,
+    Role role,
     String phone,
     String country,
-    boolean active,
+    Boolean active,
     Instant createdAt,
     Instant lastLogin,
     BigDecimal buyerBalance

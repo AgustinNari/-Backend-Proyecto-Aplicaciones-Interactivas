@@ -20,11 +20,11 @@ public class DiscountMapper {
         Discount d = new Discount();
         d.setCode(dto.code());
         if (dto.type() != null) {
-            try { d.setType(DiscountType.valueOf(dto.type())); } catch (Exception ignored) {}
+            try { d.setType(dto.type()); } catch (Exception ignored) {}
         }
         d.setValue(dto.value());
         if (dto.scope() != null) {
-            try { d.setScope(DiscountScope.valueOf(dto.scope())); } catch (Exception ignored) {}
+            try { d.setScope(dto.scope()); } catch (Exception ignored) {}
         }
         if (dto.targetProductId() != null) {
             Product p = new Product(); p.setId(dto.targetProductId()); d.setTargetProduct(p);
@@ -54,11 +54,11 @@ public class DiscountMapper {
         if (dto == null || entity == null) return;
         if (dto.code() != null) entity.setCode(dto.code());
         if (dto.type() != null) {
-            try { entity.setType(DiscountType.valueOf(dto.type())); } catch (Exception ignored) {}
+            try { entity.setType(dto.type()); } catch (Exception ignored) {}
         }
         if (dto.value() != null) entity.setValue(dto.value());
         if (dto.scope() != null) {
-            try { entity.setScope(DiscountScope.valueOf(dto.scope())); } catch (Exception ignored) {}
+            try { entity.setScope(dto.scope()); } catch (Exception ignored) {}
         }
         if (dto.targetProductId() != null) { Product p = new Product(); p.setId(dto.targetProductId()); entity.setTargetProduct(p); }
         if (dto.targetCategoryId() != null) { Category c = new Category(); c.setId(dto.targetCategoryId()); entity.setTargetCategory(c); }
@@ -80,8 +80,8 @@ public class DiscountMapper {
         Long targetProductId = d.getTargetProduct() != null ? d.getTargetProduct().getId() : null;
         Long targetCategoryId = d.getTargetCategory() != null ? d.getTargetCategory().getId() : null;
         Long targetSellerId = d.getTargetSeller() != null ? d.getTargetSeller().getId() : null;
-        String type = d.getType() == null ? null : d.getType().name();
-        String scope = d.getScope() == null ? null : d.getScope().name();
+        DiscountType type = d.getType() == null ? null : d.getType();
+        DiscountScope scope = d.getScope() == null ? null : d.getScope();
         return new DiscountResponseDto(d.getId(), d.getCode(), type, d.getValue(), scope,
                 targetProductId, targetCategoryId, targetSellerId,
                 d.getMinQuantity(), d.getStartsAt(), d.getEndsAt(),

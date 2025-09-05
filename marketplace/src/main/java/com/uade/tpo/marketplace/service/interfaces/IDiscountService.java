@@ -31,7 +31,7 @@ public interface IDiscountService {
 
         BigDecimal calculateDiscountAmount(Discount discount, List<OrderItemCreateDto> items, BigDecimal subtotal);
 
-        void registerDiscountUsage(Long discountId, Long userId, Long orderId);
+        void registerDiscountUsage(Long discountId, Long userId, Long orderOrOrderItemId);
 
         Page<DiscountResponseDto> getActiveDiscounts(Pageable pageable, Optional<Boolean> onlyActive);
 

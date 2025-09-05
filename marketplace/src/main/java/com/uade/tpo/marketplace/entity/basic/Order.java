@@ -51,8 +51,6 @@ public class Order {
     @Column(name = "discount_amount", precision = 12, scale = 2)
     private BigDecimal discountAmount = BigDecimal.ZERO;
 
-    @Column(name = "tax_amount", precision = 12, scale = 2)
-    private BigDecimal taxAmount = BigDecimal.ZERO;
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20, nullable = false)

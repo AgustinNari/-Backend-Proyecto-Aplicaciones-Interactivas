@@ -1,6 +1,8 @@
 package com.uade.tpo.marketplace.entity.dto.update;
 
+import com.uade.tpo.marketplace.entity.enums.OrderStatus;
+
 public record OrderUpdateDto(
-    String status,
+    OrderStatus status,
     String notes
 ) {}

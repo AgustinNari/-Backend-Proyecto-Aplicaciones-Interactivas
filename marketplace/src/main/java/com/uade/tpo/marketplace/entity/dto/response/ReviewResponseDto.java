@@ -9,6 +9,6 @@ public record ReviewResponseDto(
     Integer rating,
     String title,
     String comment,
-    boolean visible,
+    Boolean visible,
     Instant createdAt
 ) {}

@@ -27,14 +27,16 @@ public class ProductMapper {
         this.productImageMapper = productImageMapper;
     }
 
-    public Product toEntity(ProductCreateDto dto){
+    public Product toEntity(ProductCreateDto dto, Long sellerId){
         if (dto == null) return null;
         Product p = new Product();
-        if (dto.sellerId() != null) {
+        
+        if (sellerId != null) {
             User seller = new User();
-            seller.setId(dto.sellerId());
+            seller.setId(sellerId);
             p.setSeller(seller); 
         }
+
         p.setSku(dto.sku());
         p.setTitle(dto.title());
         p.setDescription(dto.description());
@@ -86,7 +88,8 @@ public class ProductMapper {
     }
 
  
-    public ProductResponseDto toResponse(Product product){
+    public ProductResponseDto toResponse(Product product, String sellerDisplayName){
+         if (product == null) return null;
     if (product == null) return null;
 
     Set<CategoryResponseDto> categoryDtos = product.getCategories() == null
@@ -111,6 +114,7 @@ public class ProductMapper {
     return new ProductResponseDto(
         product.getId(),
         sellerId,
+        sellerDisplayName,
         product.getSku(),
         product.getTitle(),
         product.getDescription(),
@@ -134,11 +138,12 @@ public class ProductMapper {
 }
 
    
-    public ProductResponseDto toResponse(Product product, int availableStock){
-        ProductResponseDto dto = toResponse(product);
+    public ProductResponseDto toResponse(Product product, int availableStock, String sellerDisplayName) {
+        ProductResponseDto dto = toResponse(product, sellerDisplayName);
         return new ProductResponseDto(
             dto.id(),
             dto.sellerId(),
+            dto.sellerDisplayName(),
             dto.sku(),
             dto.title(),
             dto.description(),

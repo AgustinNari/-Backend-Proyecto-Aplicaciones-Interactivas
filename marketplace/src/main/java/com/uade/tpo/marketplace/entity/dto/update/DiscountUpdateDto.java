@@ -3,11 +3,14 @@ package com.uade.tpo.marketplace.entity.dto.update;
 import java.math.BigDecimal;
 import java.time.Instant;
 
+import com.uade.tpo.marketplace.entity.enums.DiscountScope;
+import com.uade.tpo.marketplace.entity.enums.DiscountType;
+
 public record DiscountUpdateDto(
     String code,
-    String type,
+    DiscountType type,
     BigDecimal value,
-    String scope,
+    DiscountScope scope,
     Long targetProductId,
     Long targetCategoryId,
     Long targetSellerId,
