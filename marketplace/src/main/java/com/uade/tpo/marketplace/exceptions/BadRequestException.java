@@ -6,4 +6,5 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @ResponseStatus(code = HttpStatus.BAD_REQUEST, reason = "La solicitud realizada es incorrecta o inválida.")
 public class BadRequestException extends RuntimeException {
     public BadRequestException(String message) { super(message); }
+    public BadRequestException() { super(); }
 }
