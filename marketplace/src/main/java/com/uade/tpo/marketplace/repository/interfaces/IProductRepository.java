@@ -2,10 +2,13 @@ package com.uade.tpo.marketplace.repository.interfaces;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -13,7 +16,7 @@ import org.springframework.stereotype.Repository;
 import com.uade.tpo.marketplace.entity.basic.Product;
 
 @Repository
-public interface IProductRepository extends JpaRepository<Product, Long> {
+public interface IProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
 
 
     Page<Product> findBySellerId(Long sellerId, Pageable pageable);
@@ -23,6 +26,7 @@ public interface IProductRepository extends JpaRepository<Product, Long> {
     Page<Product> findByPriceBetween(BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable);
     Page<Product> findByActiveTrueOrderByPriceAsc(Pageable pageable);
     Page<Product> findByActiveTrueOrderByPriceDesc(Pageable pageable);
+    Optional<Product> findBySku(String sku);
     
     @Query("SELECT DISTINCT p FROM Product p JOIN p.categories c WHERE c.id = :categoryId")
     Page<Product> findByCategoryId(@Param("categoryId") Long categoryId, Pageable pageable);
@@ -55,4 +59,11 @@ public interface IProductRepository extends JpaRepository<Product, Long> {
     
     @Query("SELECT p.id, p.title, SUM(oi.lineTotal) FROM Product p JOIN p.orderItems oi GROUP BY p.id, p.title")
     Page<Object[]> getSalesByProduct(Pageable pageable);
+
+    default Page<Product> findBySpecification(Specification<Product> spec, Pageable pageable) {
+    if (spec == null) {
+        return this.findAll(pageable);
+    }
+    return this.findAll(spec, pageable);
+}
 }

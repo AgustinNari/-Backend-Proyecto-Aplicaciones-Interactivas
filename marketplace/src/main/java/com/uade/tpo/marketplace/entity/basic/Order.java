@@ -62,11 +62,6 @@ public class Order {
     // @Column(name = "currency", length = 3, nullable = false)
     // private String currency = "USD";
 
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "discount_id")
-    private Discount discount;
-
     @Column(name = "created_at", updatable = false)
     @CreationTimestamp
     private Instant createdAt;

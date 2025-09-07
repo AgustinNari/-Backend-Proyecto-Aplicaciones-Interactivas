@@ -19,8 +19,6 @@ public record DiscountUpdateDto(
     Instant endsAt,
     BigDecimal minPrice,
     BigDecimal maxPrice,
-    Integer maxUses,
-    Integer perUserLimit,
     Boolean active,
     Instant expiresAt,
     Long targetBuyerId

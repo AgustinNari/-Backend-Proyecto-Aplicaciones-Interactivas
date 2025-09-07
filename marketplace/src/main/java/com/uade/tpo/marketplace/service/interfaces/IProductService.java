@@ -33,6 +33,9 @@ public interface IProductService {
                                                 boolean onlyActive);
 
 
+    Page<ProductResponseDto> searchActiveProducts(Pageable pageable, String searchTerm);
+
+
     Optional<ProductResponseDto> getProductById(Long id);
 
     Optional<ProductResponseDto> getProductBySku(String sku);
@@ -49,7 +52,7 @@ public interface IProductService {
             throws ProductNotFoundException, UnauthorizedException, DuplicateResourceException;
 
 
-    void deleteProduct(Long id, Long requestingUserId) throws ProductNotFoundException,  UnauthorizedException;
+    void toggleActivity(Long id, Boolean isActive, Long requestingUserId) throws ProductNotFoundException,  UnauthorizedException;
 
 
     int getAvailableStock(Long productId);

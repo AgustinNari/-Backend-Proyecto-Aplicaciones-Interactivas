@@ -14,7 +14,6 @@ public record OrderItemPreviewResponseDto(
     BigDecimal lineSubtotal,        
     BigDecimal discountAmount,        
     BigDecimal lineTotal,           
-    DiscountAppliedDto discountsApplied, 
     List<String> warnings
 ) {
 

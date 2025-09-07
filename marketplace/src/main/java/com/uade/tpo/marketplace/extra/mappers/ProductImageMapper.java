@@ -54,10 +54,11 @@ public class ProductImageMapper {
         }
     }
 
+
     public ProductImageResponseDto toResponse(ProductImage img) {
         if (img == null) return null;
 
-        Long productId = img.getProduct() != null ? img.getProduct().getId() : null;
+        Long productId = img.getProduct() != null ? safeGetId(img.getProduct()) : null;
         String base64File = null;
 
         Blob blob = img.getImage();
@@ -90,6 +91,7 @@ public class ProductImageMapper {
         }
     }
 
+
     private String blobToBase64(Blob blob) {
         try {
             long length = blob.length();
@@ -102,6 +104,10 @@ public class ProductImageMapper {
         } catch (SQLException e) {
             throw new RuntimeException("Error al leer los bytes del Blob", e);
         }
+    }
+
+    private Long safeGetId(Product p) {
+        try { return p.getId(); } catch (Exception e) { return null; }
     }
 
 }

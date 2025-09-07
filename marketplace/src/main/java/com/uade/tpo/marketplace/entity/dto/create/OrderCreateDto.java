@@ -7,7 +7,5 @@ import jakarta.validation.constraints.NotEmpty;
 public record OrderCreateDto(
     @NotEmpty
     List<OrderItemCreateDto> items,
-
-    String couponCode,
     String notes
 ) {}

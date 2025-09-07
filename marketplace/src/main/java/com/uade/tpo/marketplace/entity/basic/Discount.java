@@ -82,9 +82,6 @@ public class Discount {
     @Column(name = "max_price")
     private BigDecimal maxPrice;
 
-    private Integer maxUses;
-    private Integer perUserLimit;
-
     @Column(nullable = false)
     private boolean active = true;
 
@@ -94,9 +91,6 @@ public class Discount {
 
     @Column(name = "expires_at", nullable = true)
     private Instant expiresAt;
-
-    @OneToMany(mappedBy = "discount", fetch = FetchType.LAZY)
-    private Set<Order> orders = new HashSet<>();
 
     @OneToMany(mappedBy = "discount", fetch = FetchType.LAZY)
     private Set<OrderItem> orderItems = new HashSet<>();

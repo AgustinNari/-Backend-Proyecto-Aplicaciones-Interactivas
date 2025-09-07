@@ -24,6 +24,6 @@ public interface IDigitalKeyService {
         void markKeysSold(List<Long> digitalKeyIds, Long orderItemId) throws ResourceNotFoundException;
 
 
-        Page<DigitalKeyResponseDto> getKeysByProduct(Long productId, Pageable pageable, Long requestingUserId)
+        Page<DigitalKeyResponseDto> getAvailableKeysByProduct(Integer keyQuantity, Long productId, Pageable pageable, Long requestingUserId)
                 throws ResourceNotFoundException, UnauthorizedException;
 }

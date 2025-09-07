@@ -9,6 +9,8 @@ public record OrderItemResponseDto(
     String productTitle,
     BigDecimal unitPrice,
     Integer quantity,
+    BigDecimal lineSubtotal,
+    BigDecimal discountAmount,
     BigDecimal lineTotal,
     List<OrderItemDigitalKeyResponseDto> digitalKeys
 ) {}

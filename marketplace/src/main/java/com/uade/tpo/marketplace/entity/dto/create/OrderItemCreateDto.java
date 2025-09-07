@@ -7,6 +7,8 @@ public record OrderItemCreateDto(
     @NotNull
     Long productId,
 
+    String couponCode,
+
     @NotNull @Min(1)
     Integer quantity
 ) {}

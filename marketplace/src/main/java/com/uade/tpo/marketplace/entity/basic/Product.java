@@ -82,12 +82,18 @@ public class Product {
     @Column(nullable=false)
     private String region;
 
+    @Column(name = "min_purchase_quantity")
     private Integer minPurchaseQuantity = 1;
+    @Column(name = "max_purchase_quantity")
     private Integer maxPurchaseQuantity = 1000;
 
+    @Column(name = "release_date")
     private LocalDate releaseDate;
+    
     private String developer;
     private String publisher;
+
+    @Column(name = "metacritic_score")
     private Integer metacriticScore;
     
 

@@ -11,5 +11,6 @@ public record DigitalKeyResponseDto(
     KeyStatus status,
     Instant soldAt,
     Instant createdAt,
-    String keyCode
+    String keyCode,
+    Long orderItemId
 ) { }

@@ -6,8 +6,7 @@ import jakarta.validation.constraints.NotNull;
 public record OrderItemPreviewRequestDto(
     @NotNull Long productId,
     @NotNull @Min(1) Integer quantity,
-    String itemCouponCode,
-    Long discountId
+    String itemCouponCode
 ) {
 
 }

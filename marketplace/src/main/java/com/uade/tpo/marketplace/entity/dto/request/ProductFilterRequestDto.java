@@ -5,6 +5,7 @@ import java.util.List;
 
 public record ProductFilterRequestDto(
     List<String> categories,
+    List<Long> categoryIds,
     BigDecimal priceMin,
     BigDecimal priceMax,
     String platform,
