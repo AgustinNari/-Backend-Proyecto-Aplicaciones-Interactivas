@@ -16,6 +16,7 @@ public record DiscountResponseDto(
     Long targetCategoryId,
     Long targetSellerId,
     Integer minQuantity,
+    Integer maxQuantity,
     Instant startsAt,
     Instant endsAt,
     BigDecimal minPrice,

@@ -45,14 +45,16 @@ public interface IProductService {
     Page<ProductResponseDto> findBySpecification(Specification<Product> spec, Pageable pageable);
 
 
-    ProductResponseDto createProduct(ProductCreateDto dto) throws ProductNotFoundException, DuplicateResourceException;
+    ProductResponseDto createProduct(ProductCreateDto dto, Long sellerId) throws ProductNotFoundException, DuplicateResourceException;
 
 
     ProductResponseDto updateProduct(Long id, ProductUpdateDto dto, Long requestingUserId)
             throws ProductNotFoundException, UnauthorizedException, DuplicateResourceException;
 
 
-    void toggleActivity(Long id, Boolean isActive, Long requestingUserId) throws ProductNotFoundException,  UnauthorizedException;
+    int toggleActivity(Long id, Boolean isActive, Long requestingUserId) throws ProductNotFoundException,  UnauthorizedException;
+
+    int updateProudctPrice(Long id, BigDecimal newPrice, Long requestingUserId) throws ProductNotFoundException, UnauthorizedException;
 
 
     int getAvailableStock(Long productId);

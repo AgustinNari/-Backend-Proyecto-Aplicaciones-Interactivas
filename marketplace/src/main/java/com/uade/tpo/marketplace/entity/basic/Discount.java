@@ -69,6 +69,8 @@ public class Discount {
     @Column(name = "min_quantity")
     private Integer minQuantity;
     
+    @Column(name = "max_quantity")
+    private Integer maxQuantity;
 
     @Column(name = "starts_at")
     private Instant startsAt;
@@ -99,4 +101,5 @@ public class Discount {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "target_buyer_id")
     private User targetBuyer;
+
 }

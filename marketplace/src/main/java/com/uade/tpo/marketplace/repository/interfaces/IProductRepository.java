@@ -9,11 +9,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.uade.tpo.marketplace.entity.basic.Product;
+
+import jakarta.transaction.Transactional;
 
 @Repository
 public interface IProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
@@ -66,4 +69,17 @@ public interface IProductRepository extends JpaRepository<Product, Long>, JpaSpe
     }
     return this.findAll(spec, pageable);
 }
+
+
+
+    @Transactional
+    @Modifying
+    @Query("UPDATE Product p SET p.price = :newPrice WHERE p.id = :id")
+    int updateProductPrice(Long id, BigDecimal newPrice);
+    
+
+    @Transactional
+    @Modifying
+    @Query("UPDATE Product p SET p.active = :isActive WHERE p.id = :id")
+    int toggleActivity(Long id, Boolean isActive);
 }

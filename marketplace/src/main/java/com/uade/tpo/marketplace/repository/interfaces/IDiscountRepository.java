@@ -2,11 +2,13 @@ package com.uade.tpo.marketplace.repository.interfaces;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -14,6 +16,8 @@ import org.springframework.stereotype.Repository;
 import com.uade.tpo.marketplace.entity.basic.Discount;
 import com.uade.tpo.marketplace.entity.enums.DiscountScope;
 import com.uade.tpo.marketplace.entity.enums.DiscountType;
+
+import jakarta.transaction.Transactional;
 
 @Repository
 public interface IDiscountRepository extends JpaRepository<Discount, Long> {
@@ -82,5 +86,38 @@ public interface IDiscountRepository extends JpaRepository<Discount, Long> {
        @Query("SELECT d FROM Discount d WHERE d.scope = :scope AND d.targetBuyer.id = :targetBuyerId AND d.active = true " +
               "AND d.startsAt <= CURRENT_TIMESTAMP AND (d.endsAt IS NULL OR d.endsAt >= CURRENT_TIMESTAMP)")
        Page<Discount> findActiveByScopeAndTargetBuyerId(DiscountScope scope, Long targetBuyerId, Pageable pageable);
+
+       @Query("SELECT d FROM Discount d WHERE d.targetProduct.id = :productId AND d.active = true " +
+              "AND d.type = 'PERCENT' " +
+              "AND d.startsAt <= CURRENT_TIMESTAMP AND (d.endsAt IS NULL OR d.endsAt >= CURRENT_TIMESTAMP) " +
+              "ORDER BY d.value DESC")
+       List<Discount> getHighestValueDiscountsForProduct(Long productId);
+
+       @Query("SELECT d FROM Discount d WHERE d.targetCategory.id = :categoryId AND d.active = true " +
+              "AND d.type = 'PERCENT' " +
+              "AND d.startsAt <= CURRENT_TIMESTAMP AND (d.endsAt IS NULL OR d.endsAt >= CURRENT_TIMESTAMP) " +
+              "ORDER BY d.value DESC")
+       List<Discount> getHighestValueDiscountsForCategory(Long categoryId);
+
+       @Query("SELECT d FROM Discount d WHERE d.targetSeller.id = :sellerId AND d.active = true " +
+              "AND d.type = 'PERCENT' " +
+              "AND d.startsAt <= CURRENT_TIMESTAMP AND (d.endsAt IS NULL OR d.endsAt >= CURRENT_TIMESTAMP) " +
+              "ORDER BY d.value DESC")
+       List<Discount> getHighestValueDiscountsForSeller(Long sellerId);
+
+
+       @Query("SELECT d FROM Discount d WHERE d.type = 'FIXED' AND d.targetBuyer.id = :targetBuyerId AND d.active = true " +
+              "AND d.startsAt <= CURRENT_TIMESTAMP AND (d.endsAt IS NULL OR d.endsAt >= CURRENT_TIMESTAMP)")
+       Page<Discount> getAllActiveCouponsByTargetBuyerId(Long targetBuyerId, Pageable pageable);
+
+
+       @Query("SELECT d FROM Discount d WHERE d.code = :code AND d.targetBuyer.id = :targetBuyerId AND d.active = true " +
+              "AND d.startsAt <= CURRENT_TIMESTAMP AND (d.endsAt IS NULL OR d.endsAt >= CURRENT_TIMESTAMP)")
+       Optional<Discount> getActiveCouponByCodeAndTargetBuyerId(String code, Long targetBuyerId);
+
+       @Modifying
+       @Transactional
+       @Query("UPDATE Discount d SET d.active = false WHERE d.id = :couponId AND d.type = 'FIXED' AND d.targetBuyer.id = :targetBuyerId")
+       int markCouponAsUsed(Long couponId, Long targetBuyerId);
 
 }

@@ -1,7 +1,6 @@
 package com.uade.tpo.marketplace.service.interfaces;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -29,18 +28,25 @@ public interface IDiscountService {
 
         Optional<DiscountResponseDto> getActiveDiscountByCode(String code);
 
-        BigDecimal calculateDiscountAmount(Discount discount, List<OrderItemCreateDto> items, BigDecimal subtotal);
-
-        void registerDiscountUsage(Long discountId, Long userId, Long orderOrOrderItemId);
+        BigDecimal calculateDiscountAmount(Discount discount, OrderItemCreateDto item);
 
         Page<DiscountResponseDto> getActiveDiscounts(Pageable pageable, Optional<Boolean> onlyActive);
 
+        Page<DiscountResponseDto> getActiveDiscountsForProduct(Long productId, Integer productQuantity, Pageable pageable);
+
         Page<DiscountResponseDto> getAllDiscounts(Pageable pageable);
 
-        DiscountResponseDto validateDiscountCodeForOrder(String code, Long buyerId, List<OrderItemCreateDto> items, BigDecimal subtotal)
+
+        Optional<Discount> validateCouponCodeForOrderItem (String code, Long buyerId, OrderItemCreateDto item, BigDecimal subtotal)
                 throws ResourceNotFoundException, BadRequestException;
 
-        DiscountResponseDto validateDiscountCodeForOrderItem (String code, Long buyerId, OrderItemCreateDto item, BigDecimal subtotal)
-                throws ResourceNotFoundException, BadRequestException;
+        Optional<Discount> getHighestValueDiscountForOrderItem (OrderItemCreateDto item)
+                throws ResourceNotFoundException;
+
+        Page<DiscountResponseDto> getAllActiveCouponsByTargetBuyerId(Long targetBuyerId, Pageable pageable);
+
+        void markCouponAsUsed(Long discountId, Long targetBuyerId) throws ResourceNotFoundException;
+
+        Optional<DiscountResponseDto> generateNewRandomCoupon(Long targetBuyerId);
 
 }

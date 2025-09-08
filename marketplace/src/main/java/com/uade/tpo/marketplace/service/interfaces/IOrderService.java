@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import com.uade.tpo.marketplace.entity.dto.create.OrderCreateDto;
+import com.uade.tpo.marketplace.entity.dto.response.OrderItemResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.OrderResponseDto;
 import com.uade.tpo.marketplace.exceptions.BadRequestException;
 import com.uade.tpo.marketplace.exceptions.InsufficientStockException;
@@ -18,6 +19,9 @@ public interface IOrderService {
         OrderResponseDto createOrder(OrderCreateDto dto, Long buyerId)
                 throws ResourceNotFoundException, InsufficientStockException, BadRequestException;
 
+        Page<OrderItemResponseDto> getOrderItemsByOrderId(Long orderId, Long requestingUserId)
+                throws ResourceNotFoundException, UnauthorizedException;
+
         Optional<OrderResponseDto> getOrderById(Long id, Long requestingUserId) throws ResourceNotFoundException, UnauthorizedException;
 
         Page<OrderResponseDto> getOrdersByBuyer(Long buyerId, Pageable pageable);
@@ -25,11 +29,6 @@ public interface IOrderService {
         Page<OrderResponseDto> getOrdersBySeller(Long sellerId, Pageable pageable);
 
         Page<OrderResponseDto> getAllOrders(Pageable pageable);
-
-        void cancelOrder(Long orderId, Long requestingUserId) throws ResourceNotFoundException, UnauthorizedException, BadRequestException;
-
-
-        void refundOrder(Long orderId, Long performedByUserId, String reason) throws ResourceNotFoundException, UnauthorizedException;
 
         OrderResponseDto completeOrder(Long orderId, Long performedByUserId)
                 throws ResourceNotFoundException, UnauthorizedException, BadRequestException;

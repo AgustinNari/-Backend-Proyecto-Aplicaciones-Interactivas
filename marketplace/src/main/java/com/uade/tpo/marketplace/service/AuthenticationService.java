@@ -60,8 +60,26 @@ public class AuthenticationService implements IAuthenticationService{
         }
 
         @Override
-        public void changePassword(Long userId, String currentPassword, String newPassword) throws ResourceNotFoundException {
-                // TODO Auto-generated method stub
+        public void changePassword(Long userId, String currentPassword, String newPassword)
+                throws ResourceNotFoundException {
+                var user = repository.findById(userId)
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found with id=" + userId));
+
+                if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+                        throw new IllegalArgumentException("La contraseña actual no es correcta");
+                }
+
+                if (passwordEncoder.matches(newPassword, user.getPassword())) {
+                        throw new IllegalArgumentException("La nueva contraseña no puede ser igual a la actual");
+                }
+
+                if (newPassword == null || newPassword.length() < 8) {
+                        throw new IllegalArgumentException("La nueva contraseña debe tener al menos 8 caracteres");
+                }
+
+                user.setPassword(passwordEncoder.encode(newPassword));
+                repository.save(user);
         }
+
         
 }

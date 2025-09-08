@@ -1,15 +1,21 @@
 package com.uade.tpo.marketplace.repository.interfaces;
 
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
 import com.uade.tpo.marketplace.entity.basic.User;
 import com.uade.tpo.marketplace.entity.enums.Role;
+
+import jakarta.transaction.Transactional;
 
 @Repository
 public interface IUserRepository extends JpaRepository<User, Long> {
@@ -45,4 +51,14 @@ public interface IUserRepository extends JpaRepository<User, Long> {
     
 
     Page<User> findByCountry(String country, Pageable pageable);
+
+    @Transactional
+    @Modifying
+    @Query("UPDATE User u SET u.balance = :newBalance WHERE u.id = :userId")
+    int updateBuyerBalance(Long userId, BigDecimal newBalance);
+
+    @Transactional
+    @Modifying
+    @Query("UPDATE User u SET u.lastLogin = :loginTime WHERE u.id = :userId")
+    int registerNewLogin(Long userId, Instant loginTime);
 }

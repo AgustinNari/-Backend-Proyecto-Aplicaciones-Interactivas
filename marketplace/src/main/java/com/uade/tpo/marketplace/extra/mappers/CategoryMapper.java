@@ -1,5 +1,11 @@
 package com.uade.tpo.marketplace.extra.mappers;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Component;
 
 import com.uade.tpo.marketplace.entity.basic.Category;
@@ -19,17 +25,32 @@ public class CategoryMapper {
 
     public void updateFromDto(CategoryUpdateDto dto, Category entity){
         if (dto == null || entity == null) return;
-        if (dto.description() != null) entity.setDescription(dto.description().trim());
+        if (dto.description() != null) {
+            entity.setDescription(dto.description().trim());
+        }
     }
 
     public CategoryResponseDto toResponse(Category category){
         if (category == null) return null;
-        int productCount = category.getProducts() == null ? 0 : category.getProducts().size();
+        int productCount = 0;
+        try {
+            productCount = category.getProducts() == null ? 0 : category.getProducts().size();
+        } catch (Exception e) {
+            productCount = 0;
+        }
         return new CategoryResponseDto(
             category.getId(),
             category.getDescription(),
             productCount
         );
+    }
+
+    public List<CategoryResponseDto> toResponseList(Collection<Category> categories) {
+        if (categories == null || categories.isEmpty()) return Collections.emptyList();
+        return categories.stream()
+                .filter(Objects::nonNull)
+                .map(this::toResponse)
+                .collect(Collectors.toList()); 
     }
 
     //TODO: 
