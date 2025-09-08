@@ -28,7 +28,7 @@ import com.uade.tpo.marketplace.repository.interfaces.IReviewRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IUserRepository;
 import com.uade.tpo.marketplace.service.interfaces.IReviewService;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ReviewService implements IReviewService {
@@ -54,7 +54,7 @@ public class ReviewService implements IReviewService {
 
 
     @Override
-    @Transactional(rollbackOn = Throwable.class)
+    @Transactional(rollbackFor = Throwable.class)
     public ReviewResponseDto createReview(ReviewCreateDto dto, Long buyerId) throws ResourceNotFoundException, BadRequestException {
         if (dto == null) throw new BadRequestException("Datos de la reseña no proporcionados.");
         if (dto.productId() == null) throw new BadRequestException("Debe indicarse el productId para la reseña.");
@@ -111,7 +111,7 @@ public class ReviewService implements IReviewService {
 
 
     @Override
-    @Transactional(rollbackOn = Throwable.class)
+    @Transactional(rollbackFor = Throwable.class)
     public ReviewResponseDto updateReview(Long reviewId, ReviewUpdateDto dto, Long requestingUserId) throws ResourceNotFoundException, UnauthorizedException {
         if (reviewId == null) throw new ResourceNotFoundException("Id de reseña no proporcionado.");
         Review existing = reviewRepository.findById(reviewId)
@@ -133,7 +133,7 @@ public class ReviewService implements IReviewService {
     }
 
     @Override
-    @Transactional(rollbackOn = Throwable.class)
+    @Transactional(rollbackFor = Throwable.class)
     public void deleteReview(Long reviewId, Long requestingUserId) throws ResourceNotFoundException, UnauthorizedException {
         if (reviewId == null) throw new ResourceNotFoundException("Id de reseña no proporcionado.");
         Review existing = reviewRepository.findById(reviewId)

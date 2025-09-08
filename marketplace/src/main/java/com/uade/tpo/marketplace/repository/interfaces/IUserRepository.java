@@ -54,7 +54,7 @@ public interface IUserRepository extends JpaRepository<User, Long> {
 
     @Transactional
     @Modifying
-    @Query("UPDATE User u SET u.balance = :newBalance WHERE u.id = :userId")
+    @Query("UPDATE User u SET u.buyerBalance = :newBalance WHERE u.id = :userId")
     int updateBuyerBalance(Long userId, BigDecimal newBalance);
 
     @Transactional

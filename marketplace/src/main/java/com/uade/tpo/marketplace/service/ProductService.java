@@ -40,8 +40,7 @@ import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
-import jakarta.transaction.Transactional;
-
+import org.springframework.transaction.annotation.Transactional;
 @Service
 public class ProductService implements IProductService {
 
@@ -144,7 +143,7 @@ public class ProductService implements IProductService {
     }
 
     @Override
-    @Transactional(rollbackOn = Throwable.class)
+    @Transactional(rollbackFor = Throwable.class)
     public ProductResponseDto createProduct(ProductCreateDto dto, Long sellerId) throws ProductNotFoundException, DuplicateResourceException {
         if (dto == null) throw new BadRequestException("Datos de producto no proporcionados.");
 
@@ -194,7 +193,7 @@ public class ProductService implements IProductService {
 
 
     @Override
-    @Transactional(rollbackOn = Throwable.class)
+    @Transactional(rollbackFor = Throwable.class)
     public ProductResponseDto updateProduct(Long id, ProductUpdateDto dto, Long requestingUserId)
             throws ProductNotFoundException, UnauthorizedException, DuplicateResourceException {
 
@@ -251,7 +250,7 @@ public class ProductService implements IProductService {
     }
 
     @Override
-    @Transactional(rollbackOn = Throwable.class)
+    @Transactional(rollbackFor = Throwable.class)
     public int toggleActivity(Long id, Boolean isActive, Long requestingUserId) throws ProductNotFoundException, UnauthorizedException {
         Product existing = productRepository.findById(id)
                     .orElseThrow(() -> new ProductNotFoundException("Producto no encontrado (id=" + id + ")."));
@@ -277,7 +276,7 @@ public class ProductService implements IProductService {
     }
 
     @Override
-    @Transactional(rollbackOn = Throwable.class)
+    @Transactional(rollbackFor = Throwable.class)
     public int updateProudctPrice(Long id, BigDecimal newPrice, Long requestingUserId) throws ProductNotFoundException, UnauthorizedException {
         Product existing = productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException("Producto no encontrado (id=" + id + ")."));

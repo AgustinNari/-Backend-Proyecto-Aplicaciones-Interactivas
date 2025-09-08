@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.uade.tpo.marketplace.entity.basic.Category;
 import com.uade.tpo.marketplace.entity.dto.create.CategoryCreateDto;
+import com.uade.tpo.marketplace.entity.dto.response.CategoryResponseDto;
 import com.uade.tpo.marketplace.exceptions.CategoryDuplicateException;
 import com.uade.tpo.marketplace.service.interfaces.ICategoryService;
 
@@ -36,12 +37,18 @@ public class CategoriesController {
   
     
     @GetMapping //localhost:4002/categories
-    public ResponseEntity<Page<Category>> getCategories(
+    public ResponseEntity<Page<CategoryResponseDto>> getCategories(
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size) {
-        if (page == null || size == null)
-            return ResponseEntity.ok(categoryService.getCategories(PageRequest.of(0, Integer.MAX_VALUE)));
-        return ResponseEntity.ok(categoryService.getCategories(PageRequest.of(page, size)));
+
+        PageRequest pr;
+        if (page == null || size == null) {
+            pr = PageRequest.of(0, Integer.MAX_VALUE);
+        } else {
+            pr = PageRequest.of(page, size);
+        }
+        Page<CategoryResponseDto> result = categoryService.getCategories(pr);
+        return ResponseEntity.ok(result);
     }
     //Quiero que este metodo me traiga todas las categorias de la BD
 
@@ -49,21 +56,18 @@ public class CategoriesController {
 
 
     @GetMapping("{categoryId}") //localhost:4002/categories/1,2,3 y así
-    public ResponseEntity<Category> getCategoryById(@PathVariable Long categoryId) {
-        Optional<Category> result = categoryService.getCategoryById(categoryId);
-        if (result.isPresent()) {
-            return ResponseEntity.ok(result.get());
-        }
-       
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<CategoryResponseDto> getCategoryById(@PathVariable Long categoryId) {
+        Optional<CategoryResponseDto> result = categoryService.getCategoryById(categoryId);
+        return result.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.noContent().build());
     }
 
     @PostMapping
-    public ResponseEntity<Category> createCategory(@Valid @RequestBody CategoryCreateDto categoryCreateDto)
+    public ResponseEntity<CategoryResponseDto> createCategory(@Valid @RequestBody CategoryCreateDto categoryCreateDto)
             throws CategoryDuplicateException {
-        Category result = categoryService.createCategory(categoryCreateDto.description());
-      
-        return ResponseEntity.created(URI.create("categories/" + result.getId())).body(result);
+
+        CategoryResponseDto created = categoryService.createCategory(categoryCreateDto);
+        URI location = URI.create(String.format("categories/", created.id()));
+        return ResponseEntity.created(location).body(created);
     }
 
 

@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.uade.tpo.marketplace.entity.basic.Category;
 import com.uade.tpo.marketplace.entity.basic.Discount;
@@ -40,7 +41,7 @@ import com.uade.tpo.marketplace.repository.interfaces.IProductRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IUserRepository;
 import com.uade.tpo.marketplace.service.interfaces.IDiscountService;
 
-import jakarta.transaction.Transactional;
+
 
 @Service
 public class DiscountService implements IDiscountService {
@@ -66,7 +67,7 @@ public class DiscountService implements IDiscountService {
 
 
     @Override
-    @Transactional(rollbackOn = Throwable.class)
+    @Transactional(rollbackFor = Throwable.class)
     public DiscountResponseDto createDiscount(DiscountCreateDto dto, Long createdByUserId)
             throws DuplicateResourceException, ResourceNotFoundException {
 
@@ -140,7 +141,7 @@ public class DiscountService implements IDiscountService {
 
 
     @Override
-    @Transactional(rollbackOn = Throwable.class)
+    @Transactional(rollbackFor = Throwable.class)
     public DiscountResponseDto updateDiscount(Long id, DiscountUpdateDto dto, Long requestingUserId)
             throws ResourceNotFoundException, UnauthorizedException, DuplicateResourceException {
 
@@ -475,7 +476,7 @@ public class DiscountService implements IDiscountService {
 
 
     @Override
-    @Transactional(rollbackOn = Throwable.class)
+    @Transactional(rollbackFor = Throwable.class)
     public void markCouponAsUsed(Long discountId, Long targetBuyerId) throws ResourceNotFoundException {
         if (discountId == null) throw new ResourceNotFoundException("Id de cupón no proporcionado.");
         if (targetBuyerId == null) throw new ResourceNotFoundException("Id de comprador no proporcionado.");
@@ -508,7 +509,7 @@ public class DiscountService implements IDiscountService {
     }
 
     @Override
-    @Transactional(rollbackOn = Throwable.class)
+    @Transactional(rollbackFor = Throwable.class)
     public Optional<DiscountResponseDto> generateNewRandomCoupon(Long targetBuyerId) {
         if (targetBuyerId == null) return Optional.empty();
         String code = generateCouponCode();

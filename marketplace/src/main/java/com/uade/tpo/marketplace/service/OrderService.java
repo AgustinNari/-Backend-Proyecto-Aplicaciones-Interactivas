@@ -51,7 +51,7 @@ import com.uade.tpo.marketplace.service.interfaces.IDiscountService;
 import com.uade.tpo.marketplace.service.interfaces.IOrderService;
 import com.uade.tpo.marketplace.service.interfaces.IUserService;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class OrderService implements IOrderService {
@@ -85,7 +85,7 @@ public class OrderService implements IOrderService {
 
 
 @Override
-@Transactional(rollbackOn = Throwable.class)
+@Transactional(rollbackFor = Throwable.class)
 public OrderResponseDto createOrder(OrderCreateDto dto, Long buyerId)
         throws ResourceNotFoundException, InsufficientStockException, BadRequestException {
 
@@ -397,7 +397,7 @@ public OrderResponseDto createOrder(OrderCreateDto dto, Long buyerId)
     }
 
     @Override
-    @Transactional(rollbackOn = Throwable.class)
+    @Transactional(rollbackFor = Throwable.class)
     public OrderResponseDto completeOrder(Long orderId, Long performedByUserId)
             throws ResourceNotFoundException, UnauthorizedException, BadRequestException {
 
@@ -422,7 +422,7 @@ public OrderResponseDto createOrder(OrderCreateDto dto, Long buyerId)
     }
 
     @Override
-    @Transactional(rollbackOn = Throwable.class)
+    @Transactional(rollbackFor = Throwable.class)
     public OrderResponseDto updateOrderStatus(Long orderId, String status, Long performedByUserId)
             throws ResourceNotFoundException, UnauthorizedException, BadRequestException {
 

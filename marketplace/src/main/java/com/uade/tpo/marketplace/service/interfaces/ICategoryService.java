@@ -6,14 +6,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
 import com.uade.tpo.marketplace.entity.basic.Category;
+import com.uade.tpo.marketplace.entity.dto.create.CategoryCreateDto;
+import com.uade.tpo.marketplace.entity.dto.response.CategoryResponseDto;
 import com.uade.tpo.marketplace.exceptions.CategoryDuplicateException;
 
 public interface  ICategoryService {
 
-    Page<Category> getCategories(PageRequest pageable);
+    Page<CategoryResponseDto> getCategories(PageRequest pageable);
 
-    Optional<Category> getCategoryById(Long id);
+    Optional<CategoryResponseDto> getCategoryById(Long id);
 
-    Category createCategory(String newCategoryDescription) throws CategoryDuplicateException;
+    CategoryResponseDto createCategory(CategoryCreateDto dto) throws CategoryDuplicateException;
 
 }

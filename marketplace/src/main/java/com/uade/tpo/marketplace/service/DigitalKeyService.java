@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.uade.tpo.marketplace.entity.basic.DigitalKey;
 import com.uade.tpo.marketplace.entity.basic.Product;
@@ -26,7 +27,7 @@ import com.uade.tpo.marketplace.repository.interfaces.IProductRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IUserRepository;
 import com.uade.tpo.marketplace.service.interfaces.IDigitalKeyService;
 
-import jakarta.transaction.Transactional;
+
 
 @Service
 public class DigitalKeyService implements IDigitalKeyService {
@@ -49,7 +50,7 @@ public class DigitalKeyService implements IDigitalKeyService {
 
 
     @Override
-    @Transactional(rollbackOn = Throwable.class)
+    @Transactional(rollbackFor = Throwable.class)
     public List<DigitalKeyResponseDto> uploadKeys(Long productId, List<String> keyCodes, Long uploaderId)
             throws ResourceNotFoundException, InsufficientStockException, DigitalKeyDuplicateException {
 
@@ -100,7 +101,7 @@ public class DigitalKeyService implements IDigitalKeyService {
 
 
     @Override
-    @Transactional(rollbackOn = Throwable.class)
+    @Transactional(rollbackFor = Throwable.class)
     public void markKeysSold(List<Long> digitalKeyIds, Long orderItemId) throws ResourceNotFoundException {
         if (digitalKeyIds == null || digitalKeyIds.isEmpty()) return;
         Instant now = Instant.now();

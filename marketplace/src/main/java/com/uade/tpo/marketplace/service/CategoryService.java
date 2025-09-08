@@ -1,6 +1,5 @@
 package com.uade.tpo.marketplace.service;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +9,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.uade.tpo.marketplace.entity.basic.Category;
+import com.uade.tpo.marketplace.entity.dto.create.CategoryCreateDto;
+import com.uade.tpo.marketplace.entity.dto.response.CategoryResponseDto;
 import com.uade.tpo.marketplace.exceptions.CategoryDuplicateException;
+import com.uade.tpo.marketplace.extra.mappers.CategoryMapper;
 import com.uade.tpo.marketplace.repository.interfaces.ICategoryRepository;
 import com.uade.tpo.marketplace.service.interfaces.ICategoryService;
 
@@ -23,29 +25,42 @@ public class CategoryService implements ICategoryService {
     private ICategoryRepository categoryRepository;
 
 
-    
-    @Override
-    public Page<Category> getCategories(PageRequest pageable) {
-        return categoryRepository.findAll(pageable);
+    private final CategoryMapper categoryMapper;
+
+    public CategoryService() {
+        this.categoryMapper = new CategoryMapper();
     }
+
+
+    @Override
+    public Page<CategoryResponseDto> getCategories(PageRequest pageable) {
+    Page<Category> page = categoryRepository.findAll(pageable);
+    return page.map(categoryMapper::toResponse);
+}
     //Quiero que este metodo me traiga todas las categorias de la BD
 
     //Pero quiero poder indicar un numero para que me devuleva solo alguna categoria tambien
 
     @Override
-    public Optional<Category> getCategoryById(Long categoryId) {
-        return categoryRepository.findById(categoryId);
-    }
+    public Optional<CategoryResponseDto> getCategoryById(Long categoryId) {
+        return categoryRepository.findById(categoryId).map(categoryMapper::toResponse);
+}
 
 
     @Transactional (rollbackFor = Throwable.class)
     @Override
-    public Category createCategory(String newCategoryDescription) throws CategoryDuplicateException {
-        Optional<Category> category = categoryRepository.findByDescription(newCategoryDescription);
-        if (category.isPresent()) {
-            throw new CategoryDuplicateException();
+    public CategoryResponseDto createCategory(CategoryCreateDto dto) throws CategoryDuplicateException {
+        if (dto == null || dto.description() == null || dto.description().isBlank()) {
+            throw new IllegalArgumentException("La descripción de la categoría no puede estar vacía.");
         }
-        return categoryRepository.save(new Category(newCategoryDescription));
+
+        if (categoryRepository.existsByDescriptionIgnoreCase(dto.description().trim())) {
+            throw new CategoryDuplicateException("Ya existe una categoría con la descripción: " + dto.description().trim());
+        }
+
+        Category entity = categoryMapper.toEntity(dto);
+        Category saved = categoryRepository.save(entity);
+        return categoryMapper.toResponse(saved);
     }
     
 }

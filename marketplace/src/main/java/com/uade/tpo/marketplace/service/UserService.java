@@ -25,7 +25,7 @@ import com.uade.tpo.marketplace.repository.interfaces.IReviewRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IUserRepository;
 import com.uade.tpo.marketplace.service.interfaces.IUserService;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UserService implements IUserService {
@@ -60,7 +60,7 @@ public class UserService implements IUserService {
 
 
     @Override
-    @Transactional(rollbackOn = Throwable.class)
+    @Transactional(rollbackFor = Throwable.class)
     public UserResponseDto updateUser(Long id, UserUpdateDto dto, Long requestingUserId)
             throws ResourceNotFoundException, UnauthorizedException, DuplicateResourceException {
 
@@ -149,7 +149,7 @@ public class UserService implements IUserService {
     }
 
     @Override
-    @Transactional(rollbackOn = Throwable.class)
+    @Transactional(rollbackFor = Throwable.class)
     public int updateBuyerBalance(Long userId, BigDecimal newBalance) throws UserNotFoundException {
         if (userId == null) throw new UserNotFoundException("Id de usuario no proporcionado.");
 
@@ -165,7 +165,7 @@ public class UserService implements IUserService {
     }
 
     @Override
-    @Transactional(rollbackOn = Throwable.class)
+    @Transactional(rollbackFor = Throwable.class)
     public int registerNewLogin(Long userId, Long requestingUserId) throws UserNotFoundException {
         if (userId == null) throw new UserNotFoundException("Id de usuario no proporcionado.");
 
