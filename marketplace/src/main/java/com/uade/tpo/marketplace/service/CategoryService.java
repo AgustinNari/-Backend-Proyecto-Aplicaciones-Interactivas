@@ -24,13 +24,8 @@ public class CategoryService implements ICategoryService {
     @Autowired
     private ICategoryRepository categoryRepository;
 
-
-    private final CategoryMapper categoryMapper;
-
-    public CategoryService() {
-        this.categoryMapper = new CategoryMapper();
-    }
-
+    @Autowired
+    private CategoryMapper categoryMapper;
 
     @Override
     public Page<CategoryResponseDto> getCategories(PageRequest pageable) {

@@ -36,11 +36,10 @@ public class ProductImageService implements IProductImageService {
     @Autowired
     private IUserRepository userRepository;
     
-    private final ProductImageMapper mapper;
+    @Autowired
+    private ProductImageMapper mapper;
 
-    public ProductImageService() {
-        this.mapper = new ProductImageMapper();
-    }
+
 
 
 
@@ -89,22 +88,16 @@ public class ProductImageService implements IProductImageService {
 
     @Override
     @Transactional(rollbackFor = Throwable.class)
-    public ProductImageResponseDto updateImage(ProductImageUpdateDto dto, Long requestingUserId)
+    public ProductImageResponseDto updateImage(Long productImageId, ProductImageUpdateDto dto, Long requestingUserId)
             throws ResourceNotFoundException, UnauthorizedException {
 
         if (dto == null) throw new ResourceNotFoundException("Datos de actualización no proporcionados.");
    
-        Long imageId;
-        try {
-            imageId = (Long) dto.getClass().getMethod("id").invoke(dto);
-        } catch (ReflectiveOperationException ex) {
-            throw new IllegalStateException("ProductImageUpdateDto debe exponer un método id() para identificar la imagen.");
-        }
 
-        if (imageId == null) throw new ResourceNotFoundException("Id de imagen no proporcionado.");
+        if (productImageId == null) throw new ResourceNotFoundException("Id de imagen no proporcionado.");
 
-        ProductImage existing = productImageRepository.findById(imageId)
-                .orElseThrow(() -> new ResourceNotFoundException("Imagen no encontrada (id=" + imageId + ")."));
+        ProductImage existing = productImageRepository.findById(productImageId)
+                .orElseThrow(() -> new ResourceNotFoundException("Imagen no encontrada (id=" + productImageId + ")."));
 
         Product product = existing.getProduct();
         if (product == null) {
@@ -173,13 +166,9 @@ public class ProductImageService implements IProductImageService {
         if (requestingUserId == null) {
             throw new UnauthorizedException("Usuario solicitante no proporcionado.");
         }
-        Optional<User> requesterOpt = userRepository.findById(requestingUserId);
-        if (requesterOpt.isEmpty()) {
-            throw new UnauthorizedException("Usuario solicitante no encontrado.");
-        }
-        User requester = requesterOpt.get();
+        User requester = userRepository.findById(requestingUserId)
+                .orElseThrow(() -> new UnauthorizedException("Usuario solicitante no encontrado."));
 
- 
         if (requester.getRole() == Role.ADMIN) return;
 
 

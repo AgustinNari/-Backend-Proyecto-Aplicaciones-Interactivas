@@ -35,11 +35,8 @@ public class UserService implements IUserService {
     @Autowired
     private IReviewRepository reviewRepository;
 
-    private final UserMapper userMapper;
-
-    public UserService() {
-        this.userMapper = new UserMapper();
-    }
+    @Autowired
+    private UserMapper userMapper;
 
 
 

@@ -39,14 +39,11 @@ public class DigitalKeyService implements IDigitalKeyService {
     @Autowired
     private IUserRepository userRepository;
 
+    @Autowired
+    private DigitalKeyMapper digitalKeyMapper;
 
-    private final DigitalKeyMapper digitalKeyMapper;
 
 
-    public DigitalKeyService() {
-        this.digitalKeyMapper = new DigitalKeyMapper();
-    }
-    
 
 
     @Override
@@ -80,7 +77,6 @@ public class DigitalKeyService implements IDigitalKeyService {
         }
 
         List<DigitalKey> entities = digitalKeyMapper.toEntitiesFromKeyCodes(productId, normalized);
- 
 
         List<DigitalKey> saved = digitalKeyRepository.saveAll(entities);
 
@@ -133,7 +129,11 @@ public class DigitalKeyService implements IDigitalKeyService {
         User requester = userRepository.findById(requestingUserId)
                 .orElseThrow(() -> new UnauthorizedException("Usuario no encontrado: " + requestingUserId));
 
- 
+        if (!requester.getId().equals(product.getSeller().getId())) {
+            throw new UnauthorizedException("El usuario no es el vendedor del producto, por lo tanto no puede acceder a las claves disponibles.");
+        }
+
+
     
         Page<DigitalKey> page = digitalKeyRepository.findByProductIdAndStatus(productId, KeyStatus.AVAILABLE, pageable);
 

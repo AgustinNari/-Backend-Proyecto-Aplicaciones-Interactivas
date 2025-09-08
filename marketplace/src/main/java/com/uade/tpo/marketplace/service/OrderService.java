@@ -41,12 +41,9 @@ import com.uade.tpo.marketplace.exceptions.UnauthorizedException;
 import com.uade.tpo.marketplace.extra.mappers.OrderItemMapper;
 import com.uade.tpo.marketplace.extra.mappers.OrderMapper;
 import com.uade.tpo.marketplace.repository.interfaces.IDigitalKeyRepository;
-import com.uade.tpo.marketplace.repository.interfaces.IDiscountRepository;
-import com.uade.tpo.marketplace.repository.interfaces.IOrderItemRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IOrderRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IProductRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IUserRepository;
-import com.uade.tpo.marketplace.service.interfaces.IDigitalKeyService;
 import com.uade.tpo.marketplace.service.interfaces.IDiscountService;
 import com.uade.tpo.marketplace.service.interfaces.IOrderService;
 import com.uade.tpo.marketplace.service.interfaces.IUserService;
@@ -65,23 +62,15 @@ public class OrderService implements IOrderService {
     @Autowired
     private IDigitalKeyRepository digitalKeyRepository;
     @Autowired
-    private IOrderItemRepository orderItemRepository;
-    @Autowired
-    private IDiscountRepository discountRepository;
-    @Autowired
     private IDiscountService discountService;
-    @Autowired
-    private IDigitalKeyService digitalKeyService;
     @Autowired
     private IUserService userService;
 
-    private final OrderItemMapper orderItemMapper;
-    private final OrderMapper orderMapper;
+    @Autowired
+    private OrderItemMapper orderItemMapper;
+    @Autowired
+    private OrderMapper orderMapper;
 
-    public OrderService() {
-        this.orderItemMapper = new OrderItemMapper();
-        this.orderMapper = new OrderMapper();
-    }
 
 
 @Override
@@ -91,6 +80,21 @@ public OrderResponseDto createOrder(OrderCreateDto dto, Long buyerId)
 
     if (dto == null || dto.items() == null || dto.items().isEmpty()) {
         throw new BadRequestException("El pedido debe contener al menos un ítem.");
+    }
+
+    Map<Long, Long> countsByProduct = dto.items().stream()
+        .filter(Objects::nonNull)
+        .map(item -> item.productId())
+        .filter(Objects::nonNull)
+        .collect(Collectors.groupingBy(pid -> pid, Collectors.counting()));
+
+    List<Long> duplicatedProductIds = countsByProduct.entrySet().stream()
+        .filter(e -> e.getValue() > 1)
+        .map(Map.Entry::getKey)
+        .collect(Collectors.toList());
+
+    if (!duplicatedProductIds.isEmpty()) {
+        throw new BadRequestException("No se permiten múltiples ítems del mismo producto en una única orden. Productos duplicados: " + duplicatedProductIds);
     }
 
     if (buyerId == null) {
@@ -314,6 +318,8 @@ public OrderResponseDto createOrder(OrderCreateDto dto, Long buyerId)
 
 
     BigDecimal buyerBalance = buyer.getBuyerBalance();
+    if (buyerBalance == null) buyerBalance = BigDecimal.ZERO;
+
     buyerBalance = buyerBalance.add(savedOrder.getTotalAmount());
 
     while (buyerBalance.compareTo(BigDecimal.valueOf(100)) >= 0) {
