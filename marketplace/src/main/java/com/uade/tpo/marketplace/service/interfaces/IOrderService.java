@@ -19,8 +19,9 @@ public interface IOrderService {
         OrderResponseDto createOrder(OrderCreateDto dto, Long buyerId)
                 throws ResourceNotFoundException, InsufficientStockException, BadRequestException;
 
-        Page<OrderItemResponseDto> getOrderItemsByOrderId(Long orderId, Long requestingUserId)
+        Page<OrderItemResponseDto> getOrderItemsByOrderId(Long orderId, Long requestingUserId, Pageable pageable)
                 throws ResourceNotFoundException, UnauthorizedException;
+
 
         Optional<OrderResponseDto> getOrderById(Long id, Long requestingUserId) throws ResourceNotFoundException, UnauthorizedException;
 
