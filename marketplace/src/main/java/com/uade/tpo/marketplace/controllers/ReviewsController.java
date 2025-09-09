@@ -23,7 +23,6 @@ import com.uade.tpo.marketplace.entity.dto.create.ReviewCreateDto;
 import com.uade.tpo.marketplace.entity.dto.response.ReviewResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.ReviewUpdateDto;
 import com.uade.tpo.marketplace.exceptions.ProductNotFoundException;
-import com.uade.tpo.marketplace.exceptions.ReviewNotFoundException;
 import com.uade.tpo.marketplace.exceptions.UserNotFoundException;
 import com.uade.tpo.marketplace.service.interfaces.IReviewService;
 
@@ -97,4 +96,4 @@ public class ReviewsController {
         reviewService.deleteReview(reviewId, requestingUserId);
         return ResponseEntity.noContent().build();
     }
-}//Enrique Busso
+}

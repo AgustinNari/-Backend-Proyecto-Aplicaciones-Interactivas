@@ -48,8 +48,8 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.GET, "/discounts/buyer/active-coupons").hasRole("BUYER")
 
                                                 //ORDERS
-                                                .requestMatchers(HttpMethod.POST, "/orders").hasRole("BUYER")
-                                                .requestMatchers(HttpMethod.GET, "/orders/my").hasRole("BUYER")
+                                                .requestMatchers(HttpMethod.POST, "/orders").hasAnyRole("BUYER", "SELLER")
+                                                .requestMatchers(HttpMethod.GET, "/orders/my").hasAnyRole("BUYER", "SELLER")
                                                 .requestMatchers(HttpMethod.GET, "/orders/seller/**").hasAnyRole("SELLER", "ADMIN")
 
                                                 //PRODUCT IMAGES
@@ -66,14 +66,14 @@ public class SecurityConfig {
 
                                                 //REVIEWS
                                                 .requestMatchers(HttpMethod.GET, "/reviews/**").permitAll()
-                                                .requestMatchers(HttpMethod.POST, "/reviews").hasRole("SELLER")
-                                                .requestMatchers(HttpMethod.PUT, "/reviews/**").hasRole("SELLER")
-                                                .requestMatchers(HttpMethod.DELETE, "/reviews/**").hasRole("SELLER")
+                                                .requestMatchers(HttpMethod.POST, "/reviews").hasAnyRole("SELLER","BUYER")
+                                                .requestMatchers(HttpMethod.PUT, "/reviews/**").hasAnyRole("SELLER","BUYER")
+                                                .requestMatchers(HttpMethod.DELETE, "/reviews/**").hasAnyRole("SELLER","BUYER")
 
                                                 //USERS
                                                 .requestMatchers(HttpMethod.GET, "/users/**").hasRole("ADMIN")
                                                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/register").permitAll() 
-                                                .requestMatchers(HttpMethod.PUT, "/users/**").hasAnyRole("ADMIN")
+                                                .requestMatchers(HttpMethod.PUT, "/users/**").hasAnyRole("ADMIN", "SELLER", "BUYER")
                                                 .requestMatchers(HttpMethod.DELETE, "/users/**").hasRole("ADMIN")
 
 
