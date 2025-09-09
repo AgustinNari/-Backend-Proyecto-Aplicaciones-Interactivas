@@ -1,5 +1,6 @@
 package com.uade.tpo.marketplace.service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -11,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
+import com.uade.tpo.marketplace.entity.basic.Order;
 import com.uade.tpo.marketplace.entity.basic.OrderItem;
 import com.uade.tpo.marketplace.entity.basic.Product;
 import com.uade.tpo.marketplace.entity.basic.Review;
@@ -18,7 +20,9 @@ import com.uade.tpo.marketplace.entity.basic.User;
 import com.uade.tpo.marketplace.entity.dto.create.ReviewCreateDto;
 import com.uade.tpo.marketplace.entity.dto.response.ReviewResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.ReviewUpdateDto;
+import com.uade.tpo.marketplace.entity.enums.OrderStatus;
 import com.uade.tpo.marketplace.exceptions.BadRequestException;
+import com.uade.tpo.marketplace.exceptions.ProductNotFoundException;
 import com.uade.tpo.marketplace.exceptions.ResourceNotFoundException;
 import com.uade.tpo.marketplace.exceptions.UnauthorizedException;
 import com.uade.tpo.marketplace.extra.mappers.ReviewMapper;
@@ -29,6 +33,8 @@ import com.uade.tpo.marketplace.repository.interfaces.IUserRepository;
 import com.uade.tpo.marketplace.service.interfaces.IReviewService;
 
 import org.springframework.transaction.annotation.Transactional;
+
+import com.uade.tpo.marketplace.repository.interfaces.IOrderRepository;
 
 @Service
 public class ReviewService implements IReviewService {
@@ -41,12 +47,11 @@ public class ReviewService implements IReviewService {
     private IUserRepository userRepository;
     @Autowired
     private IOrderItemRepository orderItemRepository;
+    @Autowired
+    private IOrderRepository orderRepository;
 
-    private final ReviewMapper reviewMapper;
-
-    public ReviewService() {
-        this.reviewMapper = new ReviewMapper();
-    }
+    @Autowired
+    private ReviewMapper reviewMapper;
 
 
 
@@ -56,57 +61,59 @@ public class ReviewService implements IReviewService {
     @Override
     @Transactional(rollbackFor = Throwable.class)
     public ReviewResponseDto createReview(ReviewCreateDto dto, Long buyerId) throws ResourceNotFoundException, BadRequestException {
-        if (dto == null) throw new BadRequestException("Datos de la reseña no proporcionados.");
-        if (dto.productId() == null) throw new BadRequestException("Debe indicarse el productId para la reseña.");
-        if (dto.rating() == null || dto.rating() < 1 || dto.rating() > 10) {
-            throw new BadRequestException("La calificación (rating) debe estar entre 1 y 10.");
-        }
+            if (dto == null) throw new BadRequestException("Datos de la reseña no proporcionados.");
+            if (dto.productId() == null) throw new BadRequestException("Debe indicarse el productId para la reseña.");
+            if (dto.rating() == null || dto.rating() < 1 || dto.rating() > 10) {
+                throw new BadRequestException("La calificación (rating) debe estar entre 1 y 10.");
+            }
 
-        Product product = productRepository.findById(dto.productId())
-                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado (id=" + dto.productId() + ")."));
+            Product product = productRepository.findById(dto.productId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado (id=" + dto.productId() + ")."));
 
-        User buyer = userRepository.findById(buyerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario comprador no encontrado (id=" + buyerId + ")."));
-
-
+            User buyer = userRepository.findById(buyerId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Usuario comprador no encontrado (id=" + buyerId + ")."));
 
 
-        if (dto.orderItemId() != null) {
+            if (dto.orderItemId() == null) {
+                throw new BadRequestException("Debe indicarse el orderItemId para la reseña.");
+            }
+
             OrderItem oi = orderItemRepository.findById(dto.orderItemId())
-                    .orElseThrow(() -> new ResourceNotFoundException("OrderItem no encontrado (id=" + dto.orderItemId() + ")."));
+                    .orElseThrow(() -> new ResourceNotFoundException("Item de la orden no encontrado (id=" + dto.orderItemId() + ")."));
 
-            if (oi.getOrder() == null || oi.getOrder().getBuyer() == null || !Objects.equals(oi.getOrder().getBuyer().getId(), buyerId)) {
-                throw new BadRequestException("El OrderItem no pertenece al comprador indicado.");
-            }
             if (oi.getProduct() == null || !Objects.equals(oi.getProduct().getId(), dto.productId())) {
-                throw new BadRequestException("El OrderItem no corresponde al producto indicado.");
+                throw new BadRequestException("El item de la orden no corresponde al producto indicado.");
             }
+
+            Order order = orderRepository.findById(oi.getOrder().getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Order no encontrado (id=" + oi.getOrder().getId() + ")."));
+
+            if (order.getBuyer() == null || !Objects.equals(order.getBuyer().getId(), buyerId)) {
+                throw new BadRequestException("La orden no pertenece al comprador indicado.");
+            }
+
+            if (order.getStatus() != OrderStatus.COMPLETED) {
+                throw new BadRequestException("La orden no se encuentra completado.");
+            }
+
             if (oi.getReview() != null) {
-                throw new BadRequestException("Ya existe una reseña asociada a ese OrderItem.");
+                throw new BadRequestException("Ya existe una reseña asociada a ese item.");
             }
-        } else {
 
-        }
+            Review review = reviewMapper.toEntity(dto);
+            review.setBuyer(buyer);
+            review.setProduct(product);
+            review.setSeller(product.getSeller()); 
+            review.setVisible(true);
+            review.setOrderItem(oi);
 
-
-        Review review = reviewMapper.toEntity(dto);
-        review.setBuyer(buyer);
-        review.setProduct(product);
-        review.setSeller(product.getSeller()); 
-        review.setVisible(true);
-
-
-        Review saved = reviewRepository.save(review);
-
-
-        if (dto.orderItemId() != null) {
-            OrderItem oi = orderItemRepository.findById(dto.orderItemId()).get();
-            oi.setReview(saved);
+            oi.setReview(review);
 
             orderItemRepository.save(oi);
-        }
 
-        return reviewMapper.toResponse(saved);
+            Review saved = reviewRepository.save(review);
+
+            return reviewMapper.toResponse(saved);
     }
 
 
@@ -198,21 +205,17 @@ public class ReviewService implements IReviewService {
     public Pair<Double, Long> getAverageRatingAndCountByProduct(Long productId) throws ResourceNotFoundException {
         if (productId == null) throw new ResourceNotFoundException("productId no proporcionado.");
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado (id=" + productId + ")."));
+                .orElseThrow(() -> new ProductNotFoundException("Producto no encontrado (id=" + productId + ")."));
 
-        Pageable p = Pageable.ofSize(1000);
-        Page<Review> page = reviewRepository.findByProductId(productId, p);
-        List<Review> visible = page.getContent().stream().filter(Review::isVisible).collect(Collectors.toList());
+        BigDecimal avgBd = reviewRepository.getAverageRatingByProductId(productId);
+        Long count = reviewRepository.getCountByProductId(productId);
 
-        long count = visible.size();
         double avg = 0.0;
-        if (count > 0) {
-            double sum = visible.stream()
-                    .filter(r -> r.getRating() != null)
-                    .mapToDouble(Review::getRating)
-                    .sum();
-            avg = sum / count;
+        if (avgBd != null) {
+            avg = avgBd.doubleValue();
         }
+
+        if (count == null) count = 0L;
 
         return Pair.of(avg, count);
     }

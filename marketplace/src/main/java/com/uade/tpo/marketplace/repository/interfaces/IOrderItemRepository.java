@@ -17,7 +17,7 @@ public interface IOrderItemRepository extends JpaRepository<OrderItem, Long> {
 
     List<OrderItem> findByOrderId(Long orderId, Pageable pageable);
     Page<OrderItem> findByProductId(Long productId, Pageable pageable);
-    
+
     @Query("SELECT oi FROM OrderItem oi JOIN FETCH oi.product WHERE oi.order.id = :orderId")
     List<OrderItem> findByOrderIdWithProduct(@Param("orderId") Long orderId);
     

@@ -36,7 +36,6 @@ import com.uade.tpo.marketplace.exceptions.UnauthorizedException;
 import com.uade.tpo.marketplace.extra.mappers.DiscountMapper;
 import com.uade.tpo.marketplace.repository.interfaces.ICategoryRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IDiscountRepository;
-import com.uade.tpo.marketplace.repository.interfaces.IOrderRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IProductRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IUserRepository;
 import com.uade.tpo.marketplace.service.interfaces.IDiscountService;
@@ -54,15 +53,10 @@ public class DiscountService implements IDiscountService {
     private ICategoryRepository categoryRepository;
     @Autowired
     private IUserRepository userRepository;
+
     @Autowired
-    private IOrderRepository orderRepository;
+    private DiscountMapper discountMapper;
 
-    
-    private final DiscountMapper discountMapper;
-
-    public DiscountService() {
-        this.discountMapper = new DiscountMapper();
-    }
 
 
 
@@ -150,17 +144,14 @@ public class DiscountService implements IDiscountService {
 
         if (requestingUserId == null) throw new ResourceNotFoundException("Id de usuario no proporcionado.");
 
-     
-        if (existing.getTargetSeller() != null && existing.getTargetSeller().getId() != null) {
-            Long targetSellerId = existing.getTargetSeller().getId();
-            if (!Objects.equals(targetSellerId, requestingUserId)) {
-                throw new UnauthorizedException("No tienes permiso para realizar esta cción.");
-              
-            }
-        } else {
-            User reqUser = userRepository.findById(requestingUserId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Usuario solicitante no encontrado (id=" + requestingUserId + ")."));
+        if (existing.getTargetSeller() == null || existing.getTargetSeller().getId() == null || !existing.getTargetSeller().getId().equals(requestingUserId) ) {
+                throw new UnauthorizedException("No tienes permiso para realizar esta acción.");
         }
+
+        if (userRepository.findById(requestingUserId).isEmpty()) {
+            throw new ResourceNotFoundException("Usuario solicitante no encontrado (id=" + requestingUserId + ").");
+        }
+        
 
         if (dto.code() != null && !dto.code().equalsIgnoreCase(existing.getCode())) {
             if (discountRepository.existsByCode(dto.code())) {
@@ -480,8 +471,18 @@ public class DiscountService implements IDiscountService {
     public void markCouponAsUsed(Long discountId, Long targetBuyerId) throws ResourceNotFoundException {
         if (discountId == null) throw new ResourceNotFoundException("Id de cupón no proporcionado.");
         if (targetBuyerId == null) throw new ResourceNotFoundException("Id de comprador no proporcionado.");
-        if (!discountRepository.findById(discountId).get().getTargetBuyer().getId().equals(targetBuyerId)) 
-            throw new ResourceNotFoundException("El cupón no es dirigido a este comprador, por lo tanto no se puede marcar como utilizado.");
+
+        Discount discount = discountRepository.findById(discountId)
+            .orElseThrow(() -> new ResourceNotFoundException("Cupón no encontrado (id=" + discountId + ")."));
+
+        if (!discount.isActive()) {
+            throw new BadRequestException("El cupón no está activo, por lo tanto no se puede marcar como utilizado.");
+        }
+
+
+        if (discount.getTargetBuyer() == null || !Objects.equals(discount.getTargetBuyer().getId(), targetBuyerId)) {
+            throw new BadRequestException("El cupón no es dirigido a este comprador, por lo tanto no se puede marcar como utilizado.");
+        }
 
         int updated = discountRepository.markCouponAsUsed(discountId, targetBuyerId);
         if (updated == 0) {
@@ -490,7 +491,6 @@ public class DiscountService implements IDiscountService {
             if (d == null) throw new ResourceNotFoundException("Cupón no encontrado (id=" + discountId + ").");
      
             d.setActive(false);
-            d.setExpiresAt(Instant.now());
             discountRepository.save(d);
         }
     }
@@ -597,7 +597,7 @@ public class DiscountService implements IDiscountService {
         List<User> users = userRepository.findAll();
         if (!users.isEmpty()) {
             List<User> sellers = users.stream()
-                    .filter(user -> user.getRole().equals("SELLER"))
+                    .filter(user -> user.getRole().equals(Role.SELLER))
                     .collect(Collectors.toList());
             
             if (!sellers.isEmpty()) {

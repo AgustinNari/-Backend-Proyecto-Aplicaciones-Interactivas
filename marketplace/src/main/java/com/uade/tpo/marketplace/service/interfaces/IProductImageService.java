@@ -16,7 +16,7 @@ public interface IProductImageService {
         ProductImageResponseDto addImage(ProductImageCreateDto dto, Long requestingUserId)
                 throws ResourceNotFoundException, BadRequestException, UnauthorizedException;
 
-        ProductImageResponseDto updateImage(ProductImageUpdateDto dto, Long requestingUserId)
+        ProductImageResponseDto updateImage(Long productImageId, ProductImageUpdateDto dto, Long requestingUserId)
                 throws ResourceNotFoundException, UnauthorizedException;
 
         void deleteImage(Long imageId, Long requestingUserId) throws ResourceNotFoundException, UnauthorizedException;

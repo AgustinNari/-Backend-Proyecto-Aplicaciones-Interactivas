@@ -53,11 +53,9 @@ public class ProductService implements IProductService {
     @Autowired
     private IDigitalKeyRepository digitalKeyRepository;
 
-    private final ProductMapper productMapper;
+    @Autowired
+    private ProductMapper productMapper;
 
-    public ProductService() {
-        this.productMapper = new ProductMapper();
-    }
     
 
     
@@ -150,9 +148,6 @@ public class ProductService implements IProductService {
         User seller = userRepository.findById(sellerId).orElseThrow(() -> new ResourceNotFoundException("Vendedor no encontrado (id=" + sellerId + ")."));
 
 
-        if (dto == null) throw new BadRequestException("Datos inválidos.");
-
-
 
         if (dto.sku() != null && !dto.sku().isBlank()) {
             Optional<Product> bySku = productRepository.findBySku(dto.sku());
@@ -172,7 +167,7 @@ public class ProductService implements IProductService {
 
         Product entity = productMapper.toEntity(dto, null);
 
-        entity.setSeller(userRepository.findById(sellerId).orElse(null));
+        entity.setSeller(seller);
 
     
         if (dto.categoryIds() != null && !dto.categoryIds().isEmpty()) {

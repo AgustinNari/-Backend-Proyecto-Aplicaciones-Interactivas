@@ -44,13 +44,14 @@ import lombok.NoArgsConstructor;
         })
 public class User implements UserDetails {
 
-    public User(String displayName, String firstName, String lastName, String email, String password, Role role, String country) {
+    public User(String displayName, String firstName, String lastName, String email, String password, Role role, String phone, String country) {
         this.displayName = displayName;
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.password = password;
         this.role = role;
+        this.phone = phone;
         this.country = country;
     }
 
@@ -77,6 +78,7 @@ public class User implements UserDetails {
     @Column(nullable = false, length = 20)
     private Role role;
     
+    @Column(nullable=false)
     private String phone;
     
 

@@ -1,6 +1,8 @@
 
 package com.uade.tpo.marketplace.service;
 
+import java.math.BigDecimal;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -12,6 +14,7 @@ import com.uade.tpo.marketplace.controllers.auth.AuthenticationResponse;
 import com.uade.tpo.marketplace.controllers.auth.RegisterRequest;
 import com.uade.tpo.marketplace.controllers.config.JwtService;
 import com.uade.tpo.marketplace.entity.basic.User;
+import com.uade.tpo.marketplace.exceptions.ConflictException;
 import com.uade.tpo.marketplace.exceptions.ResourceNotFoundException;
 import com.uade.tpo.marketplace.repository.interfaces.IUserRepository;
 import com.uade.tpo.marketplace.service.interfaces.IAuthenticationService;
@@ -28,7 +31,17 @@ public class AuthenticationService implements IAuthenticationService{
         private final AuthenticationManager authenticationManager;
 
         @Transactional (rollbackFor = Throwable.class)
+        @Override
         public AuthenticationResponse register(RegisterRequest request) {
+
+                if (request == null) throw new IllegalArgumentException("Solicitud nula");
+
+                if (repository.existsByEmailIgnoreCase(request.getEmail())) {
+                        throw new ConflictException("Ya existe un usuario con ese email");
+                }
+                if (repository.existsByDisplayNameIgnoreCase(request.getDisplayName())) {
+                        throw new ConflictException("DisplayName en uso");
+                }
                 var user = new User(
                                 request.getDisplayName(),
                                 request.getFirstName(),
@@ -36,8 +49,11 @@ public class AuthenticationService implements IAuthenticationService{
                                 request.getEmail(),
                                 passwordEncoder.encode(request.getPassword()),
                                 request.getRole(),
+                                request.getPhone(),
                                 request.getCountry()
                         );
+                user.setActive(true);
+                user.setBuyerBalance(BigDecimal.ZERO);
 
                 repository.save(user);
                 var jwtToken = jwtService.generateToken( user);
@@ -46,6 +62,7 @@ public class AuthenticationService implements IAuthenticationService{
                                 .build();
         }
 
+        @Override
         public AuthenticationResponse authenticate(AuthenticationRequest request) {
                 authenticationManager.authenticate(
                                 new UsernamePasswordAuthenticationToken(

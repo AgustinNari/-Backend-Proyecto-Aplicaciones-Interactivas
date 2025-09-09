@@ -5,6 +5,7 @@ import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -20,6 +21,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.uade.tpo.marketplace.entity.basic.DigitalKey;
@@ -38,15 +40,13 @@ import com.uade.tpo.marketplace.exceptions.BadRequestException;
 import com.uade.tpo.marketplace.exceptions.InsufficientStockException;
 import com.uade.tpo.marketplace.exceptions.ResourceNotFoundException;
 import com.uade.tpo.marketplace.exceptions.UnauthorizedException;
+import com.uade.tpo.marketplace.exceptions.UserNotFoundException;
 import com.uade.tpo.marketplace.extra.mappers.OrderItemMapper;
 import com.uade.tpo.marketplace.extra.mappers.OrderMapper;
 import com.uade.tpo.marketplace.repository.interfaces.IDigitalKeyRepository;
-import com.uade.tpo.marketplace.repository.interfaces.IDiscountRepository;
-import com.uade.tpo.marketplace.repository.interfaces.IOrderItemRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IOrderRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IProductRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IUserRepository;
-import com.uade.tpo.marketplace.service.interfaces.IDigitalKeyService;
 import com.uade.tpo.marketplace.service.interfaces.IDiscountService;
 import com.uade.tpo.marketplace.service.interfaces.IOrderService;
 import com.uade.tpo.marketplace.service.interfaces.IUserService;
@@ -65,23 +65,15 @@ public class OrderService implements IOrderService {
     @Autowired
     private IDigitalKeyRepository digitalKeyRepository;
     @Autowired
-    private IOrderItemRepository orderItemRepository;
-    @Autowired
-    private IDiscountRepository discountRepository;
-    @Autowired
     private IDiscountService discountService;
-    @Autowired
-    private IDigitalKeyService digitalKeyService;
     @Autowired
     private IUserService userService;
 
-    private final OrderItemMapper orderItemMapper;
-    private final OrderMapper orderMapper;
+    @Autowired
+    private OrderItemMapper orderItemMapper;
+    @Autowired
+    private OrderMapper orderMapper;
 
-    public OrderService() {
-        this.orderItemMapper = new OrderItemMapper();
-        this.orderMapper = new OrderMapper();
-    }
 
 
 @Override
@@ -91,6 +83,21 @@ public OrderResponseDto createOrder(OrderCreateDto dto, Long buyerId)
 
     if (dto == null || dto.items() == null || dto.items().isEmpty()) {
         throw new BadRequestException("El pedido debe contener al menos un ítem.");
+    }
+
+    Map<Long, Long> countsByProduct = dto.items().stream()
+        .filter(Objects::nonNull)
+        .map(item -> item.productId())
+        .filter(Objects::nonNull)
+        .collect(Collectors.groupingBy(pid -> pid, Collectors.counting()));
+
+    List<Long> duplicatedProductIds = countsByProduct.entrySet().stream()
+        .filter(e -> e.getValue() > 1)
+        .map(Map.Entry::getKey)
+        .collect(Collectors.toList());
+
+    if (!duplicatedProductIds.isEmpty()) {
+        throw new BadRequestException("No se permiten múltiples ítems del mismo producto en una única orden. Productos duplicados: " + duplicatedProductIds);
     }
 
     if (buyerId == null) {
@@ -314,6 +321,8 @@ public OrderResponseDto createOrder(OrderCreateDto dto, Long buyerId)
 
 
     BigDecimal buyerBalance = buyer.getBuyerBalance();
+    if (buyerBalance == null) buyerBalance = BigDecimal.ZERO;
+
     buyerBalance = buyerBalance.add(savedOrder.getTotalAmount());
 
     while (buyerBalance.compareTo(BigDecimal.valueOf(100)) >= 0) {
@@ -342,22 +351,50 @@ public OrderResponseDto createOrder(OrderCreateDto dto, Long buyerId)
 
 
 
-
-
     @Override
-    public Page<OrderItemResponseDto> getOrderItemsByOrderId(Long orderId, Long requestingUserId)
+    public Page<OrderItemResponseDto> getOrderItemsByOrderId(Long orderId, Long requestingUserId, Pageable pageable)
             throws ResourceNotFoundException, UnauthorizedException {
 
         Order order = orderRepository.findOrderWithItemsAndProducts(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Orden no encontrada (id=" + orderId + ")."));
 
+        Long buyerId = order.getBuyer() != null ? order.getBuyer().getId() : null;
+        boolean isBuyer = Objects.equals(requestingUserId, buyerId);
+        boolean isSellerOfAnyItem = order.getItems() != null &&
+            order.getItems().stream().anyMatch(oi ->
+                oi.getProduct() != null && oi.getProduct().getSeller() != null &&
+                Objects.equals(oi.getProduct().getSeller().getId(), requestingUserId)
+            );
 
-        boolean includeKeyCodes = false;
-        List<OrderItemResponseDto> dtos = order.getItems().stream()
-                .map(oi -> orderItemMapper.toResponse(oi, includeKeyCodes))
+        if (!isBuyer && !isSellerOfAnyItem) {
+            throw new UnauthorizedException("No autorizado para ver los ítems de esta orden.");
+        }
+        List<OrderItem> items = Optional.ofNullable(order.getItems()).orElse(Collections.emptyList());
+
+        if (pageable == null || pageable.isUnpaged()) {
+            List<OrderItemResponseDto> dtos = items.stream()
+                .map(oi -> orderItemMapper.toResponse(oi, true))
                 .collect(Collectors.toList());
-        return new PageImpl<>(dtos, Pageable.unpaged(), dtos.size());
+            return new PageImpl<>(dtos, Pageable.unpaged(), dtos.size());
+        }
+
+        int pageSize = pageable.getPageSize();
+        int pageNumber = pageable.getPageNumber();
+        int start = pageNumber * pageSize;
+        if (start >= items.size()) {
+            return new PageImpl<>(Collections.emptyList(), pageable, items.size());
+        }
+        int end = Math.min(start + pageSize, items.size());
+
+        List<OrderItem> pageItems = items.subList(start, end);
+        List<OrderItemResponseDto> pageDtos = pageItems.stream()
+                .map(oi -> orderItemMapper.toResponse(oi, true))
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(pageDtos, pageable, items.size());
     }
+
+
 
     @Override
     public Optional<OrderResponseDto> getOrderById(Long id, Long requestingUserId) throws ResourceNotFoundException, UnauthorizedException {
@@ -365,33 +402,94 @@ public OrderResponseDto createOrder(OrderCreateDto dto, Long buyerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Orden no encontrada (id=" + id + ")."));
 
 
-        boolean includeKeyCodes = false; 
+        boolean includeKeyCodes = true; 
         return Optional.of(orderMapper.toResponse(order, includeKeyCodes));
     }
 
     @Override
     public Page<OrderResponseDto> getOrdersByBuyer(Long buyerId, Pageable pageable) {
-        Page<Order> page = orderRepository.findByBuyerId(buyerId, pageable);
-        List<OrderResponseDto> dtos = page.getContent().stream()
-                .map(o -> orderMapper.toResponse(o, false))
-                .collect(Collectors.toList());
-        return new PageImpl<>(dtos, pageable, page.getTotalElements());
+        if (buyerId == null) {
+            throw new BadRequestException("buyerId no puede ser null");
+        }
+
+        if (!userRepository.existsById(buyerId)) {
+            throw new UserNotFoundException("Comprador no encontrado (id=" + buyerId + ").");
+        }
+
+        Pageable effectivePageable = pageable;
+        final int DEFAULT_PAGE = 0;
+        final int DEFAULT_PAGE_SIZE = 20;
+
+        if (effectivePageable == null) {
+            effectivePageable = PageRequest.of(DEFAULT_PAGE, DEFAULT_PAGE_SIZE);
+        } else {
+            int pageNumber = effectivePageable.getPageNumber();
+            int pageSize = effectivePageable.getPageSize();
+
+            if (pageNumber < 0 || pageSize <= 0) {
+                Sort sort = effectivePageable.getSort();
+                if (pageNumber < 0) pageNumber = DEFAULT_PAGE;
+                if (pageSize <= 0) pageSize = DEFAULT_PAGE_SIZE;
+                effectivePageable = PageRequest.of(pageNumber, pageSize, sort);
+            }
+        }
+
+        Page<Order> page = orderRepository.findByBuyerId(buyerId, effectivePageable);
+
+        List<OrderResponseDto> dtos = Optional.ofNullable(page.getContent())
+            .orElseGet(Collections::emptyList)
+            .stream()
+            .map(o -> orderMapper.toResponse(o, true))
+            .collect(Collectors.toList());
+
+        return new PageImpl<>(dtos, effectivePageable, page.getTotalElements());
     }
+
 
     @Override
     public Page<OrderResponseDto> getOrdersBySeller(Long sellerId, Pageable pageable) {
-        Page<Order> page = orderRepository.findBySellerId(sellerId, pageable);
-        List<OrderResponseDto> dtos = page.getContent().stream()
-                .map(o -> orderMapper.toResponse(o, false))
-                .collect(Collectors.toList());
-        return new PageImpl<>(dtos, pageable, page.getTotalElements());
+        if (sellerId == null) {
+            throw new BadRequestException("sellerId no puede ser null");
+        }
+
+        if (!userRepository.existsById(sellerId)) {
+            throw new ResourceNotFoundException("Vendedor no encontrado (id=" + sellerId + ").");
+        }
+
+        Pageable effectivePageable = pageable;
+        final int DEFAULT_PAGE = 0;
+        final int DEFAULT_PAGE_SIZE = 20;
+
+        if (effectivePageable == null) {
+            effectivePageable = PageRequest.of(DEFAULT_PAGE, DEFAULT_PAGE_SIZE);
+        } else {
+            int pageNumber = effectivePageable.getPageNumber();
+            int pageSize = effectivePageable.getPageSize();
+
+            if (pageNumber < 0 || pageSize <= 0) {
+                Sort sort = effectivePageable.getSort();
+                if (pageNumber < 0) pageNumber = DEFAULT_PAGE;
+                if (pageSize <= 0) pageSize = DEFAULT_PAGE_SIZE;
+                effectivePageable = PageRequest.of(pageNumber, pageSize, sort);
+            }
+        }
+
+        Page<Order> page = orderRepository.findBySellerId(sellerId, effectivePageable);
+
+        List<OrderResponseDto> dtos = Optional.ofNullable(page.getContent())
+            .orElseGet(Collections::emptyList)
+            .stream()
+            .map(o -> orderMapper.toResponse(o, true))
+            .collect(Collectors.toList());
+
+        return new PageImpl<>(dtos, effectivePageable, page.getTotalElements());
     }
 
     @Override
     public Page<OrderResponseDto> getAllOrders(Pageable pageable) {
         Page<Order> page = orderRepository.findAll(pageable);
         List<OrderResponseDto> dtos = page.getContent().stream()
-                .map(o -> orderMapper.toResponse(o, false))
+                .map(o -> orderMapper.toResponse(o, true))
                 .collect(Collectors.toList());
         return new PageImpl<>(dtos, pageable, page.getTotalElements());
     }
@@ -417,7 +515,7 @@ public OrderResponseDto createOrder(OrderCreateDto dto, Long buyerId)
         Order completed = orderRepository.findOrderWithItemsAndKeys(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Orden no encontrada luego de actualizar (id=" + orderId + ")."));
 
-        boolean includeKeyCodes = false;
+        boolean includeKeyCodes = true;
         return orderMapper.toResponse(completed, includeKeyCodes);
     }
 
@@ -445,7 +543,7 @@ public OrderResponseDto createOrder(OrderCreateDto dto, Long buyerId)
         Order updatedOrder = orderRepository.findOrderWithItemsAndKeys(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Orden no encontrada luego de actualizar (id=" + orderId + ")."));
 
-        boolean includeKeyCodes = false;
+        boolean includeKeyCodes = true;
         return orderMapper.toResponse(updatedOrder, includeKeyCodes);
     }
 }
