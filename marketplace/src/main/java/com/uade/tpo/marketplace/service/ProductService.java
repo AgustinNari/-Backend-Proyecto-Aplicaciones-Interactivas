@@ -16,6 +16,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.uade.tpo.marketplace.entity.basic.Category; 
 import com.uade.tpo.marketplace.entity.basic.Product;
@@ -25,8 +27,12 @@ import com.uade.tpo.marketplace.entity.dto.create.ProductImageCreateDto;
 import com.uade.tpo.marketplace.entity.dto.response.ProductResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.ProductUpdateDto;
 import com.uade.tpo.marketplace.exceptions.BadRequestException;
+import com.uade.tpo.marketplace.exceptions.CategoryNotFoundException;
 import com.uade.tpo.marketplace.exceptions.DuplicateResourceException;
+import com.uade.tpo.marketplace.exceptions.FileStorageException;
+import com.uade.tpo.marketplace.exceptions.InvalidFileException;
 import com.uade.tpo.marketplace.exceptions.ProductNotFoundException;
+import com.uade.tpo.marketplace.exceptions.ProductOwnershipException;
 import com.uade.tpo.marketplace.exceptions.ResourceNotFoundException;
 import com.uade.tpo.marketplace.exceptions.UnauthorizedException;
 import com.uade.tpo.marketplace.extra.mappers.ProductMapper;
@@ -43,8 +49,6 @@ import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 @Service
 public class ProductService implements IProductService {
 
@@ -169,7 +173,7 @@ public class ProductService implements IProductService {
         if (!categoryIds.isEmpty()) {
             List<Category> found = categoryRepository.findAllById(categoryIds).stream().toList();
             if (found.size() != categoryIds.size()) {
-                throw new ResourceNotFoundException("Una o más categorías no existen.");
+                throw new CategoryNotFoundException("Una o más categorías no existen.");
             }
         }
 
@@ -206,13 +210,13 @@ public class ProductService implements IProductService {
                 .orElseThrow(() -> new ProductNotFoundException("Producto no encontrado (id=" + id + ")."));
 
         if (requestingUserId == null) {
-            throw new UnauthorizedException(" No se pudo identificar el usuario solicitante.");
+            throw new BadRequestException(" No se pudo identificar el usuario solicitante.");
         }
 
         if (existing.getSeller() != null) {
             Long sellerId = existing.getSeller().getId();
             if (requestingUserId != null && !requestingUserId.equals(sellerId)) {
-                throw new UnauthorizedException("No tienes permiso para realizar esta acción.");
+                throw new ProductOwnershipException("No tienes permiso para realizar esta acción.");
             }
         }
 
@@ -230,7 +234,7 @@ public class ProductService implements IProductService {
         if (dto.categoryIds() != null) {
             List<Category> catsFound = categoryRepository.findAllById(dto.categoryIds()).stream().toList();
             if (catsFound.size() != dto.categoryIds().size()) {
-                throw new ResourceNotFoundException("Una o más categorías indicadas no existen.");
+                throw new CategoryNotFoundException("Una o más categorías indicadas no existen.");
             }
         }
 
@@ -259,12 +263,12 @@ public class ProductService implements IProductService {
                     .orElseThrow(() -> new ProductNotFoundException("Producto no encontrado (id=" + id + ")."));
 
             if (requestingUserId == null) {
-                throw new UnauthorizedException(" No se pudo identificar el usuario solicitante.");
+                throw new BadRequestException(" No se pudo identificar el usuario solicitante.");
             }
             if (existing.getSeller() != null) {
                 Long sellerId = existing.getSeller().getId();
                 if (requestingUserId != null && !requestingUserId.equals(sellerId)) {
-                    throw new UnauthorizedException("No tienes permiso para realizar esta acción.");
+                    throw new ProductOwnershipException("No tienes permiso para realizar esta acción.");
                 }
             }
 
@@ -288,13 +292,13 @@ public class ProductService implements IProductService {
             throw new BadRequestException("El nuevo precio debe ser un valor positivo.");
         }
         if (requestingUserId == null) {
-            throw new UnauthorizedException(" No se pudo identificar el usuario solicitante.");
+            throw new BadRequestException(" No se pudo identificar el usuario solicitante.");
         }
 
         if (existing.getSeller() != null) {
             Long sellerId = existing.getSeller().getId();
             if (requestingUserId != null && !requestingUserId.equals(sellerId)) {
-                throw new UnauthorizedException("No tienes permiso para realizar esta acción.");
+                throw new ProductOwnershipException("No tienes permiso para realizar esta acción.");
             }
         }
 
@@ -376,7 +380,7 @@ public class ProductService implements IProductService {
             throw new BadRequestException("Datos de producto no proporcionados.");
         }
         if (sellerId == null) {
-            throw new UnauthorizedException("Id de vendedor no proporcionado.");
+            throw new BadRequestException("Id de vendedor no proporcionado.");
         }
 
         ProductResponseDto created = this.createProduct(dto, sellerId);
@@ -386,7 +390,7 @@ public class ProductService implements IProductService {
         }
 
         if (!Objects.equals(created.sellerId(), sellerId)) {
-            throw new UnauthorizedException("El vendedor autenticado no coincide con el creador del producto.");
+            throw new ProductOwnershipException("El vendedor autenticado no coincide con el vendedor del producto.");
         }
 
         final int MAX_IMAGES = 10;
@@ -404,12 +408,12 @@ public class ProductService implements IProductService {
                 }
 
                 if (file.getSize() > MAX_FILE_SIZE) {
-                    throw new BadRequestException("La imagen '" + file.getOriginalFilename() + "' excede el tamaño máximo permitido de " + (MAX_FILE_SIZE / (1024*1024)) + " MB.");
+                    throw new InvalidFileException("La imagen '" + file.getOriginalFilename() + "' excede el tamaño máximo permitido de " + (MAX_FILE_SIZE / (1024*1024)) + " MB.");
                 }
 
                 String contentType = file.getContentType();
                 if (contentType != null && !ALLOWED_CONTENT_TYPES.contains(contentType)) {
-                    throw new BadRequestException("Tipo de archivo no permitido para '" + file.getOriginalFilename() + "': " + contentType);
+                    throw new InvalidFileException("Tipo de archivo no permitido para '" + file.getOriginalFilename() + "': " + contentType);
                 }
 
 
@@ -420,9 +424,9 @@ public class ProductService implements IProductService {
                 try {
                     productImageService.addImage(imgDto, sellerId);
                 } catch (ResourceNotFoundException | BadRequestException | UnauthorizedException ex) {
-                    throw new BadRequestException("Error al subir la imagen '" + filename + "': " + ex.getMessage());
+                    throw new FileStorageException("Error al subir la imagen '" + filename + "': " + ex.getMessage(), ex);
                 } catch (Exception ex) {
-                    throw new BadRequestException("Error inesperado al subir la imagen '" + filename + "': " + ex.getMessage());
+                    throw new FileStorageException("Error inesperado al subir la imagen '" + filename + "': " + ex.getMessage(), ex);
                 }
             }
         }

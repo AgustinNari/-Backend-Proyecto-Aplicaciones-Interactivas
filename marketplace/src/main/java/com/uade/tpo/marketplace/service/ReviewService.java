@@ -22,9 +22,13 @@ import com.uade.tpo.marketplace.entity.dto.response.ReviewResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.ReviewUpdateDto;
 import com.uade.tpo.marketplace.entity.enums.OrderStatus;
 import com.uade.tpo.marketplace.exceptions.BadRequestException;
+import com.uade.tpo.marketplace.exceptions.DuplicateReviewException;
+import com.uade.tpo.marketplace.exceptions.OrderNotFoundException;
 import com.uade.tpo.marketplace.exceptions.ProductNotFoundException;
 import com.uade.tpo.marketplace.exceptions.ResourceNotFoundException;
+import com.uade.tpo.marketplace.exceptions.ReviewNotFoundException;
 import com.uade.tpo.marketplace.exceptions.UnauthorizedException;
+import com.uade.tpo.marketplace.exceptions.UserNotFoundException;
 import com.uade.tpo.marketplace.extra.mappers.ReviewMapper;
 import com.uade.tpo.marketplace.repository.interfaces.IOrderItemRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IProductRepository;
@@ -68,10 +72,10 @@ public class ReviewService implements IReviewService {
             }
 
             Product product = productRepository.findById(dto.productId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado (id=" + dto.productId() + ")."));
+                    .orElseThrow(() -> new ProductNotFoundException("Producto no encontrado (id=" + dto.productId() + ")."));
 
             User buyer = userRepository.findById(buyerId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Usuario comprador no encontrado (id=" + buyerId + ")."));
+                    .orElseThrow(() -> new UserNotFoundException("Usuario comprador no encontrado (id=" + buyerId + ")."));
 
 
             if (dto.orderItemId() == null) {
@@ -79,25 +83,25 @@ public class ReviewService implements IReviewService {
             }
 
             OrderItem oi = orderItemRepository.findById(dto.orderItemId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Item de la orden no encontrado (id=" + dto.orderItemId() + ")."));
+                    .orElseThrow(() -> new OrderNotFoundException("Item de la orden no encontrado (id=" + dto.orderItemId() + ")."));
 
             if (oi.getProduct() == null || !Objects.equals(oi.getProduct().getId(), dto.productId())) {
                 throw new BadRequestException("El item de la orden no corresponde al producto indicado.");
             }
 
             Order order = orderRepository.findById(oi.getOrder().getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Order no encontrado (id=" + oi.getOrder().getId() + ")."));
+                    .orElseThrow(() -> new OrderNotFoundException("Order no encontrado (id=" + oi.getOrder().getId() + ")."));
 
             if (order.getBuyer() == null || !Objects.equals(order.getBuyer().getId(), buyerId)) {
                 throw new BadRequestException("La orden no pertenece al comprador indicado.");
             }
 
             if (order.getStatus() != OrderStatus.COMPLETED) {
-                throw new BadRequestException("La orden no se encuentra completado.");
+                throw new BadRequestException("La orden no se encuentra completada.");
             }
 
             if (oi.getReview() != null) {
-                throw new BadRequestException("Ya existe una reseña asociada a ese item.");
+                throw new DuplicateReviewException("Ya existe una reseña asociada a ese ítem.");
             }
 
             Review review = reviewMapper.toEntity(dto);
@@ -120,12 +124,12 @@ public class ReviewService implements IReviewService {
     @Override
     @Transactional(rollbackFor = Throwable.class)
     public ReviewResponseDto updateReview(Long reviewId, ReviewUpdateDto dto, Long requestingUserId) throws ResourceNotFoundException, UnauthorizedException {
-        if (reviewId == null) throw new ResourceNotFoundException("Id de reseña no proporcionado.");
+        if (reviewId == null) throw new BadRequestException("Id de reseña no proporcionado.");
         Review existing = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new ResourceNotFoundException("Reseña no encontrada (id=" + reviewId + ")."));
+                .orElseThrow(() -> new ReviewNotFoundException("Reseña no encontrada (id=" + reviewId + ")."));
 
         User requester = userRepository.findById(requestingUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario solicitante no encontrado (id=" + requestingUserId + ")."));
+                .orElseThrow(() -> new UserNotFoundException("Usuario solicitante no encontrado (id=" + requestingUserId + ")."));
 
         boolean isOwner = existing.getBuyer() != null && Objects.equals(existing.getBuyer().getId(), requestingUserId);
 
@@ -142,12 +146,12 @@ public class ReviewService implements IReviewService {
     @Override
     @Transactional(rollbackFor = Throwable.class)
     public void deleteReview(Long reviewId, Long requestingUserId) throws ResourceNotFoundException, UnauthorizedException {
-        if (reviewId == null) throw new ResourceNotFoundException("Id de reseña no proporcionado.");
+        if (reviewId == null) throw new BadRequestException("Id de reseña no proporcionado.");
         Review existing = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new ResourceNotFoundException("Reseña no encontrada (id=" + reviewId + ")."));
+                .orElseThrow(() -> new ReviewNotFoundException("Reseña no encontrada (id=" + reviewId + ")."));
 
         User requester = userRepository.findById(requestingUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario solicitante no encontrado (id=" + requestingUserId + ")."));
+                .orElseThrow(() -> new UserNotFoundException("Usuario solicitante no encontrado (id=" + requestingUserId + ")."));
 
         boolean isOwner = existing.getBuyer() != null && Objects.equals(existing.getBuyer().getId(), requestingUserId);
         if (!isOwner) {
@@ -168,9 +172,9 @@ public class ReviewService implements IReviewService {
 
     @Override
     public Page<ReviewResponseDto> getReviewsByProduct(Long productId, Pageable pageable, boolean onlyVisible) throws ResourceNotFoundException {
-        if (productId == null) throw new ResourceNotFoundException("productId no proporcionado.");
+        if (productId == null) throw new BadRequestException("productId no proporcionado.");
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado (id=" + productId + ")."));
+                .orElseThrow(() -> new ProductNotFoundException("Producto no encontrado (id=" + productId + ")."));
 
         Page<Review> page = reviewRepository.findByProductId(productId, pageable);
         List<ReviewResponseDto> dtos = page.getContent().stream()
@@ -184,9 +188,9 @@ public class ReviewService implements IReviewService {
 
     @Override
     public Page<ReviewResponseDto> getReviewsByUser(Long userId, Pageable pageable) throws ResourceNotFoundException {
-        if (userId == null) throw new ResourceNotFoundException("userId no proporcionado.");
+        if (userId == null) throw new BadRequestException("userId no proporcionado.");
         User u = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado (id=" + userId + ")."));
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado (id=" + userId + ")."));
 
         Page<Review> page = reviewRepository.findByBuyerId(userId, pageable);
         List<ReviewResponseDto> dtos = page.getContent().stream().map(reviewMapper::toResponse).collect(Collectors.toList());
@@ -203,7 +207,7 @@ public class ReviewService implements IReviewService {
 
     @Override
     public Pair<Double, Long> getAverageRatingAndCountByProduct(Long productId) throws ResourceNotFoundException {
-        if (productId == null) throw new ResourceNotFoundException("productId no proporcionado.");
+        if (productId == null) throw new BadRequestException("productId no proporcionado.");
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException("Producto no encontrado (id=" + productId + ")."));
 

@@ -9,5 +9,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 public class InvalidDigitalKeyFormat extends BadRequestException {
     public InvalidDigitalKeyFormat(String message) { super(message); }
     public InvalidDigitalKeyFormat() { super(); }
+    public InvalidDigitalKeyFormat(String message, Throwable cause) { super(message, cause); }
 
 }

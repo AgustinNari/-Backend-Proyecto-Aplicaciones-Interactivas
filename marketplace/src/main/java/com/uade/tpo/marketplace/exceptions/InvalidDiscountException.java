@@ -9,4 +9,5 @@ public class InvalidDiscountException extends BadRequestException {
         super(message);
     }
     public InvalidDiscountException() { super(); }
+    public InvalidDiscountException(String message, Throwable cause) { super(message, cause); }
 }

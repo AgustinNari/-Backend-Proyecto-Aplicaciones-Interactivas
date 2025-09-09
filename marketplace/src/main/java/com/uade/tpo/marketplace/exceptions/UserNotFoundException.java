@@ -9,4 +9,5 @@ public class UserNotFoundException extends ResourceNotFoundException {
         super(message);
     }
     public UserNotFoundException() { super(); }
+    public UserNotFoundException(String message, Throwable cause) { super(message, cause); }
 }

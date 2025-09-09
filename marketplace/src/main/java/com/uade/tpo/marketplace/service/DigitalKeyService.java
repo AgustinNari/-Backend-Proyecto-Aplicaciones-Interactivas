@@ -17,10 +17,14 @@ import com.uade.tpo.marketplace.entity.basic.Product;
 import com.uade.tpo.marketplace.entity.basic.User;
 import com.uade.tpo.marketplace.entity.dto.response.DigitalKeyResponseDto;
 import com.uade.tpo.marketplace.entity.enums.KeyStatus;
+import com.uade.tpo.marketplace.exceptions.DigitalKeyAssignmentException;
 import com.uade.tpo.marketplace.exceptions.DigitalKeyDuplicateException;
 import com.uade.tpo.marketplace.exceptions.InsufficientStockException;
+import com.uade.tpo.marketplace.exceptions.ProductNotFoundException;
+import com.uade.tpo.marketplace.exceptions.ProductOwnershipException;
 import com.uade.tpo.marketplace.exceptions.ResourceNotFoundException;
 import com.uade.tpo.marketplace.exceptions.UnauthorizedException;
+import com.uade.tpo.marketplace.exceptions.UserNotFoundException;
 import com.uade.tpo.marketplace.extra.mappers.DigitalKeyMapper;
 import com.uade.tpo.marketplace.repository.interfaces.IDigitalKeyRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IProductRepository;
@@ -55,13 +59,13 @@ public class DigitalKeyService implements IDigitalKeyService {
         if (keyCodes == null || keyCodes.isEmpty()) return Collections.emptyList();
     
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado: " + productId));
+                .orElseThrow(() -> new ProductNotFoundException("Producto no encontrado: " + productId));
 
         User uploader = userRepository.findById(uploaderId)
-                .orElseThrow(() -> new UnauthorizedException("Usuario no encontrado: " + uploaderId));
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado: " + uploaderId));
 
         if (!uploaderId.equals(product.getSeller().getId())) {
-            throw new UnauthorizedException("El usuario no es el vendedor del producto, por lo tanto no puede subir claves asociadas.");
+            throw new ProductOwnershipException("El usuario no es el vendedor del producto, por lo tanto no puede subir claves asociadas.");
         }
 
         List<String> normalized = keyCodes.stream()
@@ -112,7 +116,7 @@ public class DigitalKeyService implements IDigitalKeyService {
         );
 
         if (updated != digitalKeyIds.size()) {
-            throw new ResourceNotFoundException("Algunas claves no fueron actualizadas: " + updated + " de: " + digitalKeyIds.size());
+            throw new DigitalKeyAssignmentException("Algunas claves no fueron actualizadas: " + updated + " de: " + digitalKeyIds.size());
         }
     }
 
@@ -124,13 +128,13 @@ public class DigitalKeyService implements IDigitalKeyService {
         if (productId == null) throw new ResourceNotFoundException("Id del producto nulo");
 
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado: " + productId));
+                .orElseThrow(() -> new ProductNotFoundException("Producto no encontrado: " + productId));
 
         User requester = userRepository.findById(requestingUserId)
-                .orElseThrow(() -> new UnauthorizedException("Usuario no encontrado: " + requestingUserId));
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado: " + requestingUserId));
 
         if (!requester.getId().equals(product.getSeller().getId())) {
-            throw new UnauthorizedException("El usuario no es el vendedor del producto, por lo tanto no puede acceder a las claves disponibles.");
+            throw new ProductOwnershipException("El usuario no es el vendedor del producto, por lo tanto no puede acceder a las claves disponibles.");
         }
 
 

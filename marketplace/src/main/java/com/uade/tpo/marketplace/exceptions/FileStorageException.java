@@ -7,5 +7,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 public class FileStorageException extends RuntimeException {
     public FileStorageException(String message) { super(message); }
     public FileStorageException() { super(); }
+    public FileStorageException(String message, Throwable cause) { super(message, cause); }
 
 }

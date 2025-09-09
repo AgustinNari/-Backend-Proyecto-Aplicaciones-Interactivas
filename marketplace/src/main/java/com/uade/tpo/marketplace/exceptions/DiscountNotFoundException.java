@@ -10,4 +10,5 @@ public class DiscountNotFoundException extends ResourceNotFoundException {
     }
     public DiscountNotFoundException() { super();
     }
+    public DiscountNotFoundException(String message, Throwable cause) { super(message, cause); }
 }

@@ -17,8 +17,14 @@ import com.uade.tpo.marketplace.entity.dto.response.ProductImageResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.ProductImageUpdateDto;
 import com.uade.tpo.marketplace.entity.enums.Role;
 import com.uade.tpo.marketplace.exceptions.BadRequestException;
+import com.uade.tpo.marketplace.exceptions.FileStorageException;
+import com.uade.tpo.marketplace.exceptions.ImageNotFoundException;
+import com.uade.tpo.marketplace.exceptions.InvalidFileException;
+import com.uade.tpo.marketplace.exceptions.ProductNotFoundException;
+import com.uade.tpo.marketplace.exceptions.ProductOwnershipException;
 import com.uade.tpo.marketplace.exceptions.ResourceNotFoundException;
 import com.uade.tpo.marketplace.exceptions.UnauthorizedException;
+import com.uade.tpo.marketplace.exceptions.UserNotFoundException;
 import com.uade.tpo.marketplace.extra.mappers.ProductImageMapper;
 import com.uade.tpo.marketplace.repository.interfaces.IProductImageRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IProductRepository;
@@ -60,14 +66,14 @@ public class ProductImageService implements IProductImageService {
         if (productId == null) throw new BadRequestException("Debe indicarse el productId.");
 
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado (id=" + productId + ")."));
+                .orElseThrow(() -> new ProductNotFoundException("Producto no encontrado (id=" + productId + ")."));
 
       
         checkIsSellerOrAdmin(requestingUserId, product);
 
         MultipartFile file = dto.file();
         if (file == null || file.isEmpty()) {
-            throw new BadRequestException("El archivo de la imagen está vacío.");
+            throw new InvalidFileException("El archivo de la imagen está vacío.");
         }
 
     
@@ -79,7 +85,7 @@ public class ProductImageService implements IProductImageService {
         try {
             saved = productImageRepository.save(img);
         } catch (Exception e) {
-            throw new BadRequestException("No se pudo guardar la imagen: " + e.getMessage());
+            throw new FileStorageException("No se pudo guardar la imagen: " + e.getMessage());
         }
 
         return mapper.toResponse(saved);
@@ -91,17 +97,17 @@ public class ProductImageService implements IProductImageService {
     public ProductImageResponseDto updateImage(Long productImageId, ProductImageUpdateDto dto, Long requestingUserId)
             throws ResourceNotFoundException, UnauthorizedException {
 
-        if (dto == null) throw new ResourceNotFoundException("Datos de actualización no proporcionados.");
+        if (dto == null) throw new BadRequestException("Datos de actualización no proporcionados.");
    
 
-        if (productImageId == null) throw new ResourceNotFoundException("Id de imagen no proporcionado.");
+        if (productImageId == null) throw new BadRequestException("Id de imagen no proporcionado.");
 
         ProductImage existing = productImageRepository.findById(productImageId)
-                .orElseThrow(() -> new ResourceNotFoundException("Imagen no encontrada (id=" + productImageId + ")."));
+                .orElseThrow(() -> new ImageNotFoundException("Imagen no encontrada (id=" + productImageId + ")."));
 
         Product product = existing.getProduct();
         if (product == null) {
-            throw new ResourceNotFoundException("Producto asociado a la imagen no encontrado.");
+            throw new ProductNotFoundException("Producto asociado a la imagen no encontrado.");
         }
 
   
@@ -118,13 +124,13 @@ public class ProductImageService implements IProductImageService {
     @Override
     @Transactional(rollbackFor = Throwable.class)
     public void deleteImage(Long imageId, Long requestingUserId) throws ResourceNotFoundException, UnauthorizedException {
-        if (imageId == null) throw new ResourceNotFoundException("Id de imagen no proporcionado.");
+        if (imageId == null) throw new BadRequestException("Id de imagen no proporcionado.");
 
         ProductImage existing = productImageRepository.findById(imageId)
-                .orElseThrow(() -> new ResourceNotFoundException("Imagen no encontrada (id=" + imageId + ")."));
+                .orElseThrow(() -> new ImageNotFoundException("Imagen no encontrada (id=" + imageId + ")."));
 
         Product product = existing.getProduct();
-        if (product == null) throw new ResourceNotFoundException("Producto asociado a la imagen no encontrado.");
+        if (product == null) throw new ProductNotFoundException("Producto asociado a la imagen no encontrado.");
 
         checkIsSellerOrAdmin(requestingUserId, product);
 
@@ -136,7 +142,7 @@ public class ProductImageService implements IProductImageService {
         if (productId == null) return List.of();
 
         Product product = productRepository.findById(productId).orElse(null);
-        if (product == null) throw new ResourceNotFoundException("Producto no encontrado (id=" + productId + ").");
+        if (product == null) throw new ProductNotFoundException("Producto no encontrado (id=" + productId + ").");
 
         List<ProductImage> imgs = productImageRepository.findByProductIdOrderByIdAsc(productId);
         return imgs.stream().map(mapper::toResponse).collect(Collectors.toList());
@@ -144,10 +150,10 @@ public class ProductImageService implements IProductImageService {
 
     @Override
     public Optional<ProductImageResponseDto> getPrimaryImageByProductId(Long productId) throws ResourceNotFoundException {
-        if (productId == null) throw new ResourceNotFoundException("productId no proporcionado.");
+        if (productId == null) throw new BadRequestException("productId no proporcionado.");
 
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado (id=" + productId + ")."));
+                .orElseThrow(() -> new ProductNotFoundException("Producto no encontrado (id=" + productId + ")."));
 
         Optional<ProductImage> opt = productImageRepository.findFirstByProductIdOrderByIdAsc(productId);
         return opt.map(mapper::toResponse);
@@ -155,26 +161,26 @@ public class ProductImageService implements IProductImageService {
 
     @Override
     public ProductImageResponseDto getImageById(Long id) throws ResourceNotFoundException, Exception {
-        if (id == null) throw new ResourceNotFoundException("Id de imagen no proporcionado.");
+        if (id == null) throw new BadRequestException("Id de imagen no proporcionado.");
         ProductImage img = productImageRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Imagen no encontrada (id=" + id + ")."));
+                .orElseThrow(() -> new ImageNotFoundException("Imagen no encontrada (id=" + id + ")."));
         return mapper.toResponse(img);
     }
 
 
     private void checkIsSellerOrAdmin(Long requestingUserId, Product product) throws UnauthorizedException {
         if (requestingUserId == null) {
-            throw new UnauthorizedException("Usuario solicitante no proporcionado.");
+            throw new BadRequestException("Usuario solicitante no proporcionado.");
         }
         User requester = userRepository.findById(requestingUserId)
-                .orElseThrow(() -> new UnauthorizedException("Usuario solicitante no encontrado."));
+                .orElseThrow(() -> new UserNotFoundException("Usuario solicitante no encontrado."));
 
         if (requester.getRole() == Role.ADMIN) return;
 
 
         if (product.getSeller() == null || product.getSeller().getId() == null ||
                 !product.getSeller().getId().equals(requestingUserId)) {
-            throw new UnauthorizedException("No tiene permiso para realizar esta operación sobre las imágenes del producto.");
+            throw new ProductOwnershipException("No tiene permiso para realizar esta operación sobre las imágenes del producto.");
         }
     }
 }

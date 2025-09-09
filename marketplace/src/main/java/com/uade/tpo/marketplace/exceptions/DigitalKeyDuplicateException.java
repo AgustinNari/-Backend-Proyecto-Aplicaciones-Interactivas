@@ -9,5 +9,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 public class DigitalKeyDuplicateException extends DuplicateResourceException {
     public DigitalKeyDuplicateException(String message) { super(message); }
     public DigitalKeyDuplicateException() { super(); }
+    public DigitalKeyDuplicateException(String message, Throwable cause) { super(message, cause); }
 
 }

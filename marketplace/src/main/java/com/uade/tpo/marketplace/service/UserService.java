@@ -16,9 +16,11 @@ import com.uade.tpo.marketplace.entity.dto.response.SellerResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.UserResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.UserUpdateDto;
 import com.uade.tpo.marketplace.entity.enums.Role;
+import com.uade.tpo.marketplace.exceptions.BadRequestException;
 import com.uade.tpo.marketplace.exceptions.DuplicateResourceException;
 import com.uade.tpo.marketplace.exceptions.ResourceNotFoundException;
 import com.uade.tpo.marketplace.exceptions.UnauthorizedException;
+import com.uade.tpo.marketplace.exceptions.UserDuplicateException;
 import com.uade.tpo.marketplace.exceptions.UserNotFoundException;
 import com.uade.tpo.marketplace.extra.mappers.UserMapper;
 import com.uade.tpo.marketplace.repository.interfaces.IReviewRepository;
@@ -61,9 +63,9 @@ public class UserService implements IUserService {
     public UserResponseDto updateUser(Long id, UserUpdateDto dto, Long requestingUserId)
             throws ResourceNotFoundException, UnauthorizedException, DuplicateResourceException {
 
-        if (id == null) throw new ResourceNotFoundException("Id de usuario no proporcionado.");
+        if (id == null) throw new BadRequestException("Id de usuario no proporcionado.");
         User existing = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado (id=" + id + ")."));
+                .orElseThrow(() -> new BadRequestException("Usuario no encontrado (id=" + id + ")."));
 
 
         if (requestingUserId == null || (!requestingUserId.equals(id))) {
@@ -77,7 +79,7 @@ public class UserService implements IUserService {
             if (currentDisplay == null || !currentDisplay.equalsIgnoreCase(newDisplay)) {
                 boolean exists = userRepository.existsByDisplayNameIgnoreCase(newDisplay);
                 if (exists) {
-                    throw new DuplicateResourceException("Ya existe otro usuario con ese nombre de usuario (displayName).");
+                    throw new UserDuplicateException("Ya existe otro usuario con ese nombre de usuario (displayName).");
                 }
             }
         }
@@ -111,12 +113,12 @@ public class UserService implements IUserService {
 
     @Override
     public Optional<SellerResponseDto> getSellerProfile(Long sellerId) throws UserNotFoundException {
-        if (sellerId == null) throw new UserNotFoundException("Id de vendedor no proporcionado.");
+        if (sellerId == null) throw new BadRequestException("Id de vendedor no proporcionado.");
         User seller = userRepository.findById(sellerId)
                 .orElseThrow(() -> new UserNotFoundException("Vendedor no encontrado (id=" + sellerId + ")."));
 
         if (seller.getRole() != Role.SELLER) {
-            throw new UserNotFoundException("El usuario indicado no es un vendedor.");
+            throw new BadRequestException("El usuario indicado no es un vendedor.");
         }
 
 
@@ -148,7 +150,7 @@ public class UserService implements IUserService {
     @Override
     @Transactional(rollbackFor = Throwable.class)
     public int updateBuyerBalance(Long userId, BigDecimal newBalance) throws UserNotFoundException {
-        if (userId == null) throw new UserNotFoundException("Id de usuario no proporcionado.");
+        if (userId == null) throw new BadRequestException("Id de usuario no proporcionado.");
 
         if (newBalance == null || newBalance.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("El nuevo balance debe ser un valor no negativo.");
@@ -164,7 +166,7 @@ public class UserService implements IUserService {
     @Override
     @Transactional(rollbackFor = Throwable.class)
     public int registerNewLogin(Long userId, Long requestingUserId) throws UserNotFoundException {
-        if (userId == null) throw new UserNotFoundException("Id de usuario no proporcionado.");
+        if (userId == null) throw new BadRequestException("Id de usuario no proporcionado.");
 
         if (requestingUserId == null || (!requestingUserId.equals(userId))) {
             throw new UnauthorizedException("No tienes permiso para realizar esta acción.");

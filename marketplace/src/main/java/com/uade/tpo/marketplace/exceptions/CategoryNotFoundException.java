@@ -7,5 +7,6 @@ import org.springframework.http.HttpStatus;
 public class CategoryNotFoundException  extends ResourceNotFoundException {
     public CategoryNotFoundException(String message) { super(message); }
     public CategoryNotFoundException() { super(); }
+    public CategoryNotFoundException(String message, Throwable cause) { super(message, cause); }
     
 }

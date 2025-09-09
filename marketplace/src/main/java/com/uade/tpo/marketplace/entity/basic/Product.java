@@ -41,7 +41,7 @@ public class Product {
     @JoinColumn(name = "seller_id", nullable = false)
     private User seller;
 
-    @Column(length = 64)
+    @Column(length = 64, unique=true)
     private String sku;
 
     @Column(nullable = false)

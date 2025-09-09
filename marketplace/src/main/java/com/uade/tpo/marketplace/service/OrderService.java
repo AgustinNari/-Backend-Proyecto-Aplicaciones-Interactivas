@@ -37,7 +37,13 @@ import com.uade.tpo.marketplace.entity.dto.response.OrderResponseDto;
 import com.uade.tpo.marketplace.entity.enums.KeyStatus;
 import com.uade.tpo.marketplace.entity.enums.OrderStatus;
 import com.uade.tpo.marketplace.exceptions.BadRequestException;
+import com.uade.tpo.marketplace.exceptions.CouponAlreadyUsedException;
+import com.uade.tpo.marketplace.exceptions.DuplicateOrderItemException;
 import com.uade.tpo.marketplace.exceptions.InsufficientStockException;
+import com.uade.tpo.marketplace.exceptions.OrderNotFoundException;
+import com.uade.tpo.marketplace.exceptions.OrderProcessingException;
+import com.uade.tpo.marketplace.exceptions.ProductNotFoundException;
+import com.uade.tpo.marketplace.exceptions.ProductSelfPurchaseException;
 import com.uade.tpo.marketplace.exceptions.ResourceNotFoundException;
 import com.uade.tpo.marketplace.exceptions.UnauthorizedException;
 import com.uade.tpo.marketplace.exceptions.UserNotFoundException;
@@ -52,6 +58,9 @@ import com.uade.tpo.marketplace.service.interfaces.IOrderService;
 import com.uade.tpo.marketplace.service.interfaces.IUserService;
 
 import org.springframework.transaction.annotation.Transactional;
+
+import com.uade.tpo.marketplace.exceptions.CouponNotApplicableException;
+import com.uade.tpo.marketplace.exceptions.DigitalKeyAssignmentException;
 
 @Service
 public class OrderService implements IOrderService {
@@ -97,7 +106,7 @@ public OrderResponseDto createOrder(OrderCreateDto dto, Long buyerId)
         .collect(Collectors.toList());
 
     if (!duplicatedProductIds.isEmpty()) {
-        throw new BadRequestException("No se permiten múltiples ítems del mismo producto en una única orden. Productos duplicados: " + duplicatedProductIds);
+        throw new DuplicateOrderItemException("No se permiten múltiples ítems del mismo producto en una única orden. Productos duplicados: " + duplicatedProductIds);
     }
 
     if (buyerId == null) {
@@ -106,7 +115,7 @@ public OrderResponseDto createOrder(OrderCreateDto dto, Long buyerId)
 
  
     User buyer = userRepository.findById(buyerId)
-            .orElseThrow(() -> new ResourceNotFoundException("Comprador no encontrado (id=" + buyerId + ")."));
+            .orElseThrow(() -> new UserNotFoundException("Comprador no encontrado (id=" + buyerId + ")."));
 
 
     Set<Long> productIds = dto.items().stream()
@@ -127,12 +136,12 @@ public OrderResponseDto createOrder(OrderCreateDto dto, Long buyerId)
 
         Product p = productMap.get(itemDto.productId());
         if (p == null || !p.isActive()) {
-            throw new ResourceNotFoundException("Producto no encontrado o inactivo (id=" + itemDto.productId() + ").");
+            throw new ProductNotFoundException("Producto no encontrado o inactivo (id=" + itemDto.productId() + ").");
         }
 
         if (buyerId != null && p.getSeller() != null && p.getSeller().getId() != null
                 && buyerId.equals(p.getSeller().getId())) {
-            throw new BadRequestException("No estás autorizado para comprar tu propio producto.");
+            throw new ProductSelfPurchaseException("No estás autorizado para comprar tu propio producto.");
         }
 
         int minQty = p.getMinPurchaseQuantity() == null ? 1 : p.getMinPurchaseQuantity();
@@ -197,7 +206,7 @@ public OrderResponseDto createOrder(OrderCreateDto dto, Long buyerId)
             itemCoupon = itemCoupon.trim();
             if (couponsUsedInThisOrder.contains(itemCoupon)) {
            
-                throw new BadRequestException("El cupón " + itemCoupon + " ya fue usado en otro ítem de esta orden.");
+                throw new CouponAlreadyUsedException("El cupón " + itemCoupon + " ya fue usado en otro ítem de esta orden.");
             }
 
          
@@ -218,7 +227,7 @@ public OrderResponseDto createOrder(OrderCreateDto dto, Long buyerId)
                 }
             } catch (ResourceNotFoundException | BadRequestException ex) {
         
-                throw new BadRequestException("Cupón inválido para productId=" + itemDto.productId() + ": " + ex.getMessage());
+                throw new CouponNotApplicableException("Cupón inválido para productId=" + itemDto.productId() + ": " + ex.getMessage());
             }
         } else {
             oi.setDiscountAmount(BigDecimal.ZERO);
@@ -280,7 +289,7 @@ public OrderResponseDto createOrder(OrderCreateDto dto, Long buyerId)
             List<Long> keysForOi = new ArrayList<>(qtyForOi);
             for (int i = 0; i < qtyForOi; i++) {
                 if (keysQueue.isEmpty()) {
-                    throw new InsufficientStockException("No se pudieron asignar todas las claves necesarias para productId=" + pid);
+                    throw new DigitalKeyAssignmentException("No se pudieron asignar todas las claves necesarias para productId=" + pid);
                 }
                 keysForOi.add(keysQueue.poll());
             }
@@ -295,7 +304,7 @@ public OrderResponseDto createOrder(OrderCreateDto dto, Long buyerId)
             );
 
             if (assigned < keysForOi.size()) {
-                throw new InsufficientStockException("No se pudieron asignar todas las claves necesarias para productId=" + pid);
+                throw new DigitalKeyAssignmentException("No se pudieron asignar todas las claves necesarias para productId=" + pid);
             }
 
             List<DigitalKey> soldKeys = digitalKeyRepository.findAllById(keysForOi);
@@ -312,7 +321,7 @@ public OrderResponseDto createOrder(OrderCreateDto dto, Long buyerId)
 
     int updateOrderStatus = orderRepository.updateOrderStatus(savedOrder.getId(), OrderStatus.COMPLETED, now);
     if (updateOrderStatus == 0) {
-        throw new BadRequestException("No se pudo marcar la orden como completada.");
+        throw new OrderProcessingException("No se pudo marcar la orden como completada.");
     }
 
     Optional<Order> refreshed = orderRepository.findOrderWithItemsAndKeys(savedOrder.getId());
@@ -453,7 +462,7 @@ public OrderResponseDto createOrder(OrderCreateDto dto, Long buyerId)
         }
 
         if (!userRepository.existsById(sellerId)) {
-            throw new ResourceNotFoundException("Vendedor no encontrado (id=" + sellerId + ").");
+            throw new UserNotFoundException("Vendedor no encontrado (id=" + sellerId + ").");
         }
 
         Pageable effectivePageable = pageable;
@@ -500,20 +509,20 @@ public OrderResponseDto createOrder(OrderCreateDto dto, Long buyerId)
             throws ResourceNotFoundException, UnauthorizedException, BadRequestException {
 
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Orden no encontrada (id=" + orderId + ")."));
+                .orElseThrow(() -> new OrderNotFoundException("Orden no encontrada (id=" + orderId + ")."));
 
         if (order.getStatus() == OrderStatus.COMPLETED) {
-            throw new BadRequestException("La orden ya está completada.");
+            throw new OrderProcessingException("La orden ya está completada.");
         }
 
         Instant now = Instant.now();
         int updated = orderRepository.updateOrderStatus(orderId, OrderStatus.COMPLETED, now);
         if (updated == 0) {
-            throw new BadRequestException("No se pudo marcar la orden como completada.");
+            throw new OrderProcessingException("No se pudo marcar la orden como completada.");
         }
 
         Order completed = orderRepository.findOrderWithItemsAndKeys(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Orden no encontrada luego de actualizar (id=" + orderId + ")."));
+                .orElseThrow(() -> new OrderNotFoundException("Orden no encontrada luego de actualizar (id=" + orderId + ")."));
 
         boolean includeKeyCodes = true;
         return orderMapper.toResponse(completed, includeKeyCodes);
@@ -525,7 +534,7 @@ public OrderResponseDto createOrder(OrderCreateDto dto, Long buyerId)
             throws ResourceNotFoundException, UnauthorizedException, BadRequestException {
 
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Orden no encontrada (id=" + orderId + ")."));
+                .orElseThrow(() -> new OrderNotFoundException("Orden no encontrada (id=" + orderId + ")."));
 
         OrderStatus newStatus;
         try {
@@ -537,11 +546,11 @@ public OrderResponseDto createOrder(OrderCreateDto dto, Long buyerId)
         Instant completedAt = newStatus == OrderStatus.COMPLETED ? Instant.now() : null;
         int updated = orderRepository.updateOrderStatus(orderId, newStatus, completedAt);
         if (updated == 0) {
-            throw new BadRequestException("No se pudo actualizar el estado de la orden.");
+            throw new OrderProcessingException("No se pudo actualizar el estado de la orden.");
         }
 
         Order updatedOrder = orderRepository.findOrderWithItemsAndKeys(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Orden no encontrada luego de actualizar (id=" + orderId + ")."));
+                .orElseThrow(() -> new OrderNotFoundException("Orden no encontrada luego de actualizar (id=" + orderId + ")."));
 
         boolean includeKeyCodes = true;
         return orderMapper.toResponse(updatedOrder, includeKeyCodes);

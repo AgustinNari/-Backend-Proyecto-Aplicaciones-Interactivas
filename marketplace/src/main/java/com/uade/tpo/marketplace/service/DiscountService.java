@@ -30,9 +30,18 @@ import com.uade.tpo.marketplace.entity.enums.DiscountScope;
 import com.uade.tpo.marketplace.entity.enums.DiscountType;
 import com.uade.tpo.marketplace.entity.enums.Role;
 import com.uade.tpo.marketplace.exceptions.BadRequestException;
+import com.uade.tpo.marketplace.exceptions.CategoryNotFoundException;
+import com.uade.tpo.marketplace.exceptions.CouponAlreadyUsedException;
+import com.uade.tpo.marketplace.exceptions.CouponNotApplicableException;
+import com.uade.tpo.marketplace.exceptions.CouponTargetBuyerMissingException;
+import com.uade.tpo.marketplace.exceptions.DiscountNotFoundException;
+import com.uade.tpo.marketplace.exceptions.DuplicateCouponException;
 import com.uade.tpo.marketplace.exceptions.DuplicateResourceException;
+import com.uade.tpo.marketplace.exceptions.OrderNotFoundException;
+import com.uade.tpo.marketplace.exceptions.ProductNotFoundException;
 import com.uade.tpo.marketplace.exceptions.ResourceNotFoundException;
 import com.uade.tpo.marketplace.exceptions.UnauthorizedException;
+import com.uade.tpo.marketplace.exceptions.UserNotFoundException;
 import com.uade.tpo.marketplace.extra.mappers.DiscountMapper;
 import com.uade.tpo.marketplace.repository.interfaces.ICategoryRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IDiscountRepository;
@@ -79,7 +88,7 @@ public class DiscountService implements IDiscountService {
 
         if (dto.code() != null){
             if (discountRepository.existsByCode(dto.code())) {
-                throw new DuplicateResourceException("Ya existe un cupón con el código: " + dto.code());
+                throw new DuplicateCouponException("Ya existe un cupón con el código: " + dto.code());
             }
         }
 
@@ -121,7 +130,7 @@ public class DiscountService implements IDiscountService {
 
         if (dto.type() == DiscountType.FIXED) {
             if (dto.targetBuyerId() == null) {
-                throw new BadRequestException("Los cupones (tipo FIXED) deben estar dirigidos a un comprador específico (targetBuyerId).");
+                throw new CouponTargetBuyerMissingException("Los cupones (tipo FIXED) deben estar dirigidos a un comprador específico (targetBuyerId).");
             }
             if (dto.code() == null || dto.code().isBlank()) {
                 throw new BadRequestException("Los cupones (tipo FIXED) deben tener un código (code) definido.");
@@ -140,36 +149,36 @@ public class DiscountService implements IDiscountService {
             throws ResourceNotFoundException, UnauthorizedException, DuplicateResourceException {
 
         Discount existing = discountRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Descuento no encontrado (id=" + id + ")."));
+                .orElseThrow(() -> new DiscountNotFoundException("Descuento no encontrado (id=" + id + ")."));
 
-        if (requestingUserId == null) throw new ResourceNotFoundException("Id de usuario no proporcionado.");
+        if (requestingUserId == null) throw new BadRequestException("Id de usuario no proporcionado.");
 
         if (existing.getTargetSeller() == null || existing.getTargetSeller().getId() == null || !existing.getTargetSeller().getId().equals(requestingUserId) ) {
                 throw new UnauthorizedException("No tienes permiso para realizar esta acción.");
         }
 
         if (userRepository.findById(requestingUserId).isEmpty()) {
-            throw new ResourceNotFoundException("Usuario solicitante no encontrado (id=" + requestingUserId + ").");
+            throw new UserNotFoundException("Usuario solicitante no encontrado (id=" + requestingUserId + ").");
         }
         
 
         if (dto.code() != null && !dto.code().equalsIgnoreCase(existing.getCode())) {
             if (discountRepository.existsByCode(dto.code())) {
-                throw new DuplicateResourceException("Ya existe un descuento con el código: " + dto.code());
+                throw new DuplicateCouponException("Ya existe un cupón con el código: " + dto.code());
             }
         }
 
     
         if (dto.targetProductId() != null) {
             Product product = productRepository.findById(dto.targetProductId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Producto objetivo no encontrado (id=" + dto.targetProductId() + ")."));
+                    .orElseThrow(() -> new ProductNotFoundException("Producto objetivo no encontrado (id=" + dto.targetProductId() + ")."));
             if (!product.getSeller().getId().equals(requestingUserId)) {
                 throw new UnauthorizedException("El usuario solicitante no puede crear descuentos dirigidos a productos que no le pertenecen.");
             }
         }
         if (dto.targetCategoryId() != null) {
             categoryRepository.findById(dto.targetCategoryId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Categoría objetivo no encontrada (id=" + dto.targetCategoryId() + ")."));
+                    .orElseThrow(() -> new CategoryNotFoundException("Categoría objetivo no encontrada (id=" + dto.targetCategoryId() + ")."));
             Optional<User> user = userRepository.findById(requestingUserId);
             if (user.isEmpty() || !user.get().getRole().equals(Role.ADMIN)) {
                 throw new UnauthorizedException("El usuario solicitante no puede crear descuentos dirigidos a categorías.");
@@ -178,14 +187,14 @@ public class DiscountService implements IDiscountService {
         }
         if (dto.targetSellerId() != null) {
             userRepository.findById(dto.targetSellerId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Vendedor objetivo no encontrado (id=" + dto.targetSellerId() + ")."));
+                    .orElseThrow(() -> new UserNotFoundException("Vendedor objetivo no encontrado (id=" + dto.targetSellerId() + ")."));
             if (!dto.targetSellerId().equals(requestingUserId)) {
                 throw new UnauthorizedException("El usuario solicitante no puede crear descuentos dirigidos a otros vendedores.");
             }
         }
         if (dto.targetBuyerId() != null) {
             userRepository.findById(dto.targetBuyerId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Comprador objetivo no encontrado (id=" + dto.targetBuyerId() + ")."));
+                    .orElseThrow(() -> new UserNotFoundException("Comprador objetivo no encontrado (id=" + dto.targetBuyerId() + ")."));
             if (dto.targetBuyerId().equals(requestingUserId)) {
                 throw new UnauthorizedException("El usuario solicitante no puede crear descuentos dirigidos a si mismo.");
             }
@@ -196,7 +205,7 @@ public class DiscountService implements IDiscountService {
             Long tb = dto.targetBuyerId() != null ? dto.targetBuyerId() :
                     (existing.getTargetBuyer() != null ? existing.getTargetBuyer().getId() : null);
             if (tb == null) {
-                throw new BadRequestException("Los cupones (tipo FIXED) deben estar dirigidos a un comprador específico (targetBuyerId).");
+                throw new CouponTargetBuyerMissingException("Los cupones (tipo FIXED) deben estar dirigidos a un comprador específico (targetBuyerId).");
             }
             if (dto.code() == null || dto.code().isBlank()) {
                 throw new BadRequestException("Los cupones (tipo FIXED) deben tener un código (code) definido.");
@@ -346,9 +355,9 @@ public class DiscountService implements IDiscountService {
         if (item == null) throw new BadRequestException("OrderItem no proporcionado.");
 
         Discount discount = discountRepository.findByCodeAndActive(code)
-                .orElseThrow(() -> new ResourceNotFoundException("Cupón no encontrado o no activo."));
+                .orElseThrow(() -> new DiscountNotFoundException("Cupón no encontrado o no activo."));
 
-        if (!isActiveNow(discount)) throw new BadRequestException("El cupón no está vigente.");
+        if (!isActiveNow(discount)) throw new CouponAlreadyUsedException("El cupón no está vigente.");
 
         if (discount.getType() != DiscountType.FIXED) {
             throw new BadRequestException("El código proporcionado no corresponde a un cupón válido (debe ser FIXED).");
@@ -357,18 +366,18 @@ public class DiscountService implements IDiscountService {
 
         if (discount.getTargetBuyer() != null && discount.getTargetBuyer().getId() != null) {
             if (buyerId == null || !Objects.equals(discount.getTargetBuyer().getId(), buyerId)) {
-                throw new BadRequestException("El cupón no es aplicable a este comprador.");
+                throw new CouponNotApplicableException("El cupón no es aplicable a este comprador.");
             }
         }
         else if (discount.getTargetBuyer() == null || discount.getTargetBuyer().getId() == null) {
-            throw new BadRequestException("El cupón no está dirigido a ningún comprador específico, por lo tanto no es aplicable.");
+            throw new CouponTargetBuyerMissingException("El cupón no está dirigido a ningún comprador específico, por lo tanto no es aplicable.");
      
         }
 
 
         Product product = productRepository.findById(item.productId()).orElse(null);
         if (product == null) {
-            throw new BadRequestException("Producto del ítem no encontrado.");
+            throw new OrderNotFoundException("Producto del ítem no encontrado.");
         }
 
         boolean applicable = false;
@@ -389,7 +398,7 @@ public class DiscountService implements IDiscountService {
         }
 
         if (!applicable) {
-            throw new BadRequestException("El cupón no es aplicable a este ítem de orden.");
+            throw new CouponNotApplicableException("El cupón no es aplicable a este ítem de orden.");
         }
 
   
@@ -404,12 +413,12 @@ public class DiscountService implements IDiscountService {
             throw new BadRequestException("El cupón requiere un subtotal mínimo para aplicarse.");
         }
         if (discount.getMaxPrice() != null && lineTotal.compareTo(discount.getMaxPrice()) > 0) {
-            throw new BadRequestException("El cupón no es aplicable para montos mayores a " + discount.getMaxPrice());
+            throw new CouponNotApplicableException("El cupón no es aplicable para montos mayores a " + discount.getMaxPrice());
         }
 
         BigDecimal amount = calculateDiscountAmount(discount, item);
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new BadRequestException("El cupón no genera un descuento aplicable a este ítem.");
+            throw new CouponNotApplicableException("El cupón no genera un descuento aplicable a este ítem.");
         }
 
         return Optional.of(discount);
@@ -473,22 +482,22 @@ public class DiscountService implements IDiscountService {
         if (targetBuyerId == null) throw new ResourceNotFoundException("Id de comprador no proporcionado.");
 
         Discount discount = discountRepository.findById(discountId)
-            .orElseThrow(() -> new ResourceNotFoundException("Cupón no encontrado (id=" + discountId + ")."));
+            .orElseThrow(() -> new DiscountNotFoundException("Cupón no encontrado (id=" + discountId + ")."));
 
         if (!discount.isActive()) {
-            throw new BadRequestException("El cupón no está activo, por lo tanto no se puede marcar como utilizado.");
+            throw new CouponAlreadyUsedException("El cupón no está activo, por lo tanto no se puede marcar como utilizado.");
         }
 
 
         if (discount.getTargetBuyer() == null || !Objects.equals(discount.getTargetBuyer().getId(), targetBuyerId)) {
-            throw new BadRequestException("El cupón no es dirigido a este comprador, por lo tanto no se puede marcar como utilizado.");
+            throw new UnauthorizedException("El cupón no es dirigido a este comprador, por lo tanto no se puede marcar como utilizado.");
         }
 
         int updated = discountRepository.markCouponAsUsed(discountId, targetBuyerId);
         if (updated == 0) {
    
             Discount d = discountRepository.findById(discountId).orElse(null);
-            if (d == null) throw new ResourceNotFoundException("Cupón no encontrado (id=" + discountId + ").");
+            if (d == null) throw new DiscountNotFoundException("Cupón no encontrado (id=" + discountId + ").");
      
             d.setActive(false);
             discountRepository.save(d);
@@ -604,7 +613,7 @@ public class DiscountService implements IDiscountService {
                 return sellers.get((int) Math.round(Math.random() * (sellers.size() - 1))).getId();
             }
             else{
-                throw new ResourceNotFoundException("No se encontraron vendedores.");
+                throw new UserNotFoundException("No se encontraron vendedores.");
                 
             }
         }

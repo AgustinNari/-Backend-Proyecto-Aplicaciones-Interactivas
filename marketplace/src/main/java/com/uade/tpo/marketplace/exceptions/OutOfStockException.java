@@ -9,5 +9,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 public class OutOfStockException extends InsufficientStockException {
     public OutOfStockException(String message) { super(message); }
     public OutOfStockException() { super(); }
+    public OutOfStockException(String message, Throwable cause) { super(message, cause); }
 
 }

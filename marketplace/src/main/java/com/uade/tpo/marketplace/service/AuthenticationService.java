@@ -16,6 +16,7 @@ import com.uade.tpo.marketplace.controllers.config.JwtService;
 import com.uade.tpo.marketplace.entity.basic.User;
 import com.uade.tpo.marketplace.exceptions.ConflictException;
 import com.uade.tpo.marketplace.exceptions.ResourceNotFoundException;
+import com.uade.tpo.marketplace.exceptions.UserDuplicateException;
 import com.uade.tpo.marketplace.repository.interfaces.IUserRepository;
 import com.uade.tpo.marketplace.service.interfaces.IAuthenticationService;
 
@@ -37,10 +38,10 @@ public class AuthenticationService implements IAuthenticationService{
                 if (request == null) throw new IllegalArgumentException("Solicitud nula");
 
                 if (repository.existsByEmailIgnoreCase(request.getEmail())) {
-                        throw new ConflictException("Ya existe un usuario con ese email");
+                        throw new UserDuplicateException("Ya existe un usuario con ese email");
                 }
                 if (repository.existsByDisplayNameIgnoreCase(request.getDisplayName())) {
-                        throw new ConflictException("DisplayName en uso");
+                        throw new UserDuplicateException("DisplayName en uso");
                 }
                 var user = new User(
                                 request.getDisplayName(),
