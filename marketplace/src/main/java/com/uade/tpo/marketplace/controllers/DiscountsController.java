@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.uade.tpo.marketplace.controllers.auth.CurrentUserProvider;
 import com.uade.tpo.marketplace.entity.dto.create.DiscountCreateDto;
 import com.uade.tpo.marketplace.entity.dto.response.DiscountResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.DiscountUpdateDto;
@@ -35,12 +36,13 @@ public class DiscountsController {
 
     @Autowired private IDiscountService discountService;
     @Autowired private IUserRepository userRepository;
+    @Autowired private CurrentUserProvider currentUserProvider;
 
     @PostMapping
     public ResponseEntity<DiscountResponseDto> create(@Valid @RequestBody DiscountCreateDto dto,
                                                       Authentication authentication)
             throws DuplicateResourceException, ResourceNotFoundException {
-        Long createdByUserId = currentUserId(authentication);
+        Long createdByUserId = currentUserProvider.getCurrentUserId(authentication);
         var out = discountService.createDiscount(dto, createdByUserId);
         return ResponseEntity.created(URI.create("/discounts/" + out.id())).body(out);
     }
@@ -50,7 +52,7 @@ public class DiscountsController {
                                       @Valid @RequestBody DiscountUpdateDto dto,
                                       Authentication authentication)
             throws ResourceNotFoundException, UnauthorizedException, DuplicateResourceException {
-        Long requestingUserId = currentUserId(authentication);
+        Long requestingUserId = currentUserProvider.getCurrentUserId(authentication);
         return discountService.updateDiscount(id, dto, requestingUserId);
     }
 
@@ -91,15 +93,5 @@ public class DiscountsController {
         return discountService.getAllActiveCouponsByTargetBuyerId(buyerId, pageable);
     }
 
-    private Long currentUserId(Authentication authentication) throws ResourceNotFoundException {
-        if (authentication == null || authentication.getName() == null) {
-            throw new UnauthorizedException("No autenticado");
-        }
-        final String resolvedEmail = (authentication.getPrincipal() instanceof UserDetails ud)
-                ? ud.getUsername()
-                : authentication.getName();
-        var user = userRepository.findByEmail(resolvedEmail)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with email=" + resolvedEmail));
-        return user.getId();
-    }
+
 }

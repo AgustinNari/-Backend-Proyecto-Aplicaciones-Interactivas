@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.uade.tpo.marketplace.controllers.auth.CurrentUserProvider;
 import com.uade.tpo.marketplace.entity.dto.create.OrderCreateDto;
 import com.uade.tpo.marketplace.entity.dto.response.OrderItemResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.OrderResponseDto;
@@ -36,12 +37,13 @@ public class OrdersController {
 
     @Autowired private IOrderService orderService;
     @Autowired private IUserRepository userRepository;
+    @Autowired private CurrentUserProvider currentUserProvider;
 
     @PostMapping
     public ResponseEntity<OrderResponseDto> create(@Valid @RequestBody OrderCreateDto dto,
                                                    Authentication authentication)
             throws ResourceNotFoundException, InsufficientStockException, BadRequestException {
-        Long buyerId = currentUserId(authentication);
+        Long buyerId = currentUserProvider.getCurrentUserId(authentication);
         OrderResponseDto out = orderService.createOrder(dto, buyerId);
         return ResponseEntity.created(URI.create("/orders/" + out.id())).body(out);
     }
@@ -50,7 +52,7 @@ public class OrdersController {
     public ResponseEntity<OrderResponseDto> getOne(@PathVariable Long id,
                                                    Authentication authentication)
             throws ResourceNotFoundException, UnauthorizedException {
-        Long requestingUserId = currentUserId(authentication);
+        Long requestingUserId = currentUserProvider.getCurrentUserId(authentication);
         Optional<OrderResponseDto> opt = orderService.getOrderById(id, requestingUserId);
         return opt.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
@@ -60,14 +62,14 @@ public class OrdersController {
                                             Authentication authentication,
                                             Pageable pageable)
             throws ResourceNotFoundException, UnauthorizedException {
-        Long requestingUserId = currentUserId(authentication);
+        Long requestingUserId = currentUserProvider.getCurrentUserId(authentication);
         return orderService.getOrderItemsByOrderId(id, requestingUserId, pageable);
     }
 
     @GetMapping("/my")
     public Page<OrderResponseDto> myOrders(Authentication authentication, Pageable pageable)
             throws ResourceNotFoundException {
-        Long buyerId = currentUserId(authentication);
+        Long buyerId = currentUserProvider.getCurrentUserId(authentication);
         return orderService.getOrdersByBuyer(buyerId, pageable);
     }
 
@@ -84,7 +86,7 @@ public class OrdersController {
     @PatchMapping("/{id}/complete")
     public OrderResponseDto complete(@PathVariable Long id, Authentication authentication)
             throws ResourceNotFoundException, UnauthorizedException, BadRequestException {
-        Long performedByUserId = currentUserId(authentication);
+        Long performedByUserId = currentUserProvider.getCurrentUserId(authentication);
         return orderService.completeOrder(id, performedByUserId);
     }
 
@@ -93,19 +95,9 @@ public class OrdersController {
                                          @RequestParam("status") String status,
                                          Authentication authentication)
             throws ResourceNotFoundException, UnauthorizedException, BadRequestException {
-        Long performedByUserId = currentUserId(authentication);
+        Long performedByUserId = currentUserProvider.getCurrentUserId(authentication);
         return orderService.updateOrderStatus(id, status, performedByUserId);
     }
 
-    private Long currentUserId(Authentication authentication) throws ResourceNotFoundException {
-        if (authentication == null || authentication.getName() == null) {
-            throw new UnauthorizedException("No autenticado");
-        }
-        final String resolvedEmail = (authentication.getPrincipal() instanceof UserDetails ud)
-                ? ud.getUsername()
-                : authentication.getName();
-        var user = userRepository.findByEmail(resolvedEmail)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with email=" + resolvedEmail));
-        return user.getId();
-    }
+
 }
