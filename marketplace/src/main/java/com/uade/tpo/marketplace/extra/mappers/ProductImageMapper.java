@@ -38,6 +38,8 @@ public class ProductImageMapper {
             img.setImage(multipartFileToBlob(file));
         }
 
+        img.setPrimary(dto.isPrimary());
+
         return img;
     }
 
@@ -54,6 +56,7 @@ public class ProductImageMapper {
         if (file != null && !file.isEmpty()) {
             entity.setImage(multipartFileToBlob(file));
         }
+        entity.setPrimary(dto.isPrimary());
     }
 
 
@@ -72,7 +75,8 @@ public class ProductImageMapper {
             img.getId(),
             productId,
             img.getName(),
-            base64File
+            base64File,
+            img.isPrimary()
         );
     }
 

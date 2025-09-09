@@ -38,6 +38,7 @@ import com.uade.tpo.marketplace.exceptions.UnauthorizedException;
 import com.uade.tpo.marketplace.extra.mappers.ProductMapper;
 import com.uade.tpo.marketplace.repository.interfaces.ICategoryRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IDigitalKeyRepository;
+import com.uade.tpo.marketplace.repository.interfaces.IProductImageRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IProductRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IUserRepository;
 import com.uade.tpo.marketplace.service.interfaces.IProductImageService;
@@ -62,6 +63,8 @@ public class ProductService implements IProductService {
     private IDigitalKeyRepository digitalKeyRepository;
     @Autowired
     private IProductImageService productImageService;
+    @Autowired
+    private IProductImageRepository productImageRepository;
 
     @Autowired
     private ProductMapper productMapper;
@@ -385,6 +388,8 @@ public class ProductService implements IProductService {
 
         ProductResponseDto created = this.createProduct(dto, sellerId);
 
+
+
         if (created == null || created.id() == null) {
             throw new IllegalStateException("Producto creado pero no se obtuvo el id. Operación abortada.");
         }
@@ -392,6 +397,8 @@ public class ProductService implements IProductService {
         if (!Objects.equals(created.sellerId(), sellerId)) {
             throw new ProductOwnershipException("El vendedor autenticado no coincide con el vendedor del producto.");
         }
+
+        boolean hasPrimary = productImageRepository.existsByProductIdAndIsPrimaryTrue(created.id());
 
         final int MAX_IMAGES = 10;
         final long MAX_FILE_SIZE = 5 * 1024 * 1024L; // 5 MB por imagen como límite
@@ -402,10 +409,12 @@ public class ProductService implements IProductService {
                 throw new BadRequestException("Número de imágenes excede el máximo permitido: " + MAX_IMAGES);
             }
 
+            int uploaded = 0;
             for (MultipartFile file : images) {
                 if (file == null || file.isEmpty()) {
                     continue;
                 }
+                
 
                 if (file.getSize() > MAX_FILE_SIZE) {
                     throw new InvalidFileException("La imagen '" + file.getOriginalFilename() + "' excede el tamaño máximo permitido de " + (MAX_FILE_SIZE / (1024*1024)) + " MB.");
@@ -415,14 +424,20 @@ public class ProductService implements IProductService {
                 if (contentType != null && !ALLOWED_CONTENT_TYPES.contains(contentType)) {
                     throw new InvalidFileException("Tipo de archivo no permitido para '" + file.getOriginalFilename() + "': " + contentType);
                 }
+                
 
 
                 String rawName = file.getOriginalFilename();
                 String filename = (rawName == null || rawName.isBlank()) ? "image" : org.springframework.util.StringUtils.cleanPath(rawName);
 
-                ProductImageCreateDto imgDto = new ProductImageCreateDto(created.id(), filename, file);
+                boolean makePrimary = false;
+                if (!hasPrimary && uploaded == 0) {
+                    makePrimary = true;
+                }
+                ProductImageCreateDto imgDto = new ProductImageCreateDto(created.id(), filename, file, makePrimary);
                 try {
                     productImageService.addImage(imgDto, sellerId);
+                    uploaded++;
                 } catch (ResourceNotFoundException | BadRequestException | UnauthorizedException ex) {
                     throw new FileStorageException("Error al subir la imagen '" + filename + "': " + ex.getMessage(), ex);
                 } catch (Exception ex) {

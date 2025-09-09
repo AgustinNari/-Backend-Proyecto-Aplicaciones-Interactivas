@@ -4,13 +4,15 @@ public record ProductImageResponseDto(
     Long id,
     Long productId,
     String name,
-    String file
+    String file,
+    boolean isPrimary
 ) {
 
-    public ProductImageResponseDto (Long id, Long productId, String name, String file) {
+    public ProductImageResponseDto (Long id, Long productId, String name, String file, boolean isPrimary) {
         this.id = id;
         this.productId = productId;
         this.name = name;
         this.file = file;
+        this.isPrimary = isPrimary;
     }
 }

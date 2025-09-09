@@ -27,5 +27,8 @@ public interface IProductImageService {
 
         ProductImageResponseDto getImageById(Long id) throws ResourceNotFoundException , Exception;
 
+        void setPrimaryImage(Long imageId, Long requestingUserId)
+                throws ResourceNotFoundException, UnauthorizedException;
+
         
 }

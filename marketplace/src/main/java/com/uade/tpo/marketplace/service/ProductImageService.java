@@ -47,14 +47,6 @@ public class ProductImageService implements IProductImageService {
 
 
 
-
-
-
-
-
-
-
-
     @Override
     @Transactional(rollbackFor = Throwable.class)
     public ProductImageResponseDto addImage(ProductImageCreateDto dto, Long requestingUserId)
@@ -68,7 +60,10 @@ public class ProductImageService implements IProductImageService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException("Producto no encontrado (id=" + productId + ")."));
 
-      
+        int productImagesCount = productImageRepository.countByProductId(product.getId());
+        if (productImagesCount >= 10) throw new BadRequestException("El producto ya tiene 10 imágenes, por lo tanto no puede agregar más.");
+
+
         checkIsSellerOrAdmin(requestingUserId, product);
 
         MultipartFile file = dto.file();
@@ -76,10 +71,19 @@ public class ProductImageService implements IProductImageService {
             throw new InvalidFileException("El archivo de la imagen está vacío.");
         }
 
-    
+        
         ProductImage img = mapper.toEntity(dto);
-   
         img.setProduct(product);
+
+        boolean productHasPrimary = productImageRepository.existsByProductIdAndIsPrimaryTrue(product.getId());
+
+        if (productHasPrimary) {
+            img.setPrimary(false);
+        }
+        if(!productHasPrimary) {
+            img.setPrimary(true);
+        }
+        
 
         ProductImage saved;
         try {
@@ -110,10 +114,21 @@ public class ProductImageService implements IProductImageService {
             throw new ProductNotFoundException("Producto asociado a la imagen no encontrado.");
         }
 
-  
+        boolean productHasPrimary = productImageRepository.existsByProductIdAndIsPrimaryTrue(product.getId());
+
+        
+
+        if (productHasPrimary) {
+            ProductImage img = productImageRepository.findFirstByProductIdAndIsPrimaryTrue(product.getId()).get();
+            if (!img.getId().equals(productImageId)) {
+                img.setPrimary(false);
+            }
+            if (img.getId().equals(productImageId)) {
+                img.setPrimary(true);
+            }
+        }
         checkIsSellerOrAdmin(requestingUserId, product);
 
- 
         mapper.updateFromDto(dto, existing);
 
         ProductImage saved = productImageRepository.save(existing);
@@ -132,10 +147,43 @@ public class ProductImageService implements IProductImageService {
         Product product = existing.getProduct();
         if (product == null) throw new ProductNotFoundException("Producto asociado a la imagen no encontrado.");
 
+        boolean imageIsPrimary = productImageRepository.existsByIdAndIsPrimaryTrue(imageId);
+
+        int countByProductId = productImageRepository.countByProductId(product.getId());
+
+        if (countByProductId <= 1) throw new BadRequestException("El producto debe tener al menos una imagen, por lo tanto, la imagen indicada no puede ser eliminada.");
+
+
         checkIsSellerOrAdmin(requestingUserId, product);
 
         productImageRepository.delete(existing);
+
+        if(imageIsPrimary) {
+            productImageRepository.setFirstImageAsPrimary(product.getId());
+        }
     }
+
+    @Override
+    @Transactional(rollbackFor = Throwable.class)
+    public void setPrimaryImage(Long imageId, Long requestingUserId)
+            throws ResourceNotFoundException, UnauthorizedException {
+        
+        if (imageId == null) throw new BadRequestException("Id de imagen no proporcionado.");
+
+        ProductImage existing = productImageRepository.findById(imageId)
+                .orElseThrow(() -> new ImageNotFoundException("Imagen no encontrada (id=" + imageId + ")."));
+
+        Product product = existing.getProduct();
+        if (product == null) throw new ProductNotFoundException("Producto asociado a la imagen no encontrado.");
+    
+        Long productId = product.getId();
+
+        checkIsSellerOrAdmin(requestingUserId, product);
+
+        productImageRepository.clearPrimaryImages(productId);
+        productImageRepository.setAsPrimary(imageId);
+    }
+
 
     @Override
     public List<ProductImageResponseDto> getImagesByProductId(Long productId) {
@@ -155,7 +203,7 @@ public class ProductImageService implements IProductImageService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException("Producto no encontrado (id=" + productId + ")."));
 
-        Optional<ProductImage> opt = productImageRepository.findFirstByProductIdOrderByIdAsc(productId);
+        Optional<ProductImage> opt = productImageRepository.findFirstByProductIdAndIsPrimaryTrue(productId);
         return opt.map(mapper::toResponse);
     }
 

@@ -33,6 +33,9 @@ public class ProductImage {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
+    @Column(nullable = false, name = "is_primary")
+    private boolean isPrimary = false;
+
     @Column(nullable = false)
     private Blob image;
 
