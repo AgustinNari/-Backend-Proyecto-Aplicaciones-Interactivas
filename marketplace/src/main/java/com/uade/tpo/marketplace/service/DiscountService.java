@@ -467,6 +467,43 @@ public class DiscountService implements IDiscountService {
 
 
     @Override
+    public Optional<DiscountResponseDto> getHighestValueDiscountForProduct(Long productId) {
+
+        if (productId == null) return Optional.empty();
+
+            Product product = productRepository.findById(productId).orElseThrow(() -> new ProductNotFoundException("Producto no encontrado (id=" + productId + ")."));
+            if (product == null) return Optional.empty();
+
+            Discount bestProduct = discountRepository.getHighestValueDiscountsForProduct(product.getId())
+                    .stream().findFirst().orElse(null);
+
+            Discount bestCategory = product.getCategories() == null ? null :
+                    product.getCategories().stream()
+                        .map(cat -> discountRepository.getHighestValueDiscountsForCategory(cat.getId())
+                                .stream().findFirst().orElse(null))
+                        .filter(Objects::nonNull)
+                        .max(Comparator.comparing(Discount::getValue))
+                        .orElse(null);
+
+            Discount bestSeller = null;
+            if (product.getSeller() != null && product.getSeller().getId() != null) {
+                bestSeller = discountRepository.getHighestValueDiscountsForSeller(product.getSeller().getId())
+                        .stream().findFirst().orElse(null);
+            }
+
+            List<Discount> candidates = new ArrayList<>();
+            if (bestProduct != null) candidates.add(bestProduct);
+            if (bestCategory != null) candidates.add(bestCategory);
+            if (bestSeller != null) candidates.add(bestSeller);
+
+            if (candidates.isEmpty()) return Optional.empty();
+
+            candidates.sort(Comparator.comparing(Discount::getValue).reversed());
+            return Optional.of(discountMapper.toResponse(candidates.get(0)));
+    }
+
+
+    @Override
     public Page<DiscountResponseDto> getAllActiveCouponsByTargetBuyerId(Long targetBuyerId, Pageable pageable) {
         if (targetBuyerId == null) throw new BadRequestException("Id de comprador no proporcionado.");
         Page<Discount> page = discountRepository.getAllActiveCouponsByTargetBuyerId(targetBuyerId, pageable);

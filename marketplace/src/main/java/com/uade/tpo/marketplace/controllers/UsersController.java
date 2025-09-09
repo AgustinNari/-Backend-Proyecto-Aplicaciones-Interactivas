@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -82,7 +83,7 @@ public class UsersController {
         return ResponseEntity.ok(updated);
     }
 
-    @PutMapping("/me/balance")
+    @PatchMapping("/me/balance")
     public ResponseEntity<Integer> updateBuyerBalance(@RequestParam("newBalance") BigDecimal newBalance,
                                                       Authentication authentication) {
         Long userId = authenticator.getCurrentUserId(authentication);

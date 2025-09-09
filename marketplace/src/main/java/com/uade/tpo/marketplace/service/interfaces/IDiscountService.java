@@ -49,4 +49,6 @@ public interface IDiscountService {
 
         Optional<DiscountResponseDto> generateNewRandomCoupon(Long targetBuyerId);
 
+        Optional<DiscountResponseDto> getHighestValueDiscountForProduct(Long productId);
+
 }

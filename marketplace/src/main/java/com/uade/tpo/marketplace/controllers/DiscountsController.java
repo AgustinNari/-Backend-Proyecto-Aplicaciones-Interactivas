@@ -82,10 +82,8 @@ public class DiscountsController {
     }
 
     @GetMapping("/product/{productId}")
-    public Page<DiscountResponseDto> activeForProduct(@PathVariable Long productId,
-                                                      @RequestParam Integer productQuantity,
-                                                      Pageable pageable) {
-        return discountService.getActiveDiscountsForProduct(productId, productQuantity, pageable);
+    public Optional<DiscountResponseDto> getHighestValueDiscountForProduct(@PathVariable Long productId){
+        return discountService.getHighestValueDiscountForProduct(productId);
     }
 
     @GetMapping("/buyer/active-coupons")
