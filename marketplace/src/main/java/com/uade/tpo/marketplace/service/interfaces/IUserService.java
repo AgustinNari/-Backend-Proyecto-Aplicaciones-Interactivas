@@ -37,9 +37,3 @@ public interface IUserService {
     int registerNewLogin(Long userId, Long requestingUserId) throws UserNotFoundException;
 }
 
-
-    //TODO: ¿Reemplazar todo register y authenticate y usar únicamete el que está en AuthenticationService?
-    // UserResponseDto register(UserCreateDto dto) throws DuplicateResourceException, BadRequestException;
-
-
-    // AuthResponseDto login(AuthLoginDto dto) throws UnauthorizedException, ResourceNotFoundException;
