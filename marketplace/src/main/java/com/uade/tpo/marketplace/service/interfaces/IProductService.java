@@ -7,13 +7,16 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.uade.tpo.marketplace.entity.basic.Product;
 import com.uade.tpo.marketplace.entity.dto.create.ProductCreateDto;
 import com.uade.tpo.marketplace.entity.dto.response.ProductResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.ProductUpdateDto;
+import com.uade.tpo.marketplace.exceptions.BadRequestException;
 import com.uade.tpo.marketplace.exceptions.DuplicateResourceException;
 import com.uade.tpo.marketplace.exceptions.ProductNotFoundException;
+import com.uade.tpo.marketplace.exceptions.ResourceNotFoundException;
 import com.uade.tpo.marketplace.exceptions.UnauthorizedException;
 
 public interface IProductService {
@@ -54,11 +57,14 @@ public interface IProductService {
 
     int toggleActivity(Long id, Boolean isActive, Long requestingUserId) throws ProductNotFoundException,  UnauthorizedException;
 
-    int updateProudctPrice(Long id, BigDecimal newPrice, Long requestingUserId) throws ProductNotFoundException, UnauthorizedException;
+    int updateProductPrice(Long id, BigDecimal newPrice, Long requestingUserId) throws ProductNotFoundException, UnauthorizedException;
 
 
     int getAvailableStock(Long productId);
 
 
     Page<ProductResponseDto> getProductsBySeller(Long sellerId, Pageable pageable);
+
+    ProductResponseDto createProductWithImages(ProductCreateDto dto, Long sellerId, List<MultipartFile> images)
+        throws ProductNotFoundException, DuplicateResourceException, ResourceNotFoundException, BadRequestException, UnauthorizedException;
 }

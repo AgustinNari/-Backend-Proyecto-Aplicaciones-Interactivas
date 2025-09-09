@@ -6,16 +6,22 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import com.uade.tpo.marketplace.controllers.auth.CurrentUserProvider;
 import com.uade.tpo.marketplace.entity.dto.create.DigitalKeyBulkCreateDto;
 import com.uade.tpo.marketplace.entity.dto.response.DigitalKeyResponseDto;
-import com.uade.tpo.marketplace.exceptions.ResourceNotFoundException;
-import com.uade.tpo.marketplace.exceptions.UnauthorizedException;
 import com.uade.tpo.marketplace.exceptions.DigitalKeyDuplicateException;
 import com.uade.tpo.marketplace.exceptions.InsufficientStockException;
-import com.uade.tpo.marketplace.repository.interfaces.IUserRepository;
+import com.uade.tpo.marketplace.exceptions.ResourceNotFoundException;
+import com.uade.tpo.marketplace.exceptions.UnauthorizedException;
 import com.uade.tpo.marketplace.service.interfaces.IDigitalKeyService;
 
+import jakarta.validation.Valid;
+
+import java.net.URI;
 import java.util.List;
+
+import org.springframework.data.domain.Pageable;
 
 @RestController
 @RequestMapping("/digital_keys")
@@ -25,57 +31,53 @@ public class DigitalKeysController {
     private IDigitalKeyService digitalKeyService;
 
     @Autowired
-    private IUserRepository userRepository;
+    private CurrentUserProvider currentUserProvider;
 
     @GetMapping("/product/{productId}")
     public ResponseEntity<Page<DigitalKeyResponseDto>> getAvailableKeysByProduct(
             @PathVariable Long productId,
+            @RequestParam(required = false) Integer keyQuantity,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            Authentication authentication) 
+            Authentication authentication)
             throws ResourceNotFoundException, UnauthorizedException {
-        
-        if (authentication == null) {
-            throw new UnauthorizedException("User not authenticated");
-        }
 
-        String email = authentication.getName();
-        var user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UnauthorizedException("User not found"));
-        Long requestingUserId = user.getId();
+        Long requestingUserId = currentUserProvider.getCurrentUserId(authentication);
 
-        return ResponseEntity.ok(digitalKeyService.getAvailableKeysByProduct(
-            null, productId, PageRequest.of(page, size), requestingUserId));
+        Pageable pageable = PageRequest.of(page, size);
+        Page<DigitalKeyResponseDto> pageRes = digitalKeyService.getAvailableKeysByProduct(
+                keyQuantity, productId, pageable, requestingUserId);
+
+        return ResponseEntity.ok(pageRes);
     }
+
+    @GetMapping("/product/{productId}/count")
+    public ResponseEntity<Integer> countAvailableKeysByProduct(
+            @PathVariable Long productId) throws ResourceNotFoundException {
+
+        int count = digitalKeyService.countAvailableKeysByProductId(productId);
+        return ResponseEntity.ok(count);
+    }
+
 
     @PostMapping
     public ResponseEntity<List<DigitalKeyResponseDto>> uploadKeys(
-            @RequestBody DigitalKeyBulkCreateDto digitalKeyBulkCreateDto,
-            Authentication authentication) 
-            throws ResourceNotFoundException, UnauthorizedException, 
-                   DigitalKeyDuplicateException, InsufficientStockException {
-        
-        if (authentication == null) {
-            throw new UnauthorizedException("User not authenticated");
-        }
+            @Valid @RequestBody DigitalKeyBulkCreateDto digitalKeyBulkCreateDto,
+            Authentication authentication)
+            throws ResourceNotFoundException, UnauthorizedException, DigitalKeyDuplicateException, InsufficientStockException {
 
-        String email = authentication.getName();
-        var user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UnauthorizedException("User not found"));
-        Long sellerId = user.getId();
+        Long uploaderId = currentUserProvider.getCurrentUserId(authentication);
 
-        if (!user.getRole().toString().equals("SELLER")) {
-            throw new UnauthorizedException("User is not a seller");
-        }
-
-        List<DigitalKeyResponseDto> uploadedKeys = digitalKeyService.uploadKeys(
-            digitalKeyBulkCreateDto.productId(),
-            digitalKeyBulkCreateDto.keyCodes(),
-            sellerId
+        List<DigitalKeyResponseDto> uploaded = digitalKeyService.uploadKeys(
+                digitalKeyBulkCreateDto.productId(),
+                digitalKeyBulkCreateDto.keyCodes(),
+                uploaderId
         );
 
-        return ResponseEntity.ok(uploadedKeys);
+        return ResponseEntity.created(URI.create("/digital_keys/product/" + digitalKeyBulkCreateDto.productId()))
+                .body(uploaded);
     }
 
-    
+
 }
+    

@@ -11,8 +11,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.uade.tpo.marketplace.controllers.auth.CurrentUserProvider;
@@ -21,6 +23,8 @@ import com.uade.tpo.marketplace.entity.dto.response.UserResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.UserUpdateDto;
 import com.uade.tpo.marketplace.entity.enums.Role;
 import com.uade.tpo.marketplace.service.interfaces.IUserService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/users")
@@ -31,51 +35,58 @@ public class UsersController {
     @Autowired
     private CurrentUserProvider authenticator;
 
-    @GetMapping("{userId}")
-    public ResponseEntity<UserResponseDto> getUserById(@PathVariable Long id){
-        Optional<UserResponseDto> result =  userService.getUserById(id);
+
+    @GetMapping
+    public ResponseEntity<Page<UserResponseDto>> getUsers(Pageable pageable,
+                                                        @RequestParam(required = false) Optional<Role> role) {
+        Page<UserResponseDto> page = userService.getUsers(pageable, role);
+        return ResponseEntity.ok(page);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<UserResponseDto> getUserById(@PathVariable("id") Long id) {
+        Optional<UserResponseDto> result = userService.getUserById(id);
         return result.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.noContent().build());
     }
 
-    @GetMapping("{userId}")
-    public ResponseEntity<UserResponseDto> getUserByMail(@PathVariable String mail){
-        Optional<UserResponseDto> result =  userService.getUserByMail(mail);
+    @GetMapping("/by-email")
+    public ResponseEntity<UserResponseDto> getUserByMail(@RequestParam("email") String email) {
+        Optional<UserResponseDto> result = userService.getUserByMail(email);
         return result.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.noContent().build());
     }
 
-    @GetMapping("{userId}")
-    public Page<UserResponseDto> getUsers(@PathVariable Pageable pageable, Optional<Role> roleFilter){
-        Page<UserResponseDto> result = userService.getUsers(pageable, roleFilter);
-        return result;
+    @GetMapping("/role/{role}")
+    public ResponseEntity<Page<UserResponseDto>> getUsersByRole(@PathVariable("role") Role role, Pageable pageable) {
+        Page<UserResponseDto> page = userService.getUsersByRole(pageable, role);
+        return ResponseEntity.ok(page);
     }
 
-    @GetMapping("{userId}")
-    public Page<UserResponseDto> getUsersByRole(@PathVariable Pageable pageable, Role role) {
-        Page<UserResponseDto> result = userService.getUsersByRole(pageable, role);
-        return result;
+    @GetMapping("/seller/{sellerId}/profile")
+    public ResponseEntity<SellerResponseDto> getSellerProfile(@PathVariable("sellerId") Long sellerId) {
+        Optional<SellerResponseDto> opt = userService.getSellerProfile(sellerId);
+        return opt.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.noContent().build());
     }
 
-    @GetMapping("{sellerId}")
-    public Optional<SellerResponseDto> getSellerProfile(@PathVariable Long sellerId) {
-        Optional<SellerResponseDto> result = userService.getSellerProfile(sellerId);
-        return result;
-    }
-
-    @GetMapping("{userId}")
-    public int registerNewLogin(@PathVariable Long userId, Authentication authentication) {
+    @PostMapping("/{id}/register-login")
+    public ResponseEntity<Integer> registerNewLogin(@PathVariable("id") Long userId, Authentication authentication) {
         Long requestingUserId = authenticator.getCurrentUserId(authentication);
-        return userService.registerNewLogin(userId, requestingUserId);
+        int result = userService.registerNewLogin(userId, requestingUserId);
+        return ResponseEntity.ok(result);
     }
-
-    @PostMapping("/{userId}/update")
-    public UserResponseDto updateUser(@PathVariable Long id, @RequestBody UserUpdateDto userUpdateDto, Authentication authentication){
+    @PutMapping("/{id}")
+    public ResponseEntity<UserResponseDto> updateUser(@PathVariable("id") Long id,
+                                                      @Valid @RequestBody UserUpdateDto userUpdateDto,
+                                                      Authentication authentication) {
         Long requestingUserId = authenticator.getCurrentUserId(authentication);
-        UserResponseDto result =  userService.updateUser(id, userUpdateDto, requestingUserId);
-        return result;
+        UserResponseDto updated = userService.updateUser(id, userUpdateDto, requestingUserId);
+        return ResponseEntity.ok(updated);
     }
 
-    @PostMapping("{userId}/updateBalance")
-    public int updateBuyerBalance(@PathVariable Long userId, BigDecimal newBalance) {
-        return userService.updateBuyerBalance(userId, newBalance);
+    @PutMapping("/me/balance")
+    public ResponseEntity<Integer> updateBuyerBalance(@RequestParam("newBalance") BigDecimal newBalance,
+                                                      Authentication authentication) {
+        Long userId = authenticator.getCurrentUserId(authentication);
+        int updated = userService.updateBuyerBalance(userId, newBalance);
+        return ResponseEntity.ok(updated);
     }
 }//Enrique Busso

@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.uade.tpo.marketplace.entity.basic.Category;
 import com.uade.tpo.marketplace.entity.dto.create.CategoryCreateDto;
 import com.uade.tpo.marketplace.entity.dto.response.CategoryResponseDto;
 import com.uade.tpo.marketplace.exceptions.CategoryDuplicateException;
@@ -34,19 +33,16 @@ public class CategoriesController {
     private ICategoryService categoryService; //Usamos esto para no depender de otras capas, para reducir acoplamiento
     //Entonces no vamos a crear instancias de esta interfaz, sino que Spring se encargará de inyectarla
 
-  
     
     @GetMapping //localhost:4002/categories
     public ResponseEntity<Page<CategoryResponseDto>> getCategories(
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size) {
 
-        PageRequest pr;
-        if (page == null || size == null) {
-            pr = PageRequest.of(0, Integer.MAX_VALUE);
-        } else {
-            pr = PageRequest.of(page, size);
-        }
+        PageRequest pr = (page == null || size == null)
+                ? PageRequest.of(0, Integer.MAX_VALUE)
+                : PageRequest.of(page, size);
+
         Page<CategoryResponseDto> result = categoryService.getCategories(pr);
         return ResponseEntity.ok(result);
     }
@@ -55,7 +51,7 @@ public class CategoriesController {
     //Pero quiero poder indicar un numero para que me devuleva solo alguna categoria tambien
 
 
-    @GetMapping("{categoryId}") //localhost:4002/categories/1,2,3 y así
+    @GetMapping("/{categoryId}") //localhost:4002/categories/1,2,3 y así
     public ResponseEntity<CategoryResponseDto> getCategoryById(@PathVariable Long categoryId) {
         Optional<CategoryResponseDto> result = categoryService.getCategoryById(categoryId);
         return result.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.noContent().build());
@@ -66,12 +62,9 @@ public class CategoriesController {
             throws CategoryDuplicateException {
 
         CategoryResponseDto created = categoryService.createCategory(categoryCreateDto);
-        URI location = URI.create(String.format("categories/", created.id()));
+        URI location = URI.create("/categories/" + created.id());
         return ResponseEntity.created(location).body(created);
     }
 
 
-
-
-    
 }

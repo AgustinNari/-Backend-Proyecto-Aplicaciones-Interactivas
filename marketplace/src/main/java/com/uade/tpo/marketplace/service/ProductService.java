@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -20,6 +21,7 @@ import com.uade.tpo.marketplace.entity.basic.Category;
 import com.uade.tpo.marketplace.entity.basic.Product;
 import com.uade.tpo.marketplace.entity.basic.User;
 import com.uade.tpo.marketplace.entity.dto.create.ProductCreateDto;
+import com.uade.tpo.marketplace.entity.dto.create.ProductImageCreateDto;
 import com.uade.tpo.marketplace.entity.dto.response.ProductResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.ProductUpdateDto;
 import com.uade.tpo.marketplace.exceptions.BadRequestException;
@@ -32,6 +34,7 @@ import com.uade.tpo.marketplace.repository.interfaces.ICategoryRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IDigitalKeyRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IProductRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IUserRepository;
+import com.uade.tpo.marketplace.service.interfaces.IProductImageService;
 import com.uade.tpo.marketplace.service.interfaces.IProductService;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -41,6 +44,7 @@ import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 @Service
 public class ProductService implements IProductService {
 
@@ -52,9 +56,13 @@ public class ProductService implements IProductService {
     private ICategoryRepository categoryRepository;
     @Autowired
     private IDigitalKeyRepository digitalKeyRepository;
+    @Autowired
+    private IProductImageService productImageService;
 
     @Autowired
     private ProductMapper productMapper;
+
+ 
 
     
 
@@ -272,7 +280,7 @@ public class ProductService implements IProductService {
 
     @Override
     @Transactional(rollbackFor = Throwable.class)
-    public int updateProudctPrice(Long id, BigDecimal newPrice, Long requestingUserId) throws ProductNotFoundException, UnauthorizedException {
+    public int updateProductPrice(Long id, BigDecimal newPrice, Long requestingUserId) throws ProductNotFoundException, UnauthorizedException {
         Product existing = productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException("Producto no encontrado (id=" + id + ")."));
         
@@ -355,4 +363,70 @@ public class ProductService implements IProductService {
             return cb.and(predicates.toArray(new Predicate[0]));
         };
     }
+
+    @Override
+    @Transactional(rollbackFor = Throwable.class)
+    public ProductResponseDto createProductWithImages(
+            ProductCreateDto dto,
+            Long sellerId,
+            List<MultipartFile> images)
+            throws ProductNotFoundException, DuplicateResourceException, ResourceNotFoundException, BadRequestException, UnauthorizedException {
+
+        if (dto == null) {
+            throw new BadRequestException("Datos de producto no proporcionados.");
+        }
+        if (sellerId == null) {
+            throw new UnauthorizedException("Id de vendedor no proporcionado.");
+        }
+
+        ProductResponseDto created = this.createProduct(dto, sellerId);
+
+        if (created == null || created.id() == null) {
+            throw new IllegalStateException("Producto creado pero no se obtuvo el id. Operación abortada.");
+        }
+
+        if (!Objects.equals(created.sellerId(), sellerId)) {
+            throw new UnauthorizedException("El vendedor autenticado no coincide con el creador del producto.");
+        }
+
+        final int MAX_IMAGES = 10;
+        final long MAX_FILE_SIZE = 5 * 1024 * 1024L; // 5 MB por imagen como límite
+        final Set<String> ALLOWED_CONTENT_TYPES = Set.of("image/jpeg", "image/png", "image/webp");
+
+        if (images != null && !images.isEmpty()) {
+            if (images.size() > MAX_IMAGES) {
+                throw new BadRequestException("Número de imágenes excede el máximo permitido: " + MAX_IMAGES);
+            }
+
+            for (MultipartFile file : images) {
+                if (file == null || file.isEmpty()) {
+                    continue;
+                }
+
+                if (file.getSize() > MAX_FILE_SIZE) {
+                    throw new BadRequestException("La imagen '" + file.getOriginalFilename() + "' excede el tamaño máximo permitido de " + (MAX_FILE_SIZE / (1024*1024)) + " MB.");
+                }
+
+                String contentType = file.getContentType();
+                if (contentType != null && !ALLOWED_CONTENT_TYPES.contains(contentType)) {
+                    throw new BadRequestException("Tipo de archivo no permitido para '" + file.getOriginalFilename() + "': " + contentType);
+                }
+
+
+                String rawName = file.getOriginalFilename();
+                String filename = (rawName == null || rawName.isBlank()) ? "image" : org.springframework.util.StringUtils.cleanPath(rawName);
+
+                ProductImageCreateDto imgDto = new ProductImageCreateDto(created.id(), filename, file);
+                try {
+                    productImageService.addImage(imgDto, sellerId);
+                } catch (ResourceNotFoundException | BadRequestException | UnauthorizedException ex) {
+                    throw new BadRequestException("Error al subir la imagen '" + filename + "': " + ex.getMessage());
+                } catch (Exception ex) {
+                    throw new BadRequestException("Error inesperado al subir la imagen '" + filename + "': " + ex.getMessage());
+                }
+            }
+        }
+        return this.getProductById(created.id()).orElse(created);
+    }
+
 }

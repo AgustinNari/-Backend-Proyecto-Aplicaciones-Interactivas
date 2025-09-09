@@ -25,5 +25,7 @@ public interface IProductImageService {
 
         Optional<ProductImageResponseDto> getPrimaryImageByProductId(Long productId) throws ResourceNotFoundException;
 
-        public ProductImageResponseDto getImageById(Long id) throws ResourceNotFoundException , Exception;
+        ProductImageResponseDto getImageById(Long id) throws ResourceNotFoundException , Exception;
+
+        
 }

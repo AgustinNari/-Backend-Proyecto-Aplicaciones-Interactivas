@@ -1,17 +1,21 @@
 package com.uade.tpo.marketplace.controllers;
 
 import java.net.URI;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.uade.tpo.marketplace.controllers.auth.CurrentUserProvider;
@@ -23,6 +27,8 @@ import com.uade.tpo.marketplace.exceptions.ReviewNotFoundException;
 import com.uade.tpo.marketplace.exceptions.UserNotFoundException;
 import com.uade.tpo.marketplace.service.interfaces.IReviewService;
 
+import jakarta.validation.Valid;
+
 
 @RestController
 @RequestMapping("/reviews")
@@ -33,50 +39,62 @@ public class ReviewsController {
     @Autowired
     private CurrentUserProvider authenticator;
 
-    @GetMapping("{reviewId}")
-    public Page<ReviewResponseDto> getReviewByUser(@PathVariable Long userId, Pageable pageable)
+
+    @GetMapping
+    public ResponseEntity<Page<ReviewResponseDto>> getAllReviews(Pageable pageable) {
+        Page<ReviewResponseDto> page = reviewService.getAllReviews(pageable);
+        return ResponseEntity.ok(page);
+    }
+
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<Page<ReviewResponseDto>> getReviewsByUser(@PathVariable("userId") Long userId, Pageable pageable)
             throws UserNotFoundException {
-        Page<ReviewResponseDto> result = reviewService.getReviewsByUser(userId, pageable);
-        return result;
+        Page<ReviewResponseDto> page = reviewService.getReviewsByUser(userId, pageable);
+        return ResponseEntity.ok(page);
     }
 
-    @GetMapping("{reviewId}")
-    public Page<ReviewResponseDto> getReviewByProduct(@PathVariable Long productId, Pageable pageable, boolean onlyVisible)
+    @GetMapping("/product/{productId}")
+    public ResponseEntity<Page<ReviewResponseDto>> getReviewsByProduct(@PathVariable("productId") Long productId,
+                                                                       Pageable pageable,
+                                                                       @RequestParam(name = "onlyVisible", required = false, defaultValue = "true") boolean onlyVisible)
             throws ProductNotFoundException {
-        Page<ReviewResponseDto> result = reviewService.getReviewsByProduct(productId, pageable, onlyVisible);
-        return result;
+        Page<ReviewResponseDto> page = reviewService.getReviewsByProduct(productId, pageable, onlyVisible);
+        return ResponseEntity.ok(page);
     }
 
-    @GetMapping("{reviewId}")
-    public Page<ReviewResponseDto> getAllReviews(@PathVariable Pageable pageable)
-            throws ReviewNotFoundException {
-        Page<ReviewResponseDto> result = reviewService.getAllReviews(pageable);
-        return result;
+
+    @GetMapping("/product/{productId}/stats")
+    public ResponseEntity<Map<String, Object>> getAverageRatingAndCountByProduct(@PathVariable("productId") Long productId)
+            throws ProductNotFoundException {
+        var pair = reviewService.getAverageRatingAndCountByProduct(productId);
+        double avg = pair.getFirst(); // Double
+        long count = pair.getSecond(); // Long
+        return ResponseEntity.ok(Map.of("average", avg, "count", count));
     }
 
-    @GetMapping("{reviewId}")
-    public Page<ReviewResponseDto> getAverageRatingAndCountByProduct(@PathVariable Long productId, Pageable pageable)
-            throws ProductNotFoundException, ReviewNotFoundException {
-        Page<ReviewResponseDto> result = reviewService.getReviewsByUser(productId, pageable);
-        return result;
+    @PostMapping
+    public ResponseEntity<ReviewResponseDto> createReview(@Valid @RequestBody ReviewCreateDto dto, Authentication authentication) {
+        Long buyerId = authenticator.getCurrentUserId(authentication);
+        ReviewResponseDto created = reviewService.createReview(dto, buyerId);
+        return ResponseEntity.created(URI.create("/reviews/" + created.id())).body(created);
     }
 
-    @PostMapping()
-    public ResponseEntity<ReviewResponseDto> createReview( @RequestBody ReviewCreateDto reviewCreateDto, Long buyerId){
-        ReviewResponseDto result = reviewService.createReview(reviewCreateDto, buyerId);
-        return ResponseEntity.created(URI.create("reviews/" + result.id())).body(result);
-    }
 
-    @PostMapping()
-    public ResponseEntity<ReviewResponseDto> updateReview( @RequestBody ReviewUpdateDto reviewUpdateDto, Long reviewId, Authentication authentication){
+    @PutMapping("/{reviewId}")
+    public ResponseEntity<ReviewResponseDto> updateReview(@PathVariable("reviewId") Long reviewId,
+                                                          @Valid @RequestBody ReviewUpdateDto dto,
+                                                          Authentication authentication) {
         Long requestingUserId = authenticator.getCurrentUserId(authentication);
-        ReviewResponseDto result = reviewService.updateReview(reviewId, reviewUpdateDto, requestingUserId);
-        return ResponseEntity.ok(result);
+        ReviewResponseDto updated = reviewService.updateReview(reviewId, dto, requestingUserId);
+        return ResponseEntity.ok(updated);
     }
 
-    @PostMapping()
-    public void deleteReview(Long reviewId, Authentication authentication){
+
+    @DeleteMapping("/{reviewId}")
+    public ResponseEntity<Void> deleteReview(@PathVariable("reviewId") Long reviewId, Authentication authentication) {
         Long requestingUserId = authenticator.getCurrentUserId(authentication);
         reviewService.deleteReview(reviewId, requestingUserId);
+        return ResponseEntity.noContent().build();
     }
 }//Enrique Busso

@@ -88,8 +88,9 @@ public class DiscountsController {
         return discountService.getActiveDiscountsForProduct(productId, productQuantity, pageable);
     }
 
-    @GetMapping("/buyer/{buyerId}/active-coupons")
-    public Page<DiscountResponseDto> allActiveCouponsForBuyer(@PathVariable Long buyerId, Pageable pageable) {
+    @GetMapping("/buyer/active-coupons")
+    public Page<DiscountResponseDto> allActiveCouponsForBuyer(Authentication authentication, Pageable pageable) {
+        Long buyerId = currentUserProvider.getCurrentUserId(authentication);
         return discountService.getAllActiveCouponsByTargetBuyerId(buyerId, pageable);
     }
 
