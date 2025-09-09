@@ -7,5 +7,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 public class CategoryDuplicateException extends DuplicateResourceException {
     public CategoryDuplicateException(String message) { super(message); }
     public CategoryDuplicateException() { super(); }
+    public CategoryDuplicateException(String message, Throwable cause) { super(message, cause); }
 
 }

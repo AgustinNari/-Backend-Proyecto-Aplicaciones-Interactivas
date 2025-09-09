@@ -9,5 +9,6 @@ public class InsufficientStockException extends ConflictException {
         super(message);
     }
     public InsufficientStockException() { super(); }
+    public InsufficientStockException(String message, Throwable cause) { super(message, cause); }
 
 }

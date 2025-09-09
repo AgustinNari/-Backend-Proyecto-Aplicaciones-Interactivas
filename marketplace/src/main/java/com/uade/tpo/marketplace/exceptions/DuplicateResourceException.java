@@ -7,5 +7,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 public class DuplicateResourceException extends ConflictException {
     public DuplicateResourceException(String message) { super(message); }
     public DuplicateResourceException() { super(); }
+    public DuplicateResourceException(String message, Throwable cause) { super(message, cause); }
 
 }

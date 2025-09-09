@@ -9,4 +9,5 @@ public class ProductNotActiveException extends BadRequestException {
         super(message);
     }
     public ProductNotActiveException() { super(); }
+    public ProductNotActiveException(String message, Throwable cause) { super(message, cause); }
 }

@@ -9,4 +9,5 @@ public class ReviewNotFoundException extends ResourceNotFoundException {
         super(message);
     }
     public ReviewNotFoundException() { super(); }
+    public ReviewNotFoundException(String message, Throwable cause) { super(message, cause); }
 }

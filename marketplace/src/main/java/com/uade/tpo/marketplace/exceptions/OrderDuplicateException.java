@@ -9,5 +9,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 public class OrderDuplicateException extends DuplicateResourceException {
     public OrderDuplicateException(String message) { super(message); }
     public OrderDuplicateException() { super(); }
+    public OrderDuplicateException(String message, Throwable cause) { super(message, cause); }
 
 }

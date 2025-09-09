@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.uade.tpo.marketplace.entity.dto.request.ChangePasswordRequestDto;
 import com.uade.tpo.marketplace.exceptions.ResourceNotFoundException;
+import com.uade.tpo.marketplace.exceptions.UserNotFoundException;
 import com.uade.tpo.marketplace.repository.interfaces.IUserRepository;
 import com.uade.tpo.marketplace.service.interfaces.IAuthenticationService;
 
@@ -49,7 +50,7 @@ public class AuthenticationController {
         String email = authentication.getName();
 
         var user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with email=" + email));
+                .orElseThrow(() -> new UserNotFoundException("User not found with email=" + email));
         Long userId = user.getId();
 
         service.changePassword(userId, body.getCurrentPassword(), body.getNewPassword());

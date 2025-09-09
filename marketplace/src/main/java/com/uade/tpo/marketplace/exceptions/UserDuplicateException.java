@@ -9,5 +9,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 public class UserDuplicateException extends DuplicateResourceException {
     public UserDuplicateException(String message) { super(message); }
     public UserDuplicateException() { super(); }
+    public UserDuplicateException(String message, Throwable cause) { super(message, cause); }
 
 }

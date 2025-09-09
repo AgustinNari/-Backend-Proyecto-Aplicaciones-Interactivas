@@ -7,5 +7,6 @@ import org.springframework.http.HttpStatus;
 public class ProductNotFoundException extends ResourceNotFoundException {
     public ProductNotFoundException(String message) { super(message); }
     public ProductNotFoundException() { super(); }
+    public ProductNotFoundException(String message, Throwable cause) { super(message, cause); }
     
 }

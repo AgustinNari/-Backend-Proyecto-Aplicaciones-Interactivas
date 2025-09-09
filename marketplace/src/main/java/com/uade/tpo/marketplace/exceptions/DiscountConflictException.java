@@ -7,4 +7,5 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 public class DiscountConflictException extends ConflictException{
     public DiscountConflictException(String message) { super(message); }
     public DiscountConflictException() { super(); }
+    public DiscountConflictException(String message, Throwable cause) { super(message, cause); }
 }

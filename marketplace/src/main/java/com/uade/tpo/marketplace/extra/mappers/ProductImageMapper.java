@@ -15,6 +15,8 @@ import com.uade.tpo.marketplace.entity.basic.ProductImage;
 import com.uade.tpo.marketplace.entity.dto.create.ProductImageCreateDto;
 import com.uade.tpo.marketplace.entity.dto.response.ProductImageResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.ProductImageUpdateDto;
+import com.uade.tpo.marketplace.exceptions.ImageProcessingException;
+import com.uade.tpo.marketplace.exceptions.InvalidFileException;
 
 @Component
 public class ProductImageMapper {
@@ -87,7 +89,7 @@ public class ProductImageMapper {
             byte[] bytes = file.getBytes();
             return new SerialBlob(bytes);
         } catch (IOException | SQLException e) {
-            throw new RuntimeException("Error al convertir MultipartFile a Blob", e);
+            throw new ImageProcessingException("Error al convertir MultipartFile a Blob", e);
         }
     }
 
@@ -97,12 +99,12 @@ public class ProductImageMapper {
             long length = blob.length();
             if (length == 0) return null;
             if (length > Integer.MAX_VALUE) {
-                throw new RuntimeException("Blob demasiado grande para convertir a byte[]");
+                throw new InvalidFileException("Blob demasiado grande para convertir a byte[]");
             }
             byte[] bytes = blob.getBytes(1, (int) length);
             return Base64.getEncoder().encodeToString(bytes);
         } catch (SQLException e) {
-            throw new RuntimeException("Error al leer los bytes del Blob", e);
+            throw new ImageProcessingException("Error al leer los bytes del Blob", e);
         }
     }
 

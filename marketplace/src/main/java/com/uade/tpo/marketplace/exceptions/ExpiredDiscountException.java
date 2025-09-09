@@ -9,4 +9,5 @@ public class ExpiredDiscountException extends BadRequestException {
         super(message);
     }
     public ExpiredDiscountException() { super(); }
+    public ExpiredDiscountException(String message, Throwable cause) { super(message, cause); }
 }
