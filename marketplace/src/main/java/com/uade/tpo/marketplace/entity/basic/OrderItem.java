@@ -3,7 +3,9 @@ package com.uade.tpo.marketplace.entity.basic;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -21,6 +23,7 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Data
@@ -43,7 +46,7 @@ public class OrderItem {
     private Product product;
 
     @OneToMany(mappedBy = "orderItem", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<DigitalKey> digitalKeys = new ArrayList<>();
+    private Set<DigitalKey> digitalKeys = new HashSet<>();
 
     @Column(nullable = false)
     private Integer quantity = 1;

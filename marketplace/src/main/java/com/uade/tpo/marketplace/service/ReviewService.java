@@ -64,62 +64,66 @@ public class ReviewService implements IReviewService {
 
     @Override
     @Transactional(rollbackFor = Throwable.class)
-    public ReviewResponseDto createReview(ReviewCreateDto dto, Long buyerId) throws ResourceNotFoundException, BadRequestException {
-            if (dto == null) throw new BadRequestException("Datos de la reseña no proporcionados.");
-            if (dto.productId() == null) throw new BadRequestException("Debe indicarse el productId para la reseña.");
-            if (dto.rating() == null || dto.rating() < 1 || dto.rating() > 10) {
-                throw new BadRequestException("La calificación (rating) debe estar entre 1 y 10.");
-            }
+    public ReviewResponseDto createReview(ReviewCreateDto dto, Long buyerId)
+            throws ResourceNotFoundException, BadRequestException, DuplicateReviewException {
 
-            Product product = productRepository.findById(dto.productId())
-                    .orElseThrow(() -> new ProductNotFoundException("Producto no encontrado (id=" + dto.productId() + ")."));
+        if (dto == null) throw new BadRequestException("Datos de la reseña no proporcionados.");
+        if (dto.productId() == null) throw new BadRequestException("Debe indicarse el productId para la reseña.");
+        if (dto.rating() == null || dto.rating() < 1 || dto.rating() > 10) {
+            throw new BadRequestException("La calificación (rating) debe estar entre 1 y 10.");
+        }
 
-            User buyer = userRepository.findById(buyerId)
-                    .orElseThrow(() -> new UserNotFoundException("Usuario comprador no encontrado (id=" + buyerId + ")."));
+        Product product = productRepository.findById(dto.productId())
+                .orElseThrow(() -> new ProductNotFoundException("Producto no encontrado (id=" + dto.productId() + ")."));
 
+        User buyer = userRepository.findById(buyerId)
+                .orElseThrow(() -> new UserNotFoundException("Usuario comprador no encontrado (id=" + buyerId + ")."));
 
-            if (dto.orderItemId() == null) {
-                throw new BadRequestException("Debe indicarse el orderItemId para la reseña.");
-            }
+        if (dto.orderItemId() == null) {
+            throw new BadRequestException("Debe indicarse el orderItemId para la reseña.");
+        }
 
-            OrderItem oi = orderItemRepository.findById(dto.orderItemId())
-                    .orElseThrow(() -> new OrderNotFoundException("Item de la orden no encontrado (id=" + dto.orderItemId() + ")."));
+        OrderItem oi = orderItemRepository.findById(dto.orderItemId())
+                .orElseThrow(() -> new OrderNotFoundException("Item de la orden no encontrado (id=" + dto.orderItemId() + ")."));
 
-            if (oi.getProduct() == null || !Objects.equals(oi.getProduct().getId(), dto.productId())) {
-                throw new BadRequestException("El item de la orden no corresponde al producto indicado.");
-            }
+        if (oi.getProduct() == null || !Objects.equals(oi.getProduct().getId(), dto.productId())) {
+            throw new BadRequestException("El item de la orden no corresponde al producto indicado.");
+        }
 
-            Order order = orderRepository.findById(oi.getOrder().getId())
-                    .orElseThrow(() -> new OrderNotFoundException("Order no encontrado (id=" + oi.getOrder().getId() + ")."));
+        Order order = orderRepository.findById(oi.getOrder() != null ? oi.getOrder().getId() : null)
+                .orElseThrow(() -> new OrderNotFoundException("Order no encontrado (id=" + (oi.getOrder() != null ? oi.getOrder().getId() : null) + ")."));
 
-            if (order.getBuyer() == null || !Objects.equals(order.getBuyer().getId(), buyerId)) {
-                throw new BadRequestException("La orden no pertenece al comprador indicado.");
-            }
+        if (order.getBuyer() == null || !Objects.equals(order.getBuyer().getId(), buyerId)) {
+            throw new BadRequestException("La orden no pertenece al comprador indicado.");
+        }
 
-            if (order.getStatus() != OrderStatus.COMPLETED) {
-                throw new BadRequestException("La orden no se encuentra completada.");
-            }
+        if (order.getStatus() != OrderStatus.COMPLETED) {
+            throw new BadRequestException("La orden no se encuentra completada.");
+        }
 
-            if (oi.getReview() != null) {
-                throw new DuplicateReviewException("Ya existe una reseña asociada a ese ítem.");
-            }
+        if (reviewRepository.existsByOrderItemId(dto.orderItemId())) {
+            throw new DuplicateReviewException("Ya existe una reseña asociada a ese ítem.");
+        }
 
-            Review review = reviewMapper.toEntity(dto);
-            review.setBuyer(buyer);
-            review.setProduct(product);
-            review.setSeller(product.getSeller()); 
-            review.setVisible(true);
-            review.setOrderItem(oi);
+        if (product.getId() != null && buyerId != null &&
+                reviewRepository.existsByProductIdAndBuyerId(product.getId(), buyerId)) {
+            throw new DuplicateReviewException("El comprador ya realizó una reseña para este producto.");
+        }
 
-            oi.setReview(review);
+        Review review = reviewMapper.toEntity(dto);
+        review.setBuyer(buyer);
+        review.setProduct(product);
+        review.setSeller(product.getSeller());
+        review.setVisible(true);
+        review.setOrderItem(oi);
 
-            orderItemRepository.save(oi);
+        Review saved = reviewRepository.save(review);
 
-            Review saved = reviewRepository.save(review);
+        oi.setReview(saved);
+        orderItemRepository.save(oi);
 
-            return reviewMapper.toResponse(saved);
+        return reviewMapper.toResponse(saved);
     }
-
 
     @Override
     @Transactional(rollbackFor = Throwable.class)

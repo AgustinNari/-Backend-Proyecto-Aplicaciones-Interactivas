@@ -3,8 +3,10 @@ package com.uade.tpo.marketplace.extra.mappers;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
@@ -26,8 +28,7 @@ public class OrderMapper {
     public OrderMapper() {
         this.orderItemMapper = new OrderItemMapper();
     }
-
-    public OrderResponseDto toResponse(Order order, Boolean includeKeyCodes){
+  public OrderResponseDto toResponse(Order order, Boolean includeKeyCodes){
         if (order == null) return null;
 
         Long buyerId = order.getBuyer() != null ? safeGetId(order.getBuyer()) : null;
@@ -68,15 +69,17 @@ public class OrderMapper {
             buyer.setId(buyerId);
             order.setBuyer(buyer);
         }
-        List<OrderItem> items = dto.items() == null || dto.items().isEmpty()
-                ? Collections.emptyList()
+
+        Set<OrderItem> items = dto.items() == null || dto.items().isEmpty()
+                ? Collections.emptySet()
                 : dto.items().stream()
                     .filter(Objects::nonNull)
                     .map(itemDto -> {
                         BigDecimal unitPrice = null;
                         OrderItem oi = orderItemMapper.toEntityFromCreate(itemDto, unitPrice);
                         return oi;
-                    }).collect(Collectors.toList());
+                    }).collect(Collectors.toSet());
+
         order.setItems(items);
         order.setNotes(dto.notes());
         order.setSubtotal(BigDecimal.ZERO);
@@ -84,7 +87,6 @@ public class OrderMapper {
         order.setDiscountAmount(BigDecimal.ZERO);
         return order;
     }
-
 
     public OrderSummaryDto computeSummary(Order order) {
         if (order == null) return new OrderSummaryDto(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO);
@@ -106,7 +108,6 @@ public class OrderMapper {
         if (dto.status() != null) entity.setStatus(dto.status());
         if (dto.notes() != null) entity.setNotes(dto.notes());
     }
-
     private Long safeGetId(User u) {
         try { return u.getId(); } catch (Exception e) { return null; }
     }

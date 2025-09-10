@@ -4,7 +4,9 @@ package com.uade.tpo.marketplace.entity.basic;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -25,6 +27,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Data
@@ -32,9 +35,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Entity
 @Table(name = "orders")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
 
 
@@ -70,7 +75,7 @@ public class Order {
     private Instant completedAt;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<OrderItem> items = new ArrayList<>();
+    private Set<OrderItem> items = new HashSet<>();
 
     @Column(columnDefinition = "TEXT")
     private String notes;

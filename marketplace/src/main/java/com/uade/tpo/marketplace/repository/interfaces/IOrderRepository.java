@@ -42,4 +42,11 @@ public interface IOrderRepository extends JpaRepository<Order, Long> {
     
     @Query("SELECT o.buyer.id, COUNT(o), SUM(o.totalAmount) FROM Order o WHERE o.status = 'COMPLETED' GROUP BY o.buyer.id")
     Page<Object[]> getOrderStatisticsByUser(Pageable pageable);
+
+    @Query("SELECT DISTINCT o FROM Order o " +
+        "LEFT JOIN FETCH o.items i " +
+        "LEFT JOIN FETCH i.product p " +
+        "LEFT JOIN FETCH i.digitalKeys dk " +
+        "WHERE o.id = :id")
+    Optional<Order> findOrderWithItemsAndProductsAndKeys(@Param("id") Long id);
 }

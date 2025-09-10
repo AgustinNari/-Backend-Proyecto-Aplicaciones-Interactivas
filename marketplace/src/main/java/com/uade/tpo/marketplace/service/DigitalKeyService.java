@@ -1,8 +1,11 @@
 package com.uade.tpo.marketplace.service;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -74,11 +77,28 @@ public class DigitalKeyService implements IDigitalKeyService {
                 .filter(s -> !s.isEmpty())
                 .collect(Collectors.toList());
 
+        Map<String, Long> freq = normalized.stream()
+                .collect(Collectors.groupingBy(s -> s, LinkedHashMap::new, Collectors.counting()));
+
+        List<String> duplicatesInPayload = freq.entrySet().stream()
+                .filter(e -> e.getValue() > 1)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+
+        if (!duplicatesInPayload.isEmpty()) {
+            throw new DigitalKeyDuplicateException("Se encontraron claves duplicadas en el paquete a subir: " + duplicatesInPayload);
+        }
+
+        List<String> duplicatesInDb = new ArrayList<>();
         for (String code : normalized) {
             if (digitalKeyRepository.existsByKeyCode(code)) {
-                throw new DigitalKeyDuplicateException("Clave de videojuego duplicada: " + code);
+                duplicatesInDb.add(code);
             }
         }
+        if (!duplicatesInDb.isEmpty()) {
+            throw new DigitalKeyDuplicateException("Las siguientes claves ya existen en el sistema: " + duplicatesInDb);
+        }
+
 
         List<DigitalKey> entities = digitalKeyMapper.toEntitiesFromKeyCodes(productId, normalized);
 
