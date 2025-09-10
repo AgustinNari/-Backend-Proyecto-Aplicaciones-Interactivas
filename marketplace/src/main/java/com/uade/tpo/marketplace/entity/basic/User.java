@@ -88,7 +88,6 @@ public class User implements UserDetails {
     @Column(nullable=false)
     private String country;
 
-    //TODO: Agregar correspondencias en DTOS, Mappers y demás
     @Column(name = "buyer_balance")
     private BigDecimal buyerBalance;
 

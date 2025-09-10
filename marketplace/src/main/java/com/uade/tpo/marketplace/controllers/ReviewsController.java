@@ -67,8 +67,8 @@ public class ReviewsController {
     public ResponseEntity<Map<String, Object>> getAverageRatingAndCountByProduct(@PathVariable("productId") Long productId)
             throws ProductNotFoundException {
         var pair = reviewService.getAverageRatingAndCountByProduct(productId);
-        double avg = pair.getFirst(); // Double
-        long count = pair.getSecond(); // Long
+        double avg = pair.getFirst();
+        long count = pair.getSecond();
         return ResponseEntity.ok(Map.of("average", avg, "count", count));
     }
 

@@ -54,7 +54,7 @@ public class CategoryMapper {
     }
 
     //TODO: 
-    // Esto es un helper provisional (posiblemente para eliminar en un futuro)
+    // Esto es un helper provisional (posiblemente para eliminar o reemplazar en un futuro)
     public Category fromId(Long id){
         if (id == null) return null;
         Category c = new Category();

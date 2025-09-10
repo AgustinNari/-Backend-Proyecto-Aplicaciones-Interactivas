@@ -43,8 +43,7 @@ public interface IProductService {
 
     Optional<ProductResponseDto> getProductBySku(String sku);
 
-
-    //TODO: Para búsqueda con filtros avanzados - ¿Usar este o con filtros explicitos?
+    
     Page<ProductResponseDto> findBySpecification(Specification<Product> spec, Pageable pageable);
 
 

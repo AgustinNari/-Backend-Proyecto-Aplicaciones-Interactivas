@@ -46,8 +46,6 @@ public interface IProductRepository extends JpaRepository<Product, Long>, JpaSpe
     @Query("SELECT p FROM Product p WHERE LOWER(p.title) LIKE LOWER(CONCAT('%', :title, '%'))")
     Page<Product> findByTitleContainingIgnoreCase(@Param("title") String title, Pageable pageable);
     
-
-    //TODO: Acá usar la tabla product_category generada por la relación ManyToMany???
     @Query("SELECT DISTINCT p FROM Product p JOIN p.categories c WHERE c.id IN :categoryIds")
     Page<Product> findByCategoryIds(@Param("categoryIds") List<Long> categoryIds, Pageable pageable);
 
