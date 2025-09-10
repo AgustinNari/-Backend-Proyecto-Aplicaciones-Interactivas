@@ -3,9 +3,7 @@ package com.uade.tpo.marketplace.entity.basic;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.hibernate.annotations.CreationTimestamp;

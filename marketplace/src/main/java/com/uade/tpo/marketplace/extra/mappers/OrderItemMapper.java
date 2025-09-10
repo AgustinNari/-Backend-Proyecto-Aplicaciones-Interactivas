@@ -9,7 +9,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.AutoConfigureOrder;
 import org.springframework.stereotype.Component;
 
 import com.uade.tpo.marketplace.entity.basic.Discount;
@@ -25,15 +24,8 @@ import com.uade.tpo.marketplace.repository.interfaces.IProductRepository;
 public class OrderItemMapper {
 
 
-    private final DigitalKeyMapper digitalKeyMapper;
-
     @Autowired
     private IProductRepository productRepository;
-
-    public OrderItemMapper() {
-        this.digitalKeyMapper = new DigitalKeyMapper();
-
-    }
 
  
   public OrderItemResponseDto toResponse(OrderItem item, Boolean includeKeyCode){
