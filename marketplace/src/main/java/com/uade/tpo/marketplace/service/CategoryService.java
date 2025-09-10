@@ -28,7 +28,7 @@ public class CategoryService implements ICategoryService {
     private CategoryMapper categoryMapper;
 
     @Override
-    public Page<CategoryResponseDto> getCategories(PageRequest pageable) {
+    public Page<CategoryResponseDto> getAllCategories(PageRequest pageable) {
     Page<Category> page = categoryRepository.findAll(pageable);
     return page.map(categoryMapper::toResponse);
 }

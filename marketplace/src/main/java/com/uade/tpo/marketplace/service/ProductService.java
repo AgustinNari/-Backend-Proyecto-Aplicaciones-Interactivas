@@ -261,7 +261,7 @@ public class ProductService implements IProductService {
 
     @Override
     @Transactional(rollbackFor = Throwable.class)
-    public int toggleActivity(Long id, Boolean isActive, Long requestingUserId) throws ProductNotFoundException, UnauthorizedException {
+    public int toggleProductActivity(Long id, Boolean isActive, Long requestingUserId) throws ProductNotFoundException, UnauthorizedException {
         Product existing = productRepository.findById(id)
                     .orElseThrow(() -> new ProductNotFoundException("Producto no encontrado (id=" + id + ")."));
 
@@ -277,7 +277,7 @@ public class ProductService implements IProductService {
 
 
 
-            int updatedRows = productRepository.toggleActivity(id, isActive);
+            int updatedRows = productRepository.toggleProductActivity(id, isActive);
             
             if (updatedRows == 0) {
                 throw new ProductNotFoundException("No se pudo actualizar el producto con id=" + id);
@@ -316,7 +316,7 @@ public class ProductService implements IProductService {
     }
 
     @Override
-    public int getAvailableStock(Long productId) {
+    public int getAvailableStockByProductId(Long productId) {
         return digitalKeyRepository.countAvailableByProductId(productId);
     }
 

@@ -36,7 +36,7 @@ public class DiscountsController {
     @Autowired private CurrentUserProvider currentUserProvider;
 
     @PostMapping
-    public ResponseEntity<DiscountResponseDto> create(@Valid @RequestBody DiscountCreateDto dto,
+    public ResponseEntity<DiscountResponseDto> createDiscount(@Valid @RequestBody DiscountCreateDto dto,
                                                       Authentication authentication)
             throws DuplicateResourceException, ResourceNotFoundException {
         Long createdByUserId = currentUserProvider.getCurrentUserId(authentication);
@@ -45,7 +45,7 @@ public class DiscountsController {
     }
 
     @PutMapping("/{id}")
-    public DiscountResponseDto update(@PathVariable Long id,
+    public DiscountResponseDto updateDiscount(@PathVariable Long id,
                                       @Valid @RequestBody DiscountUpdateDto dto,
                                       Authentication authentication)
             throws ResourceNotFoundException, UnauthorizedException, DuplicateResourceException {
@@ -54,27 +54,27 @@ public class DiscountsController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<DiscountResponseDto> getOne(@PathVariable Long id) {
+    public ResponseEntity<DiscountResponseDto> getDiscountById(@PathVariable Long id) {
         return discountService.getDiscountById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/code/{code}")
-    public ResponseEntity<DiscountResponseDto> getActiveByCode(@PathVariable String code) {
+    public ResponseEntity<DiscountResponseDto> getActiveDiscountByCode(@PathVariable String code) {
         return discountService.getActiveDiscountByCode(code)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/active")
-    public Page<DiscountResponseDto> active(Pageable pageable,
+    public Page<DiscountResponseDto> getActiveDiscounts(Pageable pageable,
                                             @RequestParam(required = false) Boolean onlyActive) {
         return discountService.getActiveDiscounts(pageable, Optional.ofNullable(onlyActive));
     }
 
     @GetMapping
-    public Page<DiscountResponseDto> all(Pageable pageable) {
+    public Page<DiscountResponseDto> getAllDiscounts(Pageable pageable) {
         return discountService.getAllDiscounts(pageable);
     }
 
@@ -84,7 +84,7 @@ public class DiscountsController {
     }
 
     @GetMapping("/buyer/active-coupons")
-    public Page<DiscountResponseDto> allActiveCouponsForBuyer(Authentication authentication, Pageable pageable) {
+    public Page<DiscountResponseDto> getAllActiveCouponsByTargetBuyerId(Authentication authentication, Pageable pageable) {
         Long buyerId = currentUserProvider.getCurrentUserId(authentication);
         return discountService.getAllActiveCouponsByTargetBuyerId(buyerId, pageable);
     }

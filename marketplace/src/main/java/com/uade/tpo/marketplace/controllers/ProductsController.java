@@ -12,7 +12,16 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.uade.tpo.marketplace.controllers.auth.CurrentUserProvider;
@@ -41,7 +50,7 @@ public class ProductsController {
 
 
     @GetMapping
-    public ResponseEntity<Page<ProductResponseDto>> getProducts(
+    public ResponseEntity<Page<ProductResponseDto>> getActiveProducts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) Boolean onlyActive) {
@@ -67,7 +76,7 @@ public class ProductsController {
 
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ProductResponseDto> createProductJson(
+    public ResponseEntity<ProductResponseDto> createProduct(
             @Valid @RequestBody ProductCreateDto productCreateDto,
             Authentication authentication)
             throws ProductNotFoundException, DuplicateResourceException, UnauthorizedException {
@@ -107,19 +116,19 @@ public class ProductsController {
     }
 
     @PatchMapping("/{id}/active")
-    public ResponseEntity<Void> toggleActivity(
+    public ResponseEntity<Void> toggleProductActivity(
             @PathVariable Long id,
             @RequestParam("active") Boolean isActive,
             Authentication authentication)
             throws ProductNotFoundException, UnauthorizedException {
 
         Long reqUserId = currentUserProvider.getCurrentUserId(authentication);
-        productService.toggleActivity(id, isActive, reqUserId);
+        productService.toggleProductActivity(id, isActive, reqUserId);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/price")
-    public ResponseEntity<Void> updatePrice(
+    public ResponseEntity<Void> updateProductPrice(
             @PathVariable Long id,
             @RequestBody ProductPriceUpdateDto dto,
             Authentication authentication)
@@ -131,8 +140,8 @@ public class ProductsController {
     }
 
     @GetMapping("/{id}/stock")
-    public ResponseEntity<Integer> getAvailableStock(@PathVariable Long id) {
-        int stock = productService.getAvailableStock(id);
+    public ResponseEntity<Integer> getAvailableStockByProductId(@PathVariable Long id) {
+        int stock = productService.getAvailableStockByProductId(id);
         return ResponseEntity.ok(stock);
     }
 

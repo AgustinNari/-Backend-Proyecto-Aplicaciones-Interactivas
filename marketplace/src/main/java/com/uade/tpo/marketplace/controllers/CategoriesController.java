@@ -35,7 +35,7 @@ public class CategoriesController {
 
     
     @GetMapping //localhost:4002/categories
-    public ResponseEntity<Page<CategoryResponseDto>> getCategories(
+    public ResponseEntity<Page<CategoryResponseDto>> getAllCategories(
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size) {
 
@@ -43,7 +43,7 @@ public class CategoriesController {
                 ? PageRequest.of(0, Integer.MAX_VALUE)
                 : PageRequest.of(page, size);
 
-        Page<CategoryResponseDto> result = categoryService.getCategories(pr);
+        Page<CategoryResponseDto> result = categoryService.getAllCategories(pr);
         return ResponseEntity.ok(result);
     }
     //Quiero que este metodo me traiga todas las categorias de la BD

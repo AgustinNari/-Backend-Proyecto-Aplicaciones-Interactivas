@@ -4,7 +4,6 @@ import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -92,7 +91,7 @@ public class ProductImagesController {
     }
 
     @PatchMapping("/{id}/primary")
-    public ResponseEntity<Void> setPrimary(@PathVariable("id") Long id,
+    public ResponseEntity<Void> setPrimaryImage(@PathVariable("id") Long id,
                                         Authentication authentication)
             throws ResourceNotFoundException, UnauthorizedException {
         Long requestingUserId = currentUserProvider.getCurrentUserId(authentication);

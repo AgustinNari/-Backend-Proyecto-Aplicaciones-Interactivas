@@ -11,7 +11,7 @@ import com.uade.tpo.marketplace.exceptions.CategoryDuplicateException;
 
 public interface  ICategoryService {
 
-    Page<CategoryResponseDto> getCategories(PageRequest pageable);
+    Page<CategoryResponseDto> getAllCategories(PageRequest pageable);
 
     Optional<CategoryResponseDto> getCategoryById(Long id);
 

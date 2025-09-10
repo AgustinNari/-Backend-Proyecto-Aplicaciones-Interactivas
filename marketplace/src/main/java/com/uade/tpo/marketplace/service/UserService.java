@@ -91,7 +91,7 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public Page<UserResponseDto> getUsers(Pageable pageable, Optional<Role> roleFilter) {
+    public Page<UserResponseDto> getAllUsers(Pageable pageable, Optional<Role> roleFilter) {
         if (roleFilter != null && roleFilter.isPresent()) {
             Page<User> page = userRepository.findByRole(roleFilter.get(), pageable);
             List<UserResponseDto> dtos = page.getContent().stream().map(userMapper::toResponse).collect(Collectors.toList());

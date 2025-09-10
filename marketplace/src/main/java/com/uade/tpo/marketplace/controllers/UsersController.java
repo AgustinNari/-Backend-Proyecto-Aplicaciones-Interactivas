@@ -38,9 +38,9 @@ public class UsersController {
 
 
     @GetMapping
-    public ResponseEntity<Page<UserResponseDto>> getUsers(Pageable pageable,
+    public ResponseEntity<Page<UserResponseDto>> getAllUsers(Pageable pageable,
                                                         @RequestParam(required = false) Optional<Role> role) {
-        Page<UserResponseDto> page = userService.getUsers(pageable, role);
+        Page<UserResponseDto> page = userService.getAllUsers(pageable, role);
         return ResponseEntity.ok(page);
     }
 

@@ -54,12 +54,12 @@ public interface IProductService {
             throws ProductNotFoundException, UnauthorizedException, DuplicateResourceException;
 
 
-    int toggleActivity(Long id, Boolean isActive, Long requestingUserId) throws ProductNotFoundException,  UnauthorizedException;
+    int toggleProductActivity(Long id, Boolean isActive, Long requestingUserId) throws ProductNotFoundException,  UnauthorizedException;
 
     int updateProductPrice(Long id, BigDecimal newPrice, Long requestingUserId) throws ProductNotFoundException, UnauthorizedException;
 
 
-    int getAvailableStock(Long productId);
+    int getAvailableStockByProductId(Long productId);
 
 
     Page<ProductResponseDto> getProductsBySeller(Long sellerId, Pageable pageable);

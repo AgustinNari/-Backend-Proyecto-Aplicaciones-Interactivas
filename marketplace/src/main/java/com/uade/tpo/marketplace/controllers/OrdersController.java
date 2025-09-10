@@ -37,7 +37,7 @@ public class OrdersController {
     @Autowired private CurrentUserProvider currentUserProvider;
 
     @PostMapping
-    public ResponseEntity<OrderResponseDto> create(@Valid @RequestBody OrderCreateDto dto,
+    public ResponseEntity<OrderResponseDto> createOrder(@Valid @RequestBody OrderCreateDto dto,
                                                    Authentication authentication)
             throws ResourceNotFoundException, InsufficientStockException, BadRequestException {
         Long buyerId = currentUserProvider.getCurrentUserId(authentication);
@@ -46,7 +46,7 @@ public class OrdersController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<OrderResponseDto> getOne(@PathVariable Long id,
+    public ResponseEntity<OrderResponseDto> getOrderById(@PathVariable Long id,
                                                    Authentication authentication)
             throws ResourceNotFoundException, UnauthorizedException {
         Long requestingUserId = currentUserProvider.getCurrentUserId(authentication);
@@ -55,7 +55,7 @@ public class OrdersController {
     }
 
     @GetMapping("/{id}/items")
-    public Page<OrderItemResponseDto> items(@PathVariable Long id,
+    public Page<OrderItemResponseDto> getOrderItemsByOrderId(@PathVariable Long id,
                                             Authentication authentication,
                                             Pageable pageable)
             throws ResourceNotFoundException, UnauthorizedException {
@@ -64,31 +64,31 @@ public class OrdersController {
     }
 
     @GetMapping("/my")
-    public Page<OrderResponseDto> myOrders(Authentication authentication, Pageable pageable)
+    public Page<OrderResponseDto> getOrdersByBuyer(Authentication authentication, Pageable pageable)
             throws ResourceNotFoundException {
         Long buyerId = currentUserProvider.getCurrentUserId(authentication);
         return orderService.getOrdersByBuyer(buyerId, pageable);
     }
 
     @GetMapping("/seller/{sellerId}")
-    public Page<OrderResponseDto> bySeller(@PathVariable Long sellerId, Pageable pageable) {
+    public Page<OrderResponseDto> getOrdersBySeller(@PathVariable Long sellerId, Pageable pageable) {
         return orderService.getOrdersBySeller(sellerId, pageable);
     }
 
     @GetMapping
-    public Page<OrderResponseDto> all(Pageable pageable) {
+    public Page<OrderResponseDto> getAllOrders(Pageable pageable) {
         return orderService.getAllOrders(pageable);
     }
 
     @PatchMapping("/{id}/complete")
-    public OrderResponseDto complete(@PathVariable Long id, Authentication authentication)
+    public OrderResponseDto completeOrder(@PathVariable Long id, Authentication authentication)
             throws ResourceNotFoundException, UnauthorizedException, BadRequestException {
         Long performedByUserId = currentUserProvider.getCurrentUserId(authentication);
         return orderService.completeOrder(id, performedByUserId);
     }
 
     @PatchMapping("/{id}/status")
-    public OrderResponseDto updateStatus(@PathVariable Long id,
+    public OrderResponseDto updateOrderStatus(@PathVariable Long id,
                                          @RequestParam("status") String status,
                                          Authentication authentication)
             throws ResourceNotFoundException, UnauthorizedException, BadRequestException {

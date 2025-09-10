@@ -26,7 +26,7 @@ public interface IUserService {
     UserResponseDto updateUser(Long id, UserUpdateDto dto, Long requestingUserId)
             throws ResourceNotFoundException, UnauthorizedException, DuplicateResourceException;
 
-    Page<UserResponseDto> getUsers(Pageable pageable, Optional<Role> roleFilter);
+    Page<UserResponseDto> getAllUsers(Pageable pageable, Optional<Role> roleFilter);
 
     Page<UserResponseDto> getUsersByRole(Pageable pageable, Role role);
 
