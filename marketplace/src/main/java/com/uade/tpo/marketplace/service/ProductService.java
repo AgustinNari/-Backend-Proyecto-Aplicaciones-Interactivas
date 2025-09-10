@@ -434,7 +434,7 @@ public class ProductService implements IProductService {
                 if (!hasPrimary && uploaded == 0) {
                     makePrimary = true;
                 }
-                ProductImageCreateDto imgDto = new ProductImageCreateDto(created.id(), filename, file, makePrimary);
+                ProductImageCreateDto imgDto = new ProductImageCreateDto(created.id(), filename, makePrimary, file);
                 try {
                     productImageService.addImage(imgDto, sellerId);
                     uploaded++;

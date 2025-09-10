@@ -75,8 +75,9 @@ public class ProductImageMapper {
             img.getId(),
             productId,
             img.getName(),
-            base64File,
-            img.isPrimary()
+            img.isPrimary(),
+            base64File
+
         );
     }
 

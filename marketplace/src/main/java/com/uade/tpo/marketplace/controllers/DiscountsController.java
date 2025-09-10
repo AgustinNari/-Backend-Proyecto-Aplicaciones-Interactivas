@@ -8,7 +8,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,7 +24,6 @@ import com.uade.tpo.marketplace.entity.dto.update.DiscountUpdateDto;
 import com.uade.tpo.marketplace.exceptions.DuplicateResourceException;
 import com.uade.tpo.marketplace.exceptions.ResourceNotFoundException;
 import com.uade.tpo.marketplace.exceptions.UnauthorizedException;
-import com.uade.tpo.marketplace.repository.interfaces.IUserRepository;
 import com.uade.tpo.marketplace.service.interfaces.IDiscountService;
 
 import jakarta.validation.Valid;
@@ -35,7 +33,6 @@ import jakarta.validation.Valid;
 public class DiscountsController {
 
     @Autowired private IDiscountService discountService;
-    @Autowired private IUserRepository userRepository;
     @Autowired private CurrentUserProvider currentUserProvider;
 
     @PostMapping

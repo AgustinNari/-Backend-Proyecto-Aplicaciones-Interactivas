@@ -12,8 +12,10 @@ public record ProductImageCreateDto(
     String name,
 
     @NotNull
-    MultipartFile file,
+    boolean isPrimary,
 
     @NotNull
-    boolean isPrimary
+    MultipartFile file
+
+
 ) {}

@@ -4,7 +4,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 public record ProductImageUpdateDto(
     String name,
-    MultipartFile file,
-    boolean isPrimary
+    boolean isPrimary,
+    MultipartFile file
+
     
 ) {}

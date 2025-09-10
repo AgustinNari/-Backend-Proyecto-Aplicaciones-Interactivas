@@ -34,7 +34,7 @@ public class SecurityConfig {
 
                                                 //DIGITAL KEYS
                                                 .requestMatchers(HttpMethod.POST, "/digital_keys").hasRole("SELLER")
-                                                .requestMatchers(HttpMethod.GET, "/digital_keys/product/**/count").hasAnyRole("SELLER", "ADMIN")
+                                                .requestMatchers(HttpMethod.GET, "/digital_keys/product/*/count").hasAnyRole("SELLER", "ADMIN")
                                                 .requestMatchers(HttpMethod.GET, "/digital_keys/product/**").hasAnyRole("SELLER", "ADMIN")
 
                                                 //DISCOUNTS
@@ -48,15 +48,15 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.POST, "/orders").hasAnyRole("BUYER", "SELLER")
                                                 .requestMatchers(HttpMethod.GET, "/orders/my").hasAnyRole("BUYER", "SELLER")
                                                 .requestMatchers(HttpMethod.GET, "/orders/seller/**").hasAnyRole("SELLER", "ADMIN")
-                                                .requestMatchers(HttpMethod.PATCH, "/orders/**/complete").hasRole("ADMIN")
-                                                .requestMatchers(HttpMethod.PATCH, "/orders/**/status").hasRole("ADMIN")
+                                                .requestMatchers(HttpMethod.PATCH, "/orders/*/complete").hasRole("ADMIN")
+                                                .requestMatchers(HttpMethod.PATCH, "/orders/*/status").hasRole("ADMIN")
                                                 .requestMatchers(HttpMethod.GET, "/orders/**").authenticated()
 
                                                 //PRODUCT IMAGES
                                                 .requestMatchers(HttpMethod.GET, "/product_images/**").permitAll()
                                                 .requestMatchers(HttpMethod.POST, "/product_images").hasAnyRole("SELLER", "ADMIN")
                                                 .requestMatchers(HttpMethod.PUT, "/product_images/**").hasAnyRole("SELLER", "ADMIN")
-                                                .requestMatchers(HttpMethod.PATCH, "/product_images/**/primary").hasAnyRole("SELLER", "ADMIN")
+                                                .requestMatchers(HttpMethod.PATCH, "/product_images/*/primary").hasAnyRole("SELLER", "ADMIN")
                                                 .requestMatchers(HttpMethod.DELETE, "/product_images/**").hasAnyRole("SELLER", "ADMIN")
 
                                                 //PRODUCTS
@@ -74,7 +74,7 @@ public class SecurityConfig {
                                                 //USERS
                                                 .requestMatchers(HttpMethod.GET, "/users/**").hasRole("ADMIN")
                                                 .requestMatchers(HttpMethod.POST, "/users/**").authenticated()
-                                                .requestMatchers(HttpMethod.GET, "/users/seller/**/profile").authenticated()
+                                                .requestMatchers(HttpMethod.GET, "/users/seller/*/profile").authenticated()
                                                 .requestMatchers(HttpMethod.PUT, "/users/**").authenticated()
                                                 .requestMatchers(HttpMethod.PATCH, "/users/me/balance").hasRole("ADMIN")
 
