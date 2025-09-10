@@ -1,6 +1,9 @@
 package com.uade.tpo.marketplace.extra.mappers;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URLConnection;
 import java.sql.Blob;
 import java.sql.SQLException;
 import java.util.Base64;
@@ -35,7 +38,9 @@ public class ProductImageMapper {
 
         MultipartFile file = dto.file();
         if (file != null && !file.isEmpty()) {
-            img.setImage(multipartFileToBlob(file));
+            ImageTuple tuple = multipartFileToBlob(file);
+            img.setImage(tuple.serialBlob());
+            img.setContentType(tuple.mime());
         }
 
         img.setPrimary(dto.isPrimary());
@@ -54,8 +59,11 @@ public class ProductImageMapper {
 
         MultipartFile file = dto.file();
         if (file != null && !file.isEmpty()) {
-            entity.setImage(multipartFileToBlob(file));
+            ImageTuple tuple = multipartFileToBlob(file);
+            entity.setImage(tuple.serialBlob());
+            entity.setContentType(tuple.mime());
         }
+
         entity.setPrimary(dto.isPrimary());
     }
 
@@ -65,19 +73,28 @@ public class ProductImageMapper {
 
         Long productId = img.getProduct() != null ? safeGetId(img.getProduct()) : null;
         String base64File = null;
+        String mime = img.getContentType();
 
         Blob blob = img.getImage();
         if (blob != null) {
             base64File = blobToBase64(blob);
+            if (mime == null || mime.isBlank()) {
+                mime = detectMimeFromBlob(blob);
+            }
         }
+
+        String dataUrl = (base64File != null && mime != null && !mime.isBlank())
+                ? "data:" + mime + ";base64," + base64File
+                : null;
 
         return new ProductImageResponseDto(
             img.getId(),
             productId,
             img.getName(),
             img.isPrimary(),
-            base64File
-
+            base64File,
+            mime,
+            dataUrl
         );
     }
 
@@ -89,10 +106,16 @@ public class ProductImageMapper {
     }
 
 
-    private Blob multipartFileToBlob(MultipartFile file) {
+
+    private ImageTuple multipartFileToBlob(MultipartFile file) {
         try {
             byte[] bytes = file.getBytes();
-            return new SerialBlob(bytes);
+            String mime = detectMimeFromBytes(bytes);
+            String client = file.getContentType();
+            if ((mime == null || "application/octet-stream".equals(mime)) && client != null && client.startsWith("image/")) {
+                mime = client;
+            }
+            return new ImageTuple(mime, new SerialBlob(bytes));
         } catch (IOException | SQLException e) {
             throw new ImageProcessingException("Error al convertir MultipartFile a Blob", e);
         }
@@ -116,5 +139,43 @@ public class ProductImageMapper {
     private Long safeGetId(Product p) {
         try { return p.getId(); } catch (Exception e) { return null; }
     }
+
+    private String detectMimeFromBytes(byte[] bytes) {
+        try (InputStream is = new ByteArrayInputStream(bytes)) {
+            String mime = URLConnection.guessContentTypeFromStream(is);
+            if (mime != null) return mime;
+        } catch (IOException ignored) {}
+
+        if (bytes.length >= 3 && (bytes[0] & 0xFF) == 0xFF && (bytes[1] & 0xFF) == 0xD8) {
+            return "image/jpeg";
+        }
+        if (bytes.length >= 4 && (bytes[0] & 0xFF) == 0x89 && bytes[1] == 'P' && bytes[2] == 'N' && bytes[3] == 'G') {
+            return "image/png";
+        }
+        if (bytes.length >= 3 && bytes[0] == 'G' && bytes[1] == 'I' && bytes[2] == 'F') {
+            return "image/gif";
+        }
+        if (bytes.length >= 4 && bytes[0] == '<' && (bytes[1] == '?' || bytes[1] == 's')) {
+            return "image/svg+xml";
+        }
+        return "application/octet-stream";
+    }
+
+    private String detectMimeFromBlob(Blob blob) {
+        try (InputStream is = blob.getBinaryStream()) {
+            String mime = URLConnection.guessContentTypeFromStream(is);
+            if (mime != null) return mime;
+        } catch (SQLException | IOException ignored) {}
+
+        try {
+            int len = (int) Math.min(blob.length(), 16);
+            byte[] prefix = blob.getBytes(1, len);
+            return detectMimeFromBytes(prefix);
+        } catch (SQLException e) {
+            return "application/octet-stream";
+        }
+    }
+
+    private static record ImageTuple(String mime, SerialBlob serialBlob) {}
 
 }

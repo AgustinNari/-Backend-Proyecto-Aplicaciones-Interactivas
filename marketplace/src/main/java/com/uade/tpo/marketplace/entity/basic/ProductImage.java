@@ -42,6 +42,9 @@ public class ProductImage {
     @Column(nullable = false)
     private Blob image;
 
+    @Column(name = "content_type", length = 100)
+    private String contentType;
+
     public void setName(String name) {
         this.name = name;
     }

@@ -5,15 +5,9 @@ public record ProductImageResponseDto(
     Long productId,
     String name,
     boolean isPrimary,
-    String file
+    String file,
+    String contentType,
+    String dataUrl
 ) {
 
-    public ProductImageResponseDto (Long id, Long productId, String name,boolean isPrimary, String file) {
-        this.id = id;
-        this.productId = productId;
-        this.name = name;
-        this.isPrimary = isPrimary;
-        this.file = file;
-
     }
-}
