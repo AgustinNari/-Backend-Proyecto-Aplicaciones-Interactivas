@@ -5,7 +5,6 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import com.uade.tpo.marketplace.entity.basic.DigitalKey;
 import com.uade.tpo.marketplace.entity.dto.response.DigitalKeyResponseDto;
 import com.uade.tpo.marketplace.exceptions.DigitalKeyDuplicateException;
 import com.uade.tpo.marketplace.exceptions.InsufficientStockException;
