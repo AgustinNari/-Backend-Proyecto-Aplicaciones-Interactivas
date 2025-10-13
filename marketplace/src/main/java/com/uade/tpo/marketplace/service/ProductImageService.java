@@ -14,6 +14,7 @@ import com.uade.tpo.marketplace.entity.basic.ProductImage;
 import com.uade.tpo.marketplace.entity.basic.User;
 import com.uade.tpo.marketplace.entity.dto.create.ProductImageCreateDto;
 import com.uade.tpo.marketplace.entity.dto.response.ProductImageResponseDto;
+import com.uade.tpo.marketplace.entity.dto.response.ProductImageDeletionResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.ProductImageUpdateDto;
 import com.uade.tpo.marketplace.entity.enums.Role;
 import com.uade.tpo.marketplace.exceptions.BadRequestException;
@@ -30,6 +31,7 @@ import com.uade.tpo.marketplace.repository.interfaces.IProductImageRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IProductRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IUserRepository;
 import com.uade.tpo.marketplace.service.interfaces.IProductImageService;
+
 
 
 @Service
@@ -138,7 +140,7 @@ public class ProductImageService implements IProductImageService {
 
     @Override
     @Transactional(rollbackFor = Throwable.class)
-    public void deleteImage(Long imageId, Long requestingUserId) throws ResourceNotFoundException, UnauthorizedException {
+    public ProductImageDeletionResponseDto deleteImage(Long imageId, Long requestingUserId) throws ResourceNotFoundException, UnauthorizedException {
         if (imageId == null) throw new BadRequestException("Id de imagen no proporcionado.");
 
         ProductImage existing = productImageRepository.findById(imageId)
@@ -161,11 +163,12 @@ public class ProductImageService implements IProductImageService {
         if(imageIsPrimary) {
             productImageRepository.setFirstImageAsPrimary(product.getId());
         }
+        return new ProductImageDeletionResponseDto(true, imageId, "Imagen eliminada exitosamente.");
     }
 
     @Override
     @Transactional(rollbackFor = Throwable.class)
-    public void setPrimaryImage(Long imageId, Long requestingUserId)
+    public ProductImageResponseDto setPrimaryImage(Long imageId, Long requestingUserId)
             throws ResourceNotFoundException, UnauthorizedException {
         
         if (imageId == null) throw new BadRequestException("Id de imagen no proporcionado.");
@@ -182,6 +185,11 @@ public class ProductImageService implements IProductImageService {
 
         productImageRepository.clearPrimaryImages(productId);
         productImageRepository.setAsPrimary(imageId);
+
+        ProductImage updated = productImageRepository.findById(imageId)
+                .orElseThrow(() -> new ImageNotFoundException("Imagen no encontrada después de actualizar (id=" + imageId + ")."));
+
+        return mapper.toResponse(updated);
     }
 
 

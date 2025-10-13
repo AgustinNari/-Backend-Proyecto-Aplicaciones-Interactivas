@@ -54,9 +54,9 @@ public interface IProductService {
             throws ProductNotFoundException, UnauthorizedException, DuplicateResourceException;
 
 
-    int toggleProductActivity(Long id, Boolean isActive, Long requestingUserId) throws ProductNotFoundException,  UnauthorizedException;
+    ProductResponseDto toggleProductActivity(Long id, Boolean isActive, Long requestingUserId) throws ProductNotFoundException,  UnauthorizedException;
 
-    int updateProductPrice(Long id, BigDecimal newPrice, Long requestingUserId) throws ProductNotFoundException, UnauthorizedException;
+    ProductResponseDto updateProductPrice(Long id, BigDecimal newPrice, Long requestingUserId) throws ProductNotFoundException, UnauthorizedException;
 
 
     int getAvailableStockByProductId(Long productId);

@@ -116,27 +116,30 @@ public class ProductsController {
     }
 
     @PatchMapping("/{id}/active")
-    public ResponseEntity<Void> toggleProductActivity(
+    public ResponseEntity<ProductResponseDto> toggleProductActivity(
             @PathVariable Long id,
             @RequestParam("active") Boolean isActive,
             Authentication authentication)
             throws ProductNotFoundException, UnauthorizedException {
 
         Long reqUserId = currentUserProvider.getCurrentUserId(authentication);
-        productService.toggleProductActivity(id, isActive, reqUserId);
-        return ResponseEntity.noContent().build();
+        
+        ProductResponseDto updated = productService.toggleProductActivity(id, isActive, reqUserId);
+        
+        return ResponseEntity.ok(updated);
     }
 
     @PatchMapping("/{id}/price")
-    public ResponseEntity<Void> updateProductPrice(
+    public ResponseEntity<ProductResponseDto> updateProductPrice(
             @PathVariable Long id,
             @RequestBody ProductPriceUpdateDto dto,
             Authentication authentication)
             throws ProductNotFoundException, UnauthorizedException {
 
         Long reqUserId = currentUserProvider.getCurrentUserId(authentication);
-        productService.updateProductPrice(id, dto.price(), reqUserId);
-        return ResponseEntity.noContent().build();
+        ProductResponseDto updated = productService.updateProductPrice(id, dto.price(), reqUserId);
+        
+        return ResponseEntity.ok(updated);
     }
 
     @GetMapping("/{id}/stock")

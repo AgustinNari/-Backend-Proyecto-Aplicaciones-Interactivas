@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.uade.tpo.marketplace.controllers.auth.CurrentUserProvider;
 import com.uade.tpo.marketplace.entity.dto.create.ProductImageCreateDto;
+import com.uade.tpo.marketplace.entity.dto.response.ProductImageDeletionResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.ProductImageResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.ProductImageUpdateDto;
 import com.uade.tpo.marketplace.exceptions.BadRequestException;
@@ -83,19 +84,21 @@ public class ProductImagesController {
 
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteImage(@PathVariable("id") Long id, Authentication authentication)
+    public ResponseEntity<ProductImageDeletionResponseDto> deleteImage(@PathVariable("id") Long id, Authentication authentication)
             throws ResourceNotFoundException, UnauthorizedException {
         Long requestingUserId = currentUserProvider.getCurrentUserId(authentication);
-        productImageService.deleteImage(id, requestingUserId);
-        return ResponseEntity.noContent().build();
+        ProductImageDeletionResponseDto deleted = productImageService.deleteImage(id, requestingUserId);
+        
+        return ResponseEntity.ok(deleted);
     }
 
     @PatchMapping("/{id}/primary")
-    public ResponseEntity<Void> setPrimaryImage(@PathVariable("id") Long id,
+    public ResponseEntity<ProductImageResponseDto> setPrimaryImage(@PathVariable("id") Long id,
                                         Authentication authentication)
             throws ResourceNotFoundException, UnauthorizedException {
         Long requestingUserId = currentUserProvider.getCurrentUserId(authentication);
-        productImageService.setPrimaryImage(id, requestingUserId);
-        return ResponseEntity.noContent().build();
+        ProductImageResponseDto updated = productImageService.setPrimaryImage(id, requestingUserId);
+        
+        return ResponseEntity.ok(updated);
     }
 }

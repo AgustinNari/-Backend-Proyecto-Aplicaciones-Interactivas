@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.uade.tpo.marketplace.controllers.auth.CurrentUserProvider;
 import com.uade.tpo.marketplace.entity.dto.create.ReviewCreateDto;
+import com.uade.tpo.marketplace.entity.dto.response.ReviewDeletionResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.ReviewResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.ReviewUpdateDto;
 import com.uade.tpo.marketplace.exceptions.ProductNotFoundException;
@@ -91,9 +92,10 @@ public class ReviewsController {
 
 
     @DeleteMapping("/{reviewId}")
-    public ResponseEntity<Void> deleteReview(@PathVariable("reviewId") Long reviewId, Authentication authentication) {
+    public ResponseEntity<ReviewDeletionResponseDto> deleteReview(@PathVariable("reviewId") Long reviewId, Authentication authentication) {
         Long requestingUserId = authenticator.getCurrentUserId(authentication);
-        reviewService.deleteReview(reviewId, requestingUserId);
-        return ResponseEntity.noContent().build();
+        ReviewDeletionResponseDto deleted = reviewService.deleteReview(reviewId, requestingUserId);
+        
+        return ResponseEntity.ok(deleted);
     }
 }

@@ -11,6 +11,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.uade.tpo.marketplace.entity.basic.Order;
 import com.uade.tpo.marketplace.entity.basic.OrderItem;
@@ -18,6 +19,7 @@ import com.uade.tpo.marketplace.entity.basic.Product;
 import com.uade.tpo.marketplace.entity.basic.Review;
 import com.uade.tpo.marketplace.entity.basic.User;
 import com.uade.tpo.marketplace.entity.dto.create.ReviewCreateDto;
+import com.uade.tpo.marketplace.entity.dto.response.ReviewDeletionResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.ReviewResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.ReviewUpdateDto;
 import com.uade.tpo.marketplace.entity.enums.OrderStatus;
@@ -31,14 +33,11 @@ import com.uade.tpo.marketplace.exceptions.UnauthorizedException;
 import com.uade.tpo.marketplace.exceptions.UserNotFoundException;
 import com.uade.tpo.marketplace.extra.mappers.ReviewMapper;
 import com.uade.tpo.marketplace.repository.interfaces.IOrderItemRepository;
+import com.uade.tpo.marketplace.repository.interfaces.IOrderRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IProductRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IReviewRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IUserRepository;
 import com.uade.tpo.marketplace.service.interfaces.IReviewService;
-
-import org.springframework.transaction.annotation.Transactional;
-
-import com.uade.tpo.marketplace.repository.interfaces.IOrderRepository;
 
 @Service
 public class ReviewService implements IReviewService {
@@ -149,7 +148,7 @@ public class ReviewService implements IReviewService {
 
     @Override
     @Transactional(rollbackFor = Throwable.class)
-    public void deleteReview(Long reviewId, Long requestingUserId) throws ResourceNotFoundException, UnauthorizedException {
+    public ReviewDeletionResponseDto deleteReview(Long reviewId, Long requestingUserId) throws ResourceNotFoundException, UnauthorizedException {
         if (reviewId == null) throw new BadRequestException("Id de reseña no proporcionado.");
         Review existing = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ReviewNotFoundException("Reseña no encontrada (id=" + reviewId + ")."));
@@ -169,8 +168,11 @@ public class ReviewService implements IReviewService {
                 orderItemRepository.save(oi);
             }
         }
-
+        
         reviewRepository.delete(existing);
+
+
+        return new ReviewDeletionResponseDto(true, reviewId, "Reseña eliminada exitosamente.");
     }
 
 

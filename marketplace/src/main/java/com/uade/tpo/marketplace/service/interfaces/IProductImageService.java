@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.uade.tpo.marketplace.entity.dto.create.ProductImageCreateDto;
+import com.uade.tpo.marketplace.entity.dto.response.ProductImageDeletionResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.ProductImageResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.ProductImageUpdateDto;
 import com.uade.tpo.marketplace.exceptions.BadRequestException;
@@ -19,7 +20,7 @@ public interface IProductImageService {
         ProductImageResponseDto updateImage(Long productImageId, ProductImageUpdateDto dto, Long requestingUserId)
                 throws ResourceNotFoundException, UnauthorizedException;
 
-        void deleteImage(Long imageId, Long requestingUserId) throws ResourceNotFoundException, UnauthorizedException;
+        ProductImageDeletionResponseDto deleteImage(Long imageId, Long requestingUserId) throws ResourceNotFoundException, UnauthorizedException;
 
         List<ProductImageResponseDto> getImagesByProductId(Long productId);
 
@@ -27,7 +28,7 @@ public interface IProductImageService {
 
         ProductImageResponseDto getImageById(Long id) throws ResourceNotFoundException , Exception;
 
-        void setPrimaryImage(Long imageId, Long requestingUserId)
+        ProductImageResponseDto setPrimaryImage(Long imageId, Long requestingUserId)
                 throws ResourceNotFoundException, UnauthorizedException;
 
         

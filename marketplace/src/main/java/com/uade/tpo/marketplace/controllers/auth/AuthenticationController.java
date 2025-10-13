@@ -1,6 +1,7 @@
 package com.uade.tpo.marketplace.controllers.auth;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.uade.tpo.marketplace.entity.dto.request.ChangePasswordRequestDto;
+import com.uade.tpo.marketplace.entity.dto.response.PasswordChangeResponseDto;
 import com.uade.tpo.marketplace.exceptions.ResourceNotFoundException;
 import com.uade.tpo.marketplace.exceptions.UserNotFoundException;
 import com.uade.tpo.marketplace.repository.interfaces.IUserRepository;
@@ -39,13 +41,13 @@ public class AuthenticationController {
     }
 
     @PostMapping("/change-password")
-    public ResponseEntity<Void> changePassword(
+    public ResponseEntity<PasswordChangeResponseDto> changePassword(
             @Valid @RequestBody ChangePasswordRequestDto body,
             Authentication authentication
     ) throws ResourceNotFoundException {
 
         if (authentication == null || authentication.getName() == null) {
-            return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         String email = authentication.getName();
 
@@ -53,9 +55,9 @@ public class AuthenticationController {
                 .orElseThrow(() -> new UserNotFoundException("User not found with email=" + email));
         Long userId = user.getId();
 
-        service.changePassword(userId, body.getCurrentPassword(), body.getNewPassword());
+        PasswordChangeResponseDto response = service.changePassword(userId, body.getCurrentPassword(), body.getNewPassword());
 
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(response);
     }
 
 

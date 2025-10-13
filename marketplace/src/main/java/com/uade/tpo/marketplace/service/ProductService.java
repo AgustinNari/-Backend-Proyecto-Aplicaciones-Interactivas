@@ -261,7 +261,7 @@ public class ProductService implements IProductService {
 
     @Override
     @Transactional(rollbackFor = Throwable.class)
-    public int toggleProductActivity(Long id, Boolean isActive, Long requestingUserId) throws ProductNotFoundException, UnauthorizedException {
+    public ProductResponseDto toggleProductActivity(Long id, Boolean isActive, Long requestingUserId) throws ProductNotFoundException, UnauthorizedException {
         Product existing = productRepository.findById(id)
                     .orElseThrow(() -> new ProductNotFoundException("Producto no encontrado (id=" + id + ")."));
 
@@ -282,12 +282,16 @@ public class ProductService implements IProductService {
             if (updatedRows == 0) {
                 throw new ProductNotFoundException("No se pudo actualizar el producto con id=" + id);
             }
-            return updatedRows;
+
+            Product updated = productRepository.findById(id)
+                    .orElseThrow(() -> new ProductNotFoundException("Producto no encontrado (id=" + id + ")."));
+                    
+            return updated != null ? productMapper.toResponse(updated, updated.getSeller().getDisplayName()) : null;
     }
 
     @Override
     @Transactional(rollbackFor = Throwable.class)
-    public int updateProductPrice(Long id, BigDecimal newPrice, Long requestingUserId) throws ProductNotFoundException, UnauthorizedException {
+    public ProductResponseDto updateProductPrice(Long id, BigDecimal newPrice, Long requestingUserId) throws ProductNotFoundException, UnauthorizedException {
         Product existing = productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException("Producto no encontrado (id=" + id + ")."));
         
@@ -312,7 +316,11 @@ public class ProductService implements IProductService {
         if (updatedRows == 0) {
             throw new ProductNotFoundException("No se pudo actualizar el precio del producto con id=" + id);
         }
-        return updatedRows;
+
+        Product updated = productRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException("Producto no encontrado (id=" + id + ")."));
+
+        return updated != null ? productMapper.toResponse(updated, updated.getSeller().getDisplayName()) : null;
     }
 
     @Override

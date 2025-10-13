@@ -14,6 +14,7 @@ import com.uade.tpo.marketplace.controllers.auth.AuthenticationResponse;
 import com.uade.tpo.marketplace.controllers.auth.RegisterRequest;
 import com.uade.tpo.marketplace.controllers.config.JwtService;
 import com.uade.tpo.marketplace.entity.basic.User;
+import com.uade.tpo.marketplace.entity.dto.response.PasswordChangeResponseDto;
 import com.uade.tpo.marketplace.exceptions.ResourceNotFoundException;
 import com.uade.tpo.marketplace.exceptions.UserDuplicateException;
 import com.uade.tpo.marketplace.repository.interfaces.IUserRepository;
@@ -77,7 +78,7 @@ public class AuthenticationService implements IAuthenticationService{
         }
 
         @Override
-        public void changePassword(Long userId, String currentPassword, String newPassword)
+        public PasswordChangeResponseDto changePassword(Long userId, String currentPassword, String newPassword)
                 throws ResourceNotFoundException {
                 var user = repository.findById(userId)
                         .orElseThrow(() -> new ResourceNotFoundException("User not found with id=" + userId));
@@ -95,7 +96,11 @@ public class AuthenticationService implements IAuthenticationService{
                 }
 
                 user.setPassword(passwordEncoder.encode(newPassword));
+
+
                 repository.save(user);
+
+                return new PasswordChangeResponseDto(true, "Contraseña cambiada con éxito", userId);
         }
 
         
