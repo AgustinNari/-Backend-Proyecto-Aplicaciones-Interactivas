@@ -2,11 +2,13 @@ package com.uade.tpo.marketplace.repository.interfaces;
 
 import java.util.List;
 import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
 import com.uade.tpo.marketplace.entity.basic.ProductImage;
 
 import jakarta.transaction.Transactional;
@@ -44,20 +46,5 @@ public interface IProductImageRepository extends JpaRepository<ProductImage, Lon
     boolean existsByProductIdAndIsPrimaryTrue(Long productId);
 
     int countByProductId(Long productId);
-
-    @Modifying
-    @Transactional
-    @Query(value = """
-        UPDATE product_images
-        SET is_primary = true
-        WHERE id = (
-        SELECT id FROM product_images
-        WHERE product_id = :productId
-        ORDER BY id ASC
-        LIMIT 1
-        )
-    """, nativeQuery = true)
-    int setFirstImageAsPrimary(Long productId);
-
 
 }

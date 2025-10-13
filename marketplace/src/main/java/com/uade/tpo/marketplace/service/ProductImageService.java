@@ -13,8 +13,8 @@ import com.uade.tpo.marketplace.entity.basic.Product;
 import com.uade.tpo.marketplace.entity.basic.ProductImage;
 import com.uade.tpo.marketplace.entity.basic.User;
 import com.uade.tpo.marketplace.entity.dto.create.ProductImageCreateDto;
-import com.uade.tpo.marketplace.entity.dto.response.ProductImageResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.ProductImageDeletionResponseDto;
+import com.uade.tpo.marketplace.entity.dto.response.ProductImageResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.ProductImageUpdateDto;
 import com.uade.tpo.marketplace.entity.enums.Role;
 import com.uade.tpo.marketplace.exceptions.BadRequestException;
@@ -161,8 +161,11 @@ public class ProductImageService implements IProductImageService {
         productImageRepository.delete(existing);
 
         if(imageIsPrimary) {
-            productImageRepository.setFirstImageAsPrimary(product.getId());
+            Optional<ProductImage> newPrimaryImage = productImageRepository.findFirstByProductIdOrderByIdAsc(product.getId());
+            productImageRepository.setAsPrimary(newPrimaryImage.get().getId());
         }
+
+
         return new ProductImageDeletionResponseDto(true, imageId, "Imagen eliminada exitosamente.");
     }
 
