@@ -96,7 +96,7 @@ public class DiscountsController {
 
 
     @PostMapping("/validate")
-    public ResponseEntity<CouponValidationResponseDto> validateCouponForItem(
+    public ResponseEntity<CouponValidationResponseDto> validateCouponForOrderItemPreview(
             @Valid @RequestBody CouponValidationRequestDto request,
             Authentication authentication) {
 
@@ -119,7 +119,7 @@ public class DiscountsController {
 
 
     @PostMapping("/validate/bulk")
-    public ResponseEntity<CouponValidationResponseDto> validateCouponForItemsBulk(
+    public ResponseEntity<CouponValidationResponseDto> validateCouponForOrderItemsPreview(
             @Valid @RequestBody CouponValidationBulkRequestDto request,
             Authentication authentication) {
 
