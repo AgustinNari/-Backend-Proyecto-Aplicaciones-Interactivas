@@ -1,6 +1,7 @@
 package com.uade.tpo.marketplace.service.interfaces;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -9,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import com.uade.tpo.marketplace.entity.basic.Discount;
 import com.uade.tpo.marketplace.entity.dto.create.DiscountCreateDto;
 import com.uade.tpo.marketplace.entity.dto.create.OrderItemCreateDto;
+import com.uade.tpo.marketplace.entity.dto.response.CouponValidationResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.DiscountResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.DiscountUpdateDto;
 import com.uade.tpo.marketplace.exceptions.BadRequestException;
@@ -50,5 +52,9 @@ public interface IDiscountService {
         Optional<DiscountResponseDto> generateNewRandomCoupon(Long targetBuyerId);
 
         Optional<DiscountResponseDto> getHighestValueDiscountForProduct(Long productId);
+
+        CouponValidationResponseDto validateCouponForOrderItemPreview(String code, Long buyerId, OrderItemCreateDto item);
+
+        CouponValidationResponseDto validateCouponForOrderItemsPreview(String code, Long buyerId, List<OrderItemCreateDto> items);
 
 }

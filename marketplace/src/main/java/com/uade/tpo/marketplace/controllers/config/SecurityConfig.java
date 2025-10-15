@@ -38,6 +38,8 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.GET, "/digital_keys/product/**").hasAnyRole("SELLER", "ADMIN")
 
                                                 //DISCOUNTS
+                                                .requestMatchers(HttpMethod.POST, "/discounts/validate", "/discounts/validate/bulk")
+                                                        .hasAnyRole("BUYER", "SELLER", "ADMIN")
                                                 .requestMatchers(HttpMethod.GET, "/discounts/buyer/active-coupons").hasAnyRole("BUYER", "SELLER")
                                                 .requestMatchers(HttpMethod.GET, "/discounts/product/**").permitAll()
                                                 .requestMatchers(HttpMethod.POST, "/discounts").hasAnyRole("SELLER", "ADMIN")

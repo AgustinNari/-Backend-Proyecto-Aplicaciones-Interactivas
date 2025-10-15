@@ -24,6 +24,7 @@ import com.uade.tpo.marketplace.entity.basic.Product;
 import com.uade.tpo.marketplace.entity.basic.User;
 import com.uade.tpo.marketplace.entity.dto.create.DiscountCreateDto;
 import com.uade.tpo.marketplace.entity.dto.create.OrderItemCreateDto;
+import com.uade.tpo.marketplace.entity.dto.response.CouponValidationResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.DiscountResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.DiscountUpdateDto;
 import com.uade.tpo.marketplace.entity.enums.DiscountScope;
@@ -671,4 +672,264 @@ private String generateCouponCode() {
     }
     return couponCode.toString();
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@Override
+public CouponValidationResponseDto validateCouponForOrderItemPreview(
+        String code, Long buyerId, OrderItemCreateDto item) {
+
+
+    if (code == null || code.isBlank()) {
+        return new CouponValidationResponseDto(false, "Código de descuento no proporcionado.", BigDecimal.ZERO, null, null, null);
+    }
+    if (item == null) {
+        return new CouponValidationResponseDto(false, "OrderItem no proporcionado.", BigDecimal.ZERO, null, null, null);
+    }
+
+    try {
+        Optional<Discount> optDiscount = discountRepository.findByCodeAndActive(code);
+        if (optDiscount.isEmpty()) {
+            return new CouponValidationResponseDto(false, "Cupón no encontrado o no activo.", BigDecimal.ZERO, null, null, null);
+        }
+
+        Discount discount = optDiscount.get();
+
+
+        if (!isActiveNow(discount)) {
+            return new CouponValidationResponseDto(false, "El cupón no está vigente.", BigDecimal.ZERO, null, discount.getId(), null);
+        }
+
+
+        if (discount.getType() != DiscountType.FIXED) {
+            return new CouponValidationResponseDto(false, "El código proporcionado no corresponde a un cupón válido (debe ser FIXED).",
+                    BigDecimal.ZERO, null, discount.getId(), null);
+        }
+
+
+        if (discount.getTargetBuyer() != null && discount.getTargetBuyer().getId() != null) {
+            if (buyerId == null || !Objects.equals(discount.getTargetBuyer().getId(), buyerId)) {
+                return new CouponValidationResponseDto(false, "El cupón no es aplicable a este comprador.", BigDecimal.ZERO, null, discount.getId(), null);
+            }
+        } else {
+
+            return new CouponValidationResponseDto(false, "El cupón no está dirigido a ningún comprador específico.", BigDecimal.ZERO, null, discount.getId(), null);
+        }
+
+
+        Product product = productRepository.findById(item.productId()).orElse(null);
+        if (product == null) {
+            return new CouponValidationResponseDto(false, "Producto del ítem no encontrado.", BigDecimal.ZERO, null, discount.getId(), null);
+        }
+
+
+        boolean applicable = false;
+
+        if (discount.getTargetProduct() != null && discount.getTargetProduct().getId() != null) {
+            applicable = Objects.equals(discount.getTargetProduct().getId(), product.getId());
+        }
+
+        if (!applicable && discount.getTargetCategory() != null && discount.getTargetCategory().getId() != null) {
+            if (product.getCategories() != null) {
+                applicable = product.getCategories().stream()
+                        .anyMatch(c -> Objects.equals(c.getId(), discount.getTargetCategory().getId()));
+            }
+        }
+
+        if (!applicable && discount.getTargetSeller() != null && discount.getTargetSeller().getId() != null) {
+            if (product.getSeller() != null) {
+                applicable = Objects.equals(product.getSeller().getId(), discount.getTargetSeller().getId());
+            }
+        }
+
+        if (!applicable) {
+            return new CouponValidationResponseDto(false, "El cupón no es aplicable a este ítem de orden.", BigDecimal.ZERO, null, discount.getId(), product.getId());
+        }
+
+
+        int qty = item.quantity() == null ? 0 : item.quantity();
+        BigDecimal unitPrice = product.getPrice() != null ? product.getPrice() : BigDecimal.ZERO;
+        BigDecimal lineTotal;
+        
+        lineTotal = unitPrice.multiply(BigDecimal.valueOf(qty));
+        
+
+        if (discount.getMinQuantity() != null && qty < discount.getMinQuantity()) {
+            return new CouponValidationResponseDto(false, "El cupón requiere una cantidad mínima de " + discount.getMinQuantity() + " unidades.", BigDecimal.ZERO, lineTotal, discount.getId(), product.getId());
+        }
+
+        if (discount.getMinPrice() != null && lineTotal.compareTo(discount.getMinPrice()) < 0) {
+            return new CouponValidationResponseDto(false, "El cupón requiere un subtotal mínimo para aplicarse.", BigDecimal.ZERO, lineTotal, discount.getId(), product.getId());
+        }
+
+        if (discount.getMaxPrice() != null && lineTotal.compareTo(discount.getMaxPrice()) > 0) {
+            return new CouponValidationResponseDto(false, "El cupón no es aplicable para montos mayores a " + discount.getMaxPrice(), BigDecimal.ZERO, lineTotal, discount.getId(), product.getId());
+        }
+
+
+        BigDecimal amount = calculateDiscountAmount(discount, item);
+        if (amount == null) amount = BigDecimal.ZERO;
+
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            return new CouponValidationResponseDto(false, "El cupón no genera un descuento aplicable a este ítem.", BigDecimal.ZERO, lineTotal, discount.getId(), product.getId());
+        }
+
+
+        BigDecimal newTotal = lineTotal.subtract(amount);
+        if (newTotal.compareTo(BigDecimal.ZERO) < 0) newTotal = BigDecimal.ZERO;
+
+        return new CouponValidationResponseDto(true, "Cupón válido.", amount, newTotal, discount.getId(), product.getId());
+
+    } catch (Exception ex) {
+        return new CouponValidationResponseDto(false, "Error interno al validar el cupón.", BigDecimal.ZERO, null, null, null);
+    }
+}
+
+
+
+
+
+
+@Override
+public CouponValidationResponseDto validateCouponForOrderItemsPreview(
+        String code, Long buyerId, List<OrderItemCreateDto> items) {
+
+    if (code == null || code.isBlank()) {
+        return new CouponValidationResponseDto(false, "Código de descuento no proporcionado.", BigDecimal.ZERO, null, null, null);
+    }
+    if (items == null || items.isEmpty()) {
+        return new CouponValidationResponseDto(false, "Lista de ítems no proporcionada.", BigDecimal.ZERO, null, null, null);
+    }
+
+    try {
+        Optional<Discount> optDiscount = discountRepository.findByCodeAndActive(code);
+        if (optDiscount.isEmpty()) {
+            return new CouponValidationResponseDto(false, "Cupón no encontrado o no activo.", BigDecimal.ZERO, null, null, null);
+        }
+        Discount discount = optDiscount.get();
+
+
+        if (!isActiveNow(discount)) {
+            return new CouponValidationResponseDto(false, "El cupón no está vigente.", BigDecimal.ZERO, null, discount.getId(), null);
+        }
+
+
+        if (discount.getType() != DiscountType.FIXED) {
+            return new CouponValidationResponseDto(false, "El código proporcionado no corresponde a un cupón válido (debe ser FIXED).",
+                    BigDecimal.ZERO, null, discount.getId(), null);
+        }
+
+
+        if (discount.getTargetBuyer() != null && discount.getTargetBuyer().getId() != null) {
+            if (buyerId == null || !Objects.equals(discount.getTargetBuyer().getId(), buyerId)) {
+                return new CouponValidationResponseDto(false, "El cupón no es aplicable a este comprador.", BigDecimal.ZERO, null, discount.getId(), null);
+            }
+        } else {
+            return new CouponValidationResponseDto(false, "El cupón no está dirigido a ningún comprador específico.", BigDecimal.ZERO, null, discount.getId(), null);
+        }
+
+
+        BigDecimal bestAmount = BigDecimal.ZERO;
+        BigDecimal bestNewTotal = null;
+        Long bestProductId = null;
+        BigDecimal bestLineTotal = BigDecimal.ZERO;
+
+        for (OrderItemCreateDto item : items) {
+            if (item == null) continue;
+            Product product = productRepository.findById(item.productId()).orElse(null);
+            if (product == null) {
+
+                continue;
+            }
+
+
+            boolean applicable = false;
+            if (discount.getTargetProduct() != null && discount.getTargetProduct().getId() != null) {
+                applicable = Objects.equals(discount.getTargetProduct().getId(), product.getId());
+            }
+            if (!applicable && discount.getTargetCategory() != null && discount.getTargetCategory().getId() != null) {
+                if (product.getCategories() != null) {
+                    applicable = product.getCategories().stream()
+                            .anyMatch(c -> Objects.equals(c.getId(), discount.getTargetCategory().getId()));
+                }
+            }
+            if (!applicable && discount.getTargetSeller() != null && discount.getTargetSeller().getId() != null) {
+                if (product.getSeller() != null) {
+                    applicable = Objects.equals(product.getSeller().getId(), discount.getTargetSeller().getId());
+                }
+            }
+            if (!applicable) continue;
+
+            int qty = item.quantity() == null ? 0 : item.quantity();
+            if (qty <= 0) continue;
+            BigDecimal unitPrice = product.getPrice() != null ? product.getPrice() : BigDecimal.ZERO;
+            BigDecimal lineTotal = unitPrice.multiply(BigDecimal.valueOf(qty));
+
+
+            if (discount.getMinQuantity() != null && qty < discount.getMinQuantity()) continue;
+            if (discount.getMinPrice() != null && lineTotal.compareTo(discount.getMinPrice()) < 0) continue;
+            if (discount.getMaxPrice() != null && lineTotal.compareTo(discount.getMaxPrice()) > 0) continue;
+
+
+            BigDecimal amount = calculateDiscountAmount(discount, item);
+            if (amount == null) amount = BigDecimal.ZERO;
+            if (amount.compareTo(BigDecimal.ZERO) <= 0) continue;
+
+            BigDecimal newTotal = lineTotal.subtract(amount);
+            if (newTotal.compareTo(BigDecimal.ZERO) < 0) newTotal = BigDecimal.ZERO;
+
+
+            boolean isBetter = false;
+            int cmp = amount.compareTo(bestAmount);
+            if (cmp > 0) {
+                isBetter = true;
+            } else if (cmp == 0 && amount.compareTo(BigDecimal.ZERO) > 0) {
+
+                int ltCmp = lineTotal.compareTo(bestLineTotal);
+                if (ltCmp > 0) {
+                    isBetter = true;
+                } else if (ltCmp == 0) {
+
+                    if (bestProductId == null || (product.getId() != null && product.getId() < bestProductId)) {
+                        isBetter = true;
+                    }
+                }
+            }
+
+            if (isBetter) {
+                bestAmount = amount;
+                bestNewTotal = newTotal;
+                bestProductId = product.getId();
+                bestLineTotal = lineTotal;
+            }
+        }
+
+        if (bestAmount.compareTo(BigDecimal.ZERO) > 0) {
+            return new CouponValidationResponseDto(true, "Cupón válido para uno de los ítems.", bestAmount, bestNewTotal, discount.getId(), bestProductId);
+        } else {
+            return new CouponValidationResponseDto(false, "Ninguno de los ítems es aplicable al cupón.", BigDecimal.ZERO, null, discount.getId(), null);
+        }
+
+    } catch (Exception ex) {
+
+        return new CouponValidationResponseDto(false, "Error interno al validar el cupón.", BigDecimal.ZERO, null, null, null);
+    }
+}
+
+
+
 }

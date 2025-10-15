@@ -1,11 +1,13 @@
 package com.uade.tpo.marketplace.controllers;
 
 import java.net.URI;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +21,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.uade.tpo.marketplace.controllers.auth.CurrentUserProvider;
 import com.uade.tpo.marketplace.entity.dto.create.DiscountCreateDto;
+import com.uade.tpo.marketplace.entity.dto.request.CouponValidationBulkRequestDto;
+import com.uade.tpo.marketplace.entity.dto.request.CouponValidationRequestDto;
+import com.uade.tpo.marketplace.entity.dto.response.CouponValidationResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.DiscountResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.DiscountUpdateDto;
 import com.uade.tpo.marketplace.exceptions.DuplicateResourceException;
@@ -90,4 +95,48 @@ public class DiscountsController {
     }
 
 
+    @PostMapping("/validate")
+    public ResponseEntity<CouponValidationResponseDto> validateCouponForItem(
+            @Valid @RequestBody CouponValidationRequestDto request,
+            Authentication authentication) {
+
+        Long authUserId = currentUserProvider.getCurrentUserId(authentication);
+        Long buyerId = request.buyerId() == null ? authUserId : request.buyerId();
+
+        if (buyerId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        if (request.buyerId() != null && !Objects.equals(request.buyerId(), authUserId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        CouponValidationResponseDto response =
+                discountService.validateCouponForOrderItemPreview(request.code(), buyerId, request.item());
+
+        return ResponseEntity.ok(response);
+    }
+
+
+    @PostMapping("/validate/bulk")
+    public ResponseEntity<CouponValidationResponseDto> validateCouponForItemsBulk(
+            @Valid @RequestBody CouponValidationBulkRequestDto request,
+            Authentication authentication) {
+
+        Long authUserId = currentUserProvider.getCurrentUserId(authentication);
+        Long buyerId = request.buyerId() == null ? authUserId : request.buyerId();
+
+        if (buyerId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        if (request.buyerId() != null && !Objects.equals(request.buyerId(), authUserId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        CouponValidationResponseDto response =
+                discountService.validateCouponForOrderItemsPreview(request.code(), buyerId, request.items());
+
+        return ResponseEntity.ok(response);
+    }
 }
