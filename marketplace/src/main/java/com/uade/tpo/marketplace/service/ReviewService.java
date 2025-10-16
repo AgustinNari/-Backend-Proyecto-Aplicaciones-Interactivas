@@ -23,6 +23,7 @@ import com.uade.tpo.marketplace.entity.dto.response.ReviewDeletionResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.ReviewResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.ReviewUpdateDto;
 import com.uade.tpo.marketplace.entity.enums.OrderStatus;
+import com.uade.tpo.marketplace.entity.enums.Role;
 import com.uade.tpo.marketplace.exceptions.BadRequestException;
 import com.uade.tpo.marketplace.exceptions.DuplicateReviewException;
 import com.uade.tpo.marketplace.exceptions.OrderNotFoundException;
@@ -177,14 +178,13 @@ public class ReviewService implements IReviewService {
 
 
     @Override
-    public Page<ReviewResponseDto> getReviewsByProduct(Long productId, Pageable pageable, boolean onlyVisible) throws ResourceNotFoundException {
+    public Page<ReviewResponseDto> getReviewsByProduct(Long productId, Pageable pageable) throws ResourceNotFoundException {
         if (productId == null) throw new BadRequestException("productId no proporcionado.");
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException("Producto no encontrado (id=" + productId + ")."));
 
-        Page<Review> page = reviewRepository.findByProductId(productId, pageable);
+        Page<Review> page = reviewRepository.findByProductIdAndVisible(productId, pageable);
         List<ReviewResponseDto> dtos = page.getContent().stream()
-                .filter(r -> !onlyVisible || r.isVisible())
                 .map(reviewMapper::toResponse)
                 .collect(Collectors.toList());
 
@@ -229,4 +229,33 @@ public class ReviewService implements IReviewService {
 
         return Pair.of(avg, count);
     }
+
+
+    @Override
+    @Transactional(rollbackFor = Throwable.class)
+    public ReviewResponseDto toggleReviewVisibility(Long reviewId, boolean visible, Long requestingUserId)
+            throws ResourceNotFoundException, UnauthorizedException {
+
+        if (reviewId == null) throw new BadRequestException("Id de reseña no proporcionado.");
+        Review existing = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new ReviewNotFoundException("Reseña no encontrada (id=" + reviewId + ")."));
+
+        if (requestingUserId == null) throw new BadRequestException("Id de usuario solicitante no proporcionado.");
+        User requester = userRepository.findById(requestingUserId)
+                .orElseThrow(() -> new UserNotFoundException("Usuario solicitante no encontrado (id=" + requestingUserId + ")."));
+
+        if (requester.getRole() != Role.ADMIN) {
+            throw new UnauthorizedException("No tienes permiso para cambiar la visibilidad de la reseña.");
+        }
+
+        if (Objects.equals(existing.isVisible(), visible)) {
+            return reviewMapper.toResponse(existing);
+        }
+
+        existing.setVisible(visible);
+        Review saved = reviewRepository.save(existing);
+
+        return reviewMapper.toResponse(saved);
+    }
+
 }

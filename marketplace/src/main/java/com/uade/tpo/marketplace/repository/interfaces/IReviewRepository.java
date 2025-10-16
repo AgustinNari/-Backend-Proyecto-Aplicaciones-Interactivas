@@ -7,18 +7,25 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.uade.tpo.marketplace.entity.basic.Review;
 
+import jakarta.transaction.Transactional;
+
 @Repository
 public interface IReviewRepository extends JpaRepository<Review, Long> {
 
 
-    Page<Review> findByProductId(Long productId, Pageable pageable);
+    @Query("SELECT r FROM Review r WHERE r.product.id = :productId AND r.visible = true")
+    Page<Review> findByProductIdAndVisible(Long productId, Pageable pageable);
+
     Page<Review> findByRating(Integer rating, Pageable pageable);
+
+    Page<Review> findByVisible(boolean visible, Pageable pageable);
     
     @Query("SELECT r FROM Review r WHERE r.rating >= :minRating AND r.visible = true")
     Page<Review> findByMinRating(@Param("minRating") Integer minRating, Pageable pageable);
@@ -30,13 +37,13 @@ public interface IReviewRepository extends JpaRepository<Review, Long> {
     
     Page<Review> findByBuyerId(Long buyerId, Pageable pageable);
 
-    @Query("SELECT AVG(r.rating) FROM Review r WHERE r.seller.id = :sellerId AND r.visible = true")
+    @Query("SELECT AVG(r.rating) FROM Review r WHERE r.seller.id = :sellerId")
     BigDecimal getAverageRatingBySellerId(Long sellerId);
 
-    @Query("SELECT AVG(r.rating) FROM Review r WHERE r.product.id = :productId AND r.visible = true")
+    @Query("SELECT AVG(r.rating) FROM Review r WHERE r.product.id = :productId")
     BigDecimal getAverageRatingByProductId(Long productId);
 
-    @Query("SELECT COUNT(r) FROM Review r WHERE r.product.id = :productId AND r.visible = true")
+    @Query("SELECT COUNT(r) FROM Review r WHERE r.product.id = :productId")
     Long getCountByProductId(Long productId);
 
     boolean existsByOrderItemId(Long orderItemId);
@@ -44,4 +51,9 @@ public interface IReviewRepository extends JpaRepository<Review, Long> {
     boolean existsByProductIdAndBuyerId(Long productId, Long buyerId);
 
     Optional<Review> findByOrderItemId(Long orderItemId);
+
+    @Transactional
+    @Modifying
+    @Query("UPDATE Review r SET r.visible = :visible WHERE r.id = :reviewId")
+    int toggleReviewVisibility(Long reviewId, boolean visible);
 }

@@ -20,11 +20,13 @@ public interface IReviewService {
 
     ReviewDeletionResponseDto deleteReview(Long reviewId, Long requestingUserId) throws ResourceNotFoundException, UnauthorizedException;
 
-    Page<ReviewResponseDto> getReviewsByProduct(Long productId, Pageable pageable, boolean onlyVisible) throws ResourceNotFoundException;
+    Page<ReviewResponseDto> getReviewsByProduct(Long productId, Pageable pageable) throws ResourceNotFoundException;
 
     Page<ReviewResponseDto> getReviewsByUser(Long userId, Pageable pageable) throws ResourceNotFoundException;
- 
+
     Page<ReviewResponseDto> getAllReviews(Pageable pageable);
 
     Pair<Double, Long> getAverageRatingAndCountByProduct(Long productId) throws ResourceNotFoundException;
+
+    ReviewResponseDto toggleReviewVisibility(Long reviewId, boolean visible, Long requestingUserId) throws ResourceNotFoundException, UnauthorizedException;
 }

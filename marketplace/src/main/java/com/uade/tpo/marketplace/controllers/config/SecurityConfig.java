@@ -68,10 +68,13 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.PATCH, "/products/**").hasRole("SELLER")
 
                                                 //REVIEWS
-                                                .requestMatchers(HttpMethod.GET, "/reviews/**").permitAll()
+                                                .requestMatchers(HttpMethod.GET, "/reviews").hasRole("ADMIN")
+                                                .requestMatchers(HttpMethod.GET, "/reviews/me").authenticated()
+                                                .requestMatchers(HttpMethod.GET, "/reviews/product/**").permitAll()
                                                 .requestMatchers(HttpMethod.POST, "/reviews").hasAnyRole("BUYER", "SELLER")
                                                 .requestMatchers(HttpMethod.PUT, "/reviews/**").hasAnyRole("BUYER", "SELLER")
                                                 .requestMatchers(HttpMethod.DELETE, "/reviews/**").hasAnyRole("BUYER", "SELLER")
+                                                .requestMatchers(HttpMethod.PATCH, "/reviews/*/visibility").hasRole("ADMIN")
 
                                                 //USERS
                                                 .requestMatchers(HttpMethod.GET, "/users/**").hasRole("ADMIN")

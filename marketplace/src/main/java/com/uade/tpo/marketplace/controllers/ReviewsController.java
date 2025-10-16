@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -24,6 +25,8 @@ import com.uade.tpo.marketplace.entity.dto.response.ReviewDeletionResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.ReviewResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.ReviewUpdateDto;
 import com.uade.tpo.marketplace.exceptions.ProductNotFoundException;
+import com.uade.tpo.marketplace.exceptions.ResourceNotFoundException;
+import com.uade.tpo.marketplace.exceptions.UnauthorizedException;
 import com.uade.tpo.marketplace.exceptions.UserNotFoundException;
 import com.uade.tpo.marketplace.service.interfaces.IReviewService;
 
@@ -47,19 +50,19 @@ public class ReviewsController {
     }
 
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<Page<ReviewResponseDto>> getReviewsByUser(@PathVariable("userId") Long userId, Pageable pageable)
+    @GetMapping("/me")
+    public ResponseEntity<Page<ReviewResponseDto>> getReviewsByUser(Pageable pageable, Authentication authentication)
             throws UserNotFoundException {
+        Long userId = authenticator.getCurrentUserId(authentication);
         Page<ReviewResponseDto> page = reviewService.getReviewsByUser(userId, pageable);
         return ResponseEntity.ok(page);
     }
 
     @GetMapping("/product/{productId}")
     public ResponseEntity<Page<ReviewResponseDto>> getReviewsByProduct(@PathVariable("productId") Long productId,
-                                                                       Pageable pageable,
-                                                                       @RequestParam(name = "onlyVisible", required = false, defaultValue = "true") boolean onlyVisible)
+                                                                       Pageable pageable)
             throws ProductNotFoundException {
-        Page<ReviewResponseDto> page = reviewService.getReviewsByProduct(productId, pageable, onlyVisible);
+        Page<ReviewResponseDto> page = reviewService.getReviewsByProduct(productId, pageable);
         return ResponseEntity.ok(page);
     }
 
@@ -98,4 +101,16 @@ public class ReviewsController {
         
         return ResponseEntity.ok(deleted);
     }
+
+    @PatchMapping("/{reviewId}/visibility")
+    public ResponseEntity<ReviewResponseDto> toggleReviewVisibility(
+        @PathVariable("reviewId") Long reviewId,
+        @RequestParam("visible") boolean visible,
+        Authentication authentication)
+        throws ResourceNotFoundException, UnauthorizedException {
+
+    Long requestingUserId = authenticator.getCurrentUserId(authentication);
+    ReviewResponseDto updated = reviewService.toggleReviewVisibility(reviewId, visible, requestingUserId);
+    return ResponseEntity.ok(updated);
+}
 }
