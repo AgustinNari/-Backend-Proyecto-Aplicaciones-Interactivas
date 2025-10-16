@@ -51,6 +51,7 @@ public class AuthenticationService implements IAuthenticationService{
                                 passwordEncoder.encode(request.getPassword()),
                                 request.getRole(),
                                 request.getPhone(),
+                                request.getSellerDescription(),
                                 request.getCountry()
                         );
                 user.setActive(true);

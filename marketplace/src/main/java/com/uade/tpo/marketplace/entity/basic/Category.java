@@ -40,6 +40,8 @@ public class Category {
     @Column(nullable = false, name = "description", unique = true)
     private String description;
 
+    private boolean featured = false;
+
     @ManyToMany(mappedBy = "categories")
     private Set<Product> products = new HashSet<>();
 

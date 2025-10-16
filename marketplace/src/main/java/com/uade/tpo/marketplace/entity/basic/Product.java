@@ -98,6 +98,10 @@ public class Product {
 
     @Column(name = "metacritic_score")
     private Integer metacriticScore;
+
+
+    
+    private boolean featured = false;
     
 
 

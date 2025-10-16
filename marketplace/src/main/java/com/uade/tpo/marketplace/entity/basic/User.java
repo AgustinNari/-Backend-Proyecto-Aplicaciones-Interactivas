@@ -47,7 +47,7 @@ import lombok.NoArgsConstructor;
         })
 public class User implements UserDetails {
 
-    public User(String displayName, String firstName, String lastName, String email, String password, Role role, String phone, String country) {
+    public User(String displayName, String firstName, String lastName, String email, String password, Role role, String phone, String sellerDescription, String country) {
         this.displayName = displayName;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -55,6 +55,7 @@ public class User implements UserDetails {
         this.password = password;
         this.role = role;
         this.phone = phone;
+        this.sellerDescription = sellerDescription;
         this.country = country;
     }
 
