@@ -6,10 +6,14 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import com.uade.tpo.marketplace.entity.dto.create.UserAvatarCreateDto;
 import com.uade.tpo.marketplace.entity.dto.response.SellerResponseDto;
+import com.uade.tpo.marketplace.entity.dto.response.UserAvatarDeletionResponseDto;
+import com.uade.tpo.marketplace.entity.dto.response.UserAvatarResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.UserResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.UserUpdateDto;
 import com.uade.tpo.marketplace.entity.enums.Role;
+import com.uade.tpo.marketplace.exceptions.BadRequestException;
 import com.uade.tpo.marketplace.exceptions.DuplicateResourceException;
 import com.uade.tpo.marketplace.exceptions.ResourceNotFoundException;
 import com.uade.tpo.marketplace.exceptions.UnauthorizedException;
@@ -35,5 +39,13 @@ public interface IUserService {
     int updateBuyerBalance(Long userId, BigDecimal newBalance) throws UserNotFoundException;
 
     int registerNewLogin(Long userId, Long requestingUserId) throws UserNotFoundException;
+    
+    UserAvatarResponseDto uploadAvatar (UserAvatarCreateDto dto, Long requestingUserId)
+            throws UserNotFoundException, UnauthorizedException, BadRequestException;
+
+    UserAvatarDeletionResponseDto deleteAvatar (Long userId, Long requestingUserId)
+            throws UserNotFoundException, UnauthorizedException;
+
+
 }
 

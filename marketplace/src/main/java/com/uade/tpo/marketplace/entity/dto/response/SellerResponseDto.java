@@ -1,22 +1,20 @@
 package com.uade.tpo.marketplace.entity.dto.response;
 
-import java.time.Instant;
-
-import com.uade.tpo.marketplace.entity.enums.Role;
+import java.math.BigDecimal;
 
 public record SellerResponseDto(
     Long id,
     String displayName,
+    String sellerDescription,
     String firstName,
     String lastName,
     String email,
-    Role role,
     String phone,
     String country,
     Boolean active,
-    Instant createdAt,
-    Instant lastLogin,
-    Integer sellerRating
+    BigDecimal sellerRating,
+    String avatarContentType,
+    String avatarDataUrl
     //TODO: Agregar products acá???
 ) {
 

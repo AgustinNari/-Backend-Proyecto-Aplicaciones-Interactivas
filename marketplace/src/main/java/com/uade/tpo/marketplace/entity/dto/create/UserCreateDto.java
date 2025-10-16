@@ -27,8 +27,9 @@ public record UserCreateDto(
     @NotNull
     Role role,
 
-
     String phone,
+
+    String sellerDescription,
 
     @NotBlank
     String country

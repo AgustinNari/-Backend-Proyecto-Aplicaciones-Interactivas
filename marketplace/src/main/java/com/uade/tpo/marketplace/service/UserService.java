@@ -2,7 +2,9 @@ package com.uade.tpo.marketplace.service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,25 +14,34 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.uade.tpo.marketplace.entity.basic.User;
+import com.uade.tpo.marketplace.entity.dto.create.UserAvatarCreateDto;
 import com.uade.tpo.marketplace.entity.dto.response.SellerResponseDto;
+import com.uade.tpo.marketplace.entity.dto.response.UserAvatarDeletionResponseDto;
+import com.uade.tpo.marketplace.entity.dto.response.UserAvatarResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.UserResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.UserUpdateDto;
 import com.uade.tpo.marketplace.entity.enums.Role;
 import com.uade.tpo.marketplace.exceptions.BadRequestException;
 import com.uade.tpo.marketplace.exceptions.DuplicateResourceException;
+import com.uade.tpo.marketplace.exceptions.ImageProcessingException;
 import com.uade.tpo.marketplace.exceptions.ResourceNotFoundException;
 import com.uade.tpo.marketplace.exceptions.UnauthorizedException;
 import com.uade.tpo.marketplace.exceptions.UserDuplicateException;
 import com.uade.tpo.marketplace.exceptions.UserNotFoundException;
+import com.uade.tpo.marketplace.extra.mappers.UserAvatarMapper;
 import com.uade.tpo.marketplace.extra.mappers.UserMapper;
 import com.uade.tpo.marketplace.repository.interfaces.IReviewRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IUserRepository;
 import com.uade.tpo.marketplace.service.interfaces.IUserService;
 
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class UserService implements IUserService {
+
+    private static final long MAX_AVATAR_BYTES = 5 * 1024 * 1024; // 5 MB
+    private static final Set<String> ALLOWED_MIMES = Set.of("image/jpeg", "image/png", "image/gif", "image/svg+xml");
 
     @Autowired
     private IUserRepository userRepository;
@@ -40,12 +51,15 @@ public class UserService implements IUserService {
     @Autowired
     private UserMapper userMapper;
 
+    @Autowired
+    private UserAvatarMapper avatarMapper;
+
 
 
 
 
     
-   @Override
+    @Override
     public Optional<UserResponseDto> getUserById(Long id) {
         if (id == null) return Optional.empty();
         return userRepository.findById(id).map(userMapper::toResponse);
@@ -123,27 +137,24 @@ public class UserService implements IUserService {
 
 
         BigDecimal avg = reviewRepository.getAverageRatingBySellerId(sellerId);
-        Integer ratingInt = null;
-        if (avg != null) {
 
-            ratingInt = avg.intValue();
-        }
+        UserAvatarResponseDto avatar = avatarMapper.toResponse(seller);
 
         SellerResponseDto dto = new SellerResponseDto(
-                seller.getId(),
-                seller.getDisplayName(),
-                seller.getFirstName(),
-                seller.getLastName(),
-                seller.getEmail(),
-                seller.getRole() == null ? null : seller.getRole(),
-                seller.getPhone(),
-                seller.getCountry(),
-                seller.isActive(),
-                seller.getCreatedAt(),
-                seller.getLastLogin(),
-                ratingInt
+            seller.getId(),
+            seller.getDisplayName(),
+            seller.getSellerDescription(),
+            seller.getFirstName(),
+            seller.getLastName(),
+            seller.getEmail(),
+            seller.getPhone(),
+            seller.getCountry(),
+            seller.isActive(),
+            avg,
+            avatar == null ? null : avatar.contentType(),
+            avatar == null ? null : avatar.dataUrl()
         );
-
+                
         return Optional.of(dto);
     }
 
@@ -177,5 +188,103 @@ public class UserService implements IUserService {
             throw new UserNotFoundException("No se pudo registrar el login. Usuario no encontrado (id=" + userId + ").");
         }
         return updatedRows;
+    }
+
+
+    @Override
+    @Transactional(rollbackFor = Throwable.class)
+    public UserAvatarResponseDto uploadAvatar(UserAvatarCreateDto dto, Long requestingUserId)
+            throws UserNotFoundException, UnauthorizedException, BadRequestException {
+
+        if (dto == null || dto.userId() == null) {
+            throw new BadRequestException("UserId no proporcionado.");
+        }
+        if (dto.file() == null || dto.file().isEmpty()) {
+            throw new BadRequestException("Archivo no proporcionado o vacío.");
+        }
+
+        Long targetUserId = dto.userId();
+
+
+        User targetUser = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado (id=" + targetUserId + ")."));
+
+
+        if (requestingUserId == null) {
+            throw new UnauthorizedException("No autenticado.");
+        }
+        User requestingUser = userRepository.findById(requestingUserId)
+                .orElseThrow(() -> new UserNotFoundException("Usuario solicitante no encontrado (id=" + requestingUserId + ")."));
+
+        boolean isOwner = Objects.equals(requestingUserId, targetUserId);
+        boolean isAdmin = requestingUser.getRole() == Role.ADMIN;
+
+        if (!isOwner && !isAdmin) {
+            throw new UnauthorizedException("No tienes permiso para subir el avatar de este usuario.");
+        }
+
+        MultipartFile file = dto.file();
+
+
+        if (file.getSize() > MAX_AVATAR_BYTES) {
+            throw new BadRequestException("Archivo demasiado grande. Límite: " + (MAX_AVATAR_BYTES/1024/1024) + " MB.");
+        }
+
+
+        User tmp = avatarMapper.toEntityAvatar(targetUserId, file);
+        if (tmp == null || tmp.getAvatar() == null) {
+            throw new ImageProcessingException("No se pudo procesar el archivo de avatar.");
+        }
+
+        String mime = tmp.getAvatarContentType();
+        if (mime == null) mime = "application/octet-stream";
+
+
+        if (!mime.startsWith("image/") && !ALLOWED_MIMES.contains(mime)) {
+            throw new BadRequestException("Tipo de archivo no permitido: " + mime);
+        }
+
+
+        int updated = userRepository.uploadAvatarById(targetUserId, tmp.getAvatar(), mime);
+        if (updated == 0) {
+            throw new UserNotFoundException("No se pudo guardar el avatar. Usuario no encontrado (id=" + targetUserId + ").");
+        }
+
+
+        User saved = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado tras guardar el avatar (id=" + targetUserId + ")."));
+
+        return avatarMapper.toResponse(saved);
+    }
+
+
+    @Override
+    @Transactional(rollbackFor = Throwable.class)
+    public UserAvatarDeletionResponseDto deleteAvatar(Long userId, Long requestingUserId)
+            throws UserNotFoundException, UnauthorizedException {
+
+        if (userId == null) throw new BadRequestException("UserId no proporcionado.");
+
+        User targetUser = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado (id=" + userId + ")."));
+
+        if (requestingUserId == null) throw new UnauthorizedException("No autenticado.");
+
+        User requestingUser = userRepository.findById(requestingUserId)
+                .orElseThrow(() -> new UserNotFoundException("Usuario solicitante no encontrado (id=" + requestingUserId + ")."));
+
+        boolean isOwner = Objects.equals(requestingUserId, userId);
+        boolean isAdmin = requestingUser.getRole() == Role.ADMIN;
+
+        if (!isOwner && !isAdmin) {
+            throw new UnauthorizedException("No tienes permiso para eliminar el avatar de este usuario.");
+        }
+
+        int updated = userRepository.deleteAvatarById(userId);
+        if (updated == 0) {
+            throw new UserNotFoundException("No se pudo eliminar el avatar. Usuario no encontrado (id=" + userId + ").");
+        }
+
+        return new UserAvatarDeletionResponseDto(true, userId, "Avatar eliminado correctamente.");
     }
 }

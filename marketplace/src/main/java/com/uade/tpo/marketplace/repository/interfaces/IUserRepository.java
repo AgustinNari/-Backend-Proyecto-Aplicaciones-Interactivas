@@ -1,6 +1,7 @@
 package com.uade.tpo.marketplace.repository.interfaces;
 
 import java.math.BigDecimal;
+import java.sql.Blob;
 import java.time.Instant;
 import java.util.Optional;
 
@@ -61,4 +62,14 @@ public interface IUserRepository extends JpaRepository<User, Long> {
     @Modifying
     @Query("UPDATE User u SET u.lastLogin = :loginTime WHERE u.id = :userId")
     int registerNewLogin(Long userId, Instant loginTime);
+
+    @Transactional
+    @Modifying
+    @Query("UPDATE User u SET u.avatar = :avatar, u.avatarContentType = :avatarContentType WHERE u.id = :userId")
+    int uploadAvatarById(Long userId, Blob avatar, String avatarContentType);
+
+    @Transactional
+    @Modifying
+    @Query("UPDATE User u SET u.avatar = NULL, u.avatarContentType = NULL WHERE u.id = :userId")
+    int deleteAvatarById(Long userId);
 }

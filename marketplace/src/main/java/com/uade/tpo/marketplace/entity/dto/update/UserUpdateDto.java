@@ -5,5 +5,6 @@ public record UserUpdateDto(
     String firstName,
     String lastName,
     String phone,
+    String sellerDescription,
     String country
 ) {}

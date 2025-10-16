@@ -76,10 +76,13 @@ public class SecurityConfig {
                                                 //USERS
                                                 .requestMatchers(HttpMethod.GET, "/users/**").hasRole("ADMIN")
                                                 .requestMatchers(HttpMethod.POST, "/users/**").authenticated()
+                                                .requestMatchers(HttpMethod.GET, "/users/me/profile").authenticated()
                                                 .requestMatchers(HttpMethod.GET, "/users/seller/*/profile").authenticated()
                                                 .requestMatchers(HttpMethod.PUT, "/users/**").authenticated()
                                                 .requestMatchers(HttpMethod.PATCH, "/users/me/balance").hasRole("ADMIN")
-
+                                                .requestMatchers(HttpMethod.POST, "/users/*/avatar").authenticated()
+                                                .requestMatchers(HttpMethod.PUT, "/users/*/avatar").authenticated()
+                                                .requestMatchers(HttpMethod.DELETE, "/users/*/avatar").authenticated()
 
 
 

@@ -6,17 +6,20 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.uade.tpo.marketplace.entity.basic.User;
 import com.uade.tpo.marketplace.entity.dto.create.UserCreateDto;
-import com.uade.tpo.marketplace.entity.dto.response.BuyerResponseDto;
-import com.uade.tpo.marketplace.entity.dto.response.SellerResponseDto;
+import com.uade.tpo.marketplace.entity.dto.response.UserAvatarResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.UserResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.UserUpdateDto;
 
 @Component
 public class UserMapper {
+
+    @Autowired
+    private UserAvatarMapper avatarMapper;
 
     public User toEntity(UserCreateDto dto){
         if (dto == null) return null;
@@ -27,6 +30,7 @@ public class UserMapper {
         u.setEmail(dto.email());
         if (dto.role() != null) u.setRole(dto.role());
         u.setPhone(dto.phone());
+        u.setSellerDescription(dto.sellerDescription());
         u.setCountry(dto.country());
         return u;
     }
@@ -37,30 +41,19 @@ public class UserMapper {
         if (dto.firstName() != null) entity.setFirstName(dto.firstName());
         if (dto.lastName() != null) entity.setLastName(dto.lastName());
         if (dto.phone() != null) entity.setPhone(dto.phone());
+        if (dto.sellerDescription() != null) entity.setSellerDescription(dto.sellerDescription());
         if (dto.country() != null) entity.setCountry(dto.country());
     }
 
     public UserResponseDto toResponse(User u){
         if (u == null) return null;
+
+        UserAvatarResponseDto avatar = avatarMapper.toResponse(u);
+
         return new UserResponseDto(
             u.getId(),
             u.getDisplayName(),
-            u.getFirstName(),
-            u.getLastName(),
-            u.getEmail(),
-            u.getRole(),
-            u.getPhone(),
-            u.getCountry(),
-            u.isActive(),
-            u.getCreatedAt(),
-            u.getLastLogin()
-        );
-    }
-    public SellerResponseDto toSellerResponse(User u){
-        if (u == null) return null;
-        return new SellerResponseDto(
-            u.getId(),
-            u.getDisplayName(),
+            u.getSellerDescription(),
             u.getFirstName(),
             u.getLastName(),
             u.getEmail(),
@@ -70,28 +63,14 @@ public class UserMapper {
             u.isActive(),
             u.getCreatedAt(),
             u.getLastLogin(),
-            u.getSellerRating()
+            u.getBuyerBalance(),
+            avatar == null ? null : avatar.contentType(),
+            avatar == null ? null : avatar.dataUrl()
         );
     }
 
 
-    public BuyerResponseDto toBuyerResponse(User u){
-        if (u == null) return null;
-        return new BuyerResponseDto(
-            u.getId(),
-            u.getDisplayName(),
-            u.getFirstName(),
-            u.getLastName(),
-            u.getEmail(),
-            u.getRole(),
-            u.getPhone(),
-            u.getCountry(),
-            u.isActive(),
-            u.getCreatedAt(),
-            u.getLastLogin(),
-            u.getBuyerBalance()
-        );
-    }
+
 
 
     public User fromId(Long id) {

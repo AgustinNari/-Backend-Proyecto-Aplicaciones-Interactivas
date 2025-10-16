@@ -2,6 +2,7 @@ package com.uade.tpo.marketplace.entity.basic;
 
 
 import java.math.BigDecimal;
+import java.sql.Blob;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.HashSet;
@@ -65,6 +66,15 @@ public class User implements UserDetails {
     @Column(name = "display_name", nullable=false, length = 100, unique = true)
     private String displayName;
 
+    @Column(name = "avatar")
+    private Blob avatar;
+
+    @Column(name = "avatar_content_type", length = 100)
+    private String avatarContentType;
+
+    @Column(name = "seller_description")
+    private String sellerDescription;
+
     @Column(name = "first_name", nullable=false, length = 50)
     private String firstName;
 
@@ -93,14 +103,6 @@ public class User implements UserDetails {
 
     @OneToMany(mappedBy = "targetBuyer", fetch = FetchType.LAZY)
     private Set<Discount> coupons = new HashSet<>();
-
-
-
-    //TODO:
-    @Column (name = "seller_rating")
-    private Integer sellerRating;
-
-
 
 
     @Column(nullable = false)
