@@ -3,7 +3,8 @@ package com.uade.tpo.marketplace.entity.dto.response;
 public record CategoryResponseDto(
     Long id,
     String description,
-    Integer productCount
+    Integer productCount,
+    Boolean featured
 ) {
 
     public String getDescription() {

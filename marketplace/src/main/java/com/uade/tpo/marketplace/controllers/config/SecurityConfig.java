@@ -31,6 +31,7 @@ public class SecurityConfig {
                                                 //CATEGORIES
                                                 .requestMatchers(HttpMethod.GET, "/categories/**").permitAll()
                                                 .requestMatchers(HttpMethod.POST, "/categories/**").hasRole("ADMIN")
+                                                .requestMatchers(HttpMethod.PATCH, "/categories/*/featured").hasRole("ADMIN")
 
                                                 //DIGITAL KEYS
                                                 .requestMatchers(HttpMethod.POST, "/digital_keys").hasRole("SELLER")

@@ -5,11 +5,15 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
 import com.uade.tpo.marketplace.entity.basic.Category;
 import com.uade.tpo.marketplace.entity.basic.Product;
+
+import jakarta.transaction.Transactional;
 
 @Repository
 public interface ICategoryRepository extends JpaRepository<Category, Long> {
@@ -31,6 +35,11 @@ public interface ICategoryRepository extends JpaRepository<Category, Long> {
 
     @Query("SELECT p FROM Product p JOIN p.categories c WHERE c.description = :description")
     Page<Product> findProductsByCategoryDescription(@Param("description") String description, Pageable pageable);
+
+    @Transactional
+    @Modifying
+    @Query("UPDATE Category c SET c.featured = :featured WHERE c.id = :categoryId")
+    int toggleCategoryFeaturedStatus(Long categoryId, boolean featured);
     
 
 

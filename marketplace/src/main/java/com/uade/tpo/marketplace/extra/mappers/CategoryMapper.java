@@ -41,7 +41,8 @@ public class CategoryMapper {
         return new CategoryResponseDto(
             category.getId(),
             category.getDescription(),
-            productCount
+            productCount,
+            category.isFeatured()
         );
     }
 

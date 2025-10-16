@@ -9,11 +9,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.uade.tpo.marketplace.entity.basic.Category;
+import com.uade.tpo.marketplace.entity.basic.User;
 import com.uade.tpo.marketplace.entity.dto.create.CategoryCreateDto;
 import com.uade.tpo.marketplace.entity.dto.response.CategoryResponseDto;
+import com.uade.tpo.marketplace.entity.enums.Role;
+import com.uade.tpo.marketplace.exceptions.BadRequestException;
 import com.uade.tpo.marketplace.exceptions.CategoryDuplicateException;
+import com.uade.tpo.marketplace.exceptions.CategoryNotFoundException;
+import com.uade.tpo.marketplace.exceptions.ResourceNotFoundException;
+import com.uade.tpo.marketplace.exceptions.UnauthorizedException;
+import com.uade.tpo.marketplace.exceptions.UserNotFoundException;
 import com.uade.tpo.marketplace.extra.mappers.CategoryMapper;
 import com.uade.tpo.marketplace.repository.interfaces.ICategoryRepository;
+import com.uade.tpo.marketplace.repository.interfaces.IUserRepository;
 import com.uade.tpo.marketplace.service.interfaces.ICategoryService;
 
 @Service
@@ -26,6 +34,9 @@ public class CategoryService implements ICategoryService {
 
     @Autowired
     private CategoryMapper categoryMapper;
+
+    @Autowired
+    private IUserRepository userRepository;
 
     @Override
     public Page<CategoryResponseDto> getAllCategories(PageRequest pageable) {
@@ -56,6 +67,32 @@ public class CategoryService implements ICategoryService {
         Category entity = categoryMapper.toEntity(dto);
         Category saved = categoryRepository.save(entity);
         return categoryMapper.toResponse(saved);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Throwable.class)
+    public CategoryResponseDto toggleCategoryFeaturedStatus(Long categoryId, boolean featured, Long requestingUserId)
+            throws ResourceNotFoundException, UnauthorizedException {
+
+        if (categoryId == null) throw new BadRequestException("Id de categoría no proporcionado.");
+        if (requestingUserId == null) throw new UnauthorizedException("Id de usuario solicitante no proporcionado.");
+
+        User requester = userRepository.findById(requestingUserId)
+                .orElseThrow(() -> new UserNotFoundException("Usuario solicitante no encontrado (id=" + requestingUserId + ")."));
+
+        if (requester.getRole() != Role.ADMIN) {
+            throw new UnauthorizedException("No tienes permisos para modificar el estado 'featured' de la categoría.");
+        }
+
+        int updated = categoryRepository.toggleCategoryFeaturedStatus(categoryId, featured);
+        if (updated == 0) {
+            throw new CategoryNotFoundException("No se encontró la categoría (id=" + categoryId + ").");
+        }
+
+        Category updatedCategory = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new CategoryNotFoundException("No se encontró la categoría (id=" + categoryId + ")."));
+
+        return categoryMapper.toResponse(updatedCategory);
     }
     
 }

@@ -7,7 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,9 +17,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.uade.tpo.marketplace.controllers.auth.CurrentUserProvider;
 import com.uade.tpo.marketplace.entity.dto.create.CategoryCreateDto;
 import com.uade.tpo.marketplace.entity.dto.response.CategoryResponseDto;
 import com.uade.tpo.marketplace.exceptions.CategoryDuplicateException;
+import com.uade.tpo.marketplace.exceptions.ResourceNotFoundException;
+import com.uade.tpo.marketplace.exceptions.UnauthorizedException;
 import com.uade.tpo.marketplace.service.interfaces.ICategoryService;
 
 import jakarta.validation.Valid;
@@ -33,6 +38,8 @@ public class CategoriesController {
     private ICategoryService categoryService; //Usamos esto para no depender de otras capas, para reducir acoplamiento
     //Entonces no vamos a crear instancias de esta interfaz, sino que Spring se encargará de inyectarla
 
+    @Autowired
+    private CurrentUserProvider currentUserProvider;
     
     @GetMapping //localhost:4002/categories
     public ResponseEntity<Page<CategoryResponseDto>> getAllCategories(
@@ -66,5 +73,19 @@ public class CategoriesController {
         return ResponseEntity.created(location).body(created);
     }
 
+
+    @PatchMapping("/{categoryId}/featured")
+    public ResponseEntity<CategoryResponseDto> toggleCategoryFeaturedStatus(
+            @PathVariable Long categoryId,
+            @RequestParam("featured") boolean featured,
+            Authentication authentication)
+            throws ResourceNotFoundException, UnauthorizedException {
+
+        Long requestingUserId = currentUserProvider.getCurrentUserId(authentication);
+        CategoryResponseDto out = categoryService.toggleCategoryFeaturedStatus(categoryId, featured, requestingUserId);
+        return ResponseEntity.ok(out);
+    }
+
+    
 
 }
