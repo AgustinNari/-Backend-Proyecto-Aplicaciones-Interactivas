@@ -28,5 +28,6 @@ public record ProductResponseDto(
     String publisher,
     Integer metacriticScore,
     Integer availableStock, 
-    List<String> imageUrls
+    List<String> imageUrls,
+    Boolean featured
 ) {}

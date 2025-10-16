@@ -145,7 +145,8 @@ public class ProductMapper {
             product.getPublisher(),
             product.getMetacriticScore(),
             availableStock,
-            imageFiles
+            imageFiles,
+            product.isFeatured()
         );
     }
 
@@ -175,7 +176,8 @@ public class ProductMapper {
             base.publisher(),
             base.metacriticScore(),
             availableStock,
-            base.imageUrls()
+            base.imageUrls(),
+            base.featured()
         );
     }
 

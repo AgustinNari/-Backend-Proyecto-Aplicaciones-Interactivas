@@ -203,6 +203,21 @@ public class ProductsController {
     }
 
 
+    @PatchMapping("/{id}/featured")
+    public ResponseEntity<ProductResponseDto> toggleProductFeaturedStatus(
+            @PathVariable("id") Long id,
+            @RequestParam("featured") Boolean featured,
+            Authentication authentication)
+            throws ProductNotFoundException, UnauthorizedException {
+
+        Long requestingUserId = currentUserProvider.getCurrentUserId(authentication);
+        ProductResponseDto updated = productService.toggleProductFeaturedStatus(id, featured, requestingUserId);
+        return ResponseEntity.ok(updated);
+    }
+
+
+    
+
 
 
 

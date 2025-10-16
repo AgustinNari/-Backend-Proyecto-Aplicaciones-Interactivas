@@ -67,6 +67,7 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.POST, "/products/**").hasRole("SELLER")
                                                 .requestMatchers(HttpMethod.PUT, "/products/**").hasRole("SELLER")
                                                 .requestMatchers(HttpMethod.PATCH, "/products/**").hasRole("SELLER")
+                                                .requestMatchers(HttpMethod.PATCH, "/products/*/featured").hasRole("ADMIN")
 
                                                 //REVIEWS
                                                 .requestMatchers(HttpMethod.GET, "/reviews").hasRole("ADMIN")

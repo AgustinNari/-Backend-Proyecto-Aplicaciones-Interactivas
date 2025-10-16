@@ -21,49 +21,53 @@ import com.uade.tpo.marketplace.exceptions.UnauthorizedException;
 
 public interface IProductService {
 
-    Page<ProductResponseDto> getActiveProducts(Pageable pageable,
-                                            boolean onlyActive);
-
-    Page<ProductResponseDto> getAllProducts(Pageable pageable);
-
-    Page<ProductResponseDto> getProductByFilters(Pageable pageable,
-                                                List<Long> categoryIds,
-                                                Optional<Long> sellerId,
-                                                Optional<BigDecimal> priceMin,
-                                                Optional<BigDecimal> priceMax,
-                                                Optional<String> platform,
-                                                Optional<String> region,
+        Page<ProductResponseDto> getActiveProducts(Pageable pageable,
                                                 boolean onlyActive);
 
+        Page<ProductResponseDto> getAllProducts(Pageable pageable);
 
-    Page<ProductResponseDto> searchActiveProducts(Pageable pageable, String searchTerm);
-
-
-    Optional<ProductResponseDto> getProductById(Long id);
-
-    Optional<ProductResponseDto> getProductBySku(String sku);
-
-    
-    Page<ProductResponseDto> findBySpecification(Specification<Product> spec, Pageable pageable);
-
-
-    ProductResponseDto createProduct(ProductCreateDto dto, Long sellerId) throws ProductNotFoundException, DuplicateResourceException;
+        Page<ProductResponseDto> getProductByFilters(Pageable pageable,
+                                                        List<Long> categoryIds,
+                                                        Optional<Long> sellerId,
+                                                        Optional<BigDecimal> priceMin,
+                                                        Optional<BigDecimal> priceMax,
+                                                        Optional<String> platform,
+                                                        Optional<String> region,
+                                                        boolean onlyActive);
 
 
-    ProductResponseDto updateProduct(Long id, ProductUpdateDto dto, Long requestingUserId)
-            throws ProductNotFoundException, UnauthorizedException, DuplicateResourceException;
+        Page<ProductResponseDto> searchActiveProducts(Pageable pageable, String searchTerm);
 
 
-    ProductResponseDto toggleProductActivity(Long id, Boolean isActive, Long requestingUserId) throws ProductNotFoundException,  UnauthorizedException;
+        Optional<ProductResponseDto> getProductById(Long id);
 
-    ProductResponseDto updateProductPrice(Long id, BigDecimal newPrice, Long requestingUserId) throws ProductNotFoundException, UnauthorizedException;
+        Optional<ProductResponseDto> getProductBySku(String sku);
+
+        
+        Page<ProductResponseDto> findBySpecification(Specification<Product> spec, Pageable pageable);
 
 
-    int getAvailableStockByProductId(Long productId);
+        ProductResponseDto createProduct(ProductCreateDto dto, Long sellerId) throws ProductNotFoundException, DuplicateResourceException;
 
 
-    Page<ProductResponseDto> getProductsBySeller(Long sellerId, Pageable pageable);
+        ProductResponseDto updateProduct(Long id, ProductUpdateDto dto, Long requestingUserId)
+                throws ProductNotFoundException, UnauthorizedException, DuplicateResourceException;
 
-    ProductResponseDto createProductWithImages(ProductCreateDto dto, Long sellerId, List<MultipartFile> images)
-        throws ProductNotFoundException, DuplicateResourceException, ResourceNotFoundException, BadRequestException, UnauthorizedException;
+
+        ProductResponseDto toggleProductActivity(Long id, Boolean isActive, Long requestingUserId) throws ProductNotFoundException,  UnauthorizedException;
+
+        ProductResponseDto updateProductPrice(Long id, BigDecimal newPrice, Long requestingUserId) throws ProductNotFoundException, UnauthorizedException;
+
+
+        int getAvailableStockByProductId(Long productId);
+
+
+        Page<ProductResponseDto> getProductsBySeller(Long sellerId, Pageable pageable);
+
+        ProductResponseDto createProductWithImages(ProductCreateDto dto, Long sellerId, List<MultipartFile> images)
+                throws ProductNotFoundException, DuplicateResourceException, ResourceNotFoundException, BadRequestException, UnauthorizedException;
+
+
+        ProductResponseDto toggleProductFeaturedStatus(Long id, Boolean isFeatured, Long requestingUserId) throws ProductNotFoundException, UnauthorizedException;
+
 }

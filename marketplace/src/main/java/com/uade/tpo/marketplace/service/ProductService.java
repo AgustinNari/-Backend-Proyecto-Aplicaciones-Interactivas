@@ -26,6 +26,7 @@ import com.uade.tpo.marketplace.entity.dto.create.ProductCreateDto;
 import com.uade.tpo.marketplace.entity.dto.create.ProductImageCreateDto;
 import com.uade.tpo.marketplace.entity.dto.response.ProductResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.ProductUpdateDto;
+import com.uade.tpo.marketplace.entity.enums.Role;
 import com.uade.tpo.marketplace.exceptions.BadRequestException;
 import com.uade.tpo.marketplace.exceptions.CategoryNotFoundException;
 import com.uade.tpo.marketplace.exceptions.DuplicateResourceException;
@@ -35,6 +36,7 @@ import com.uade.tpo.marketplace.exceptions.ProductNotFoundException;
 import com.uade.tpo.marketplace.exceptions.ProductOwnershipException;
 import com.uade.tpo.marketplace.exceptions.ResourceNotFoundException;
 import com.uade.tpo.marketplace.exceptions.UnauthorizedException;
+import com.uade.tpo.marketplace.exceptions.UserNotFoundException;
 import com.uade.tpo.marketplace.extra.mappers.ProductMapper;
 import com.uade.tpo.marketplace.repository.interfaces.ICategoryRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IDigitalKeyRepository;
@@ -454,6 +456,36 @@ public class ProductService implements IProductService {
             }
         }
         return this.getProductById(created.id()).orElse(created);
+    }
+
+
+    @Override
+    @Transactional(rollbackFor = Throwable.class)
+    public ProductResponseDto toggleProductFeaturedStatus(Long id, Boolean isFeatured, Long requestingUserId)
+            throws ProductNotFoundException, UnauthorizedException {
+
+        if (id == null) throw new BadRequestException("Id de producto no proporcionado.");
+        if (requestingUserId == null) throw new UnauthorizedException("Id de usuario solicitante no proporcionado.");
+
+        User requester = userRepository.findById(requestingUserId)
+                .orElseThrow(() -> new UserNotFoundException("Usuario solicitante no encontrado (id=" + requestingUserId + ")."));
+
+        if (requester.getRole() != Role.ADMIN) {
+            throw new UnauthorizedException("No tienes permisos para modificar el estado 'featured' del producto.");
+        }
+
+        int updatedRows = productRepository.toggleProductFeaturedStatus(id, isFeatured);
+        if (updatedRows == 0) {
+            throw new ProductNotFoundException("No se encontró el producto (id=" + id + ").");
+        }
+
+        Product updated = productRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException("Producto no encontrado (id=" + id + ")."));
+
+        int stock = digitalKeyRepository.countAvailableByProductId(updated.getId());
+        String sellerName = updated.getSeller() != null ? updated.getSeller().getDisplayName() : null;
+
+        return productMapper.toResponse(updated, stock, sellerName);
     }
 
 }

@@ -80,4 +80,9 @@ public interface IProductRepository extends JpaRepository<Product, Long>, JpaSpe
     @Modifying
     @Query("UPDATE Product p SET p.active = :isActive WHERE p.id = :id")
     int toggleProductActivity(Long id, Boolean isActive);
+
+    @Transactional
+    @Modifying
+    @Query ("UPDATE Product p SET p.featured = :isFeatured WHERE p.id = :id")
+    int toggleProductFeaturedStatus(Long id, Boolean isFeatured);
 }
