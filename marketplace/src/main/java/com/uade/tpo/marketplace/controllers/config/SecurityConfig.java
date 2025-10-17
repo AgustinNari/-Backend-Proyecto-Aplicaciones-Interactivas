@@ -28,6 +28,9 @@ public class SecurityConfig {
                                 .authorizeHttpRequests(req -> req.requestMatchers("/api/v1/auth/**")
                                                 .permitAll()
 
+                                                //PRODUCT QUERIES
+                                                .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
+
                                                 //CATEGORIES
                                                 .requestMatchers(HttpMethod.GET, "/categories/**").permitAll()
                                                 .requestMatchers(HttpMethod.POST, "/categories/**").hasRole("ADMIN")
