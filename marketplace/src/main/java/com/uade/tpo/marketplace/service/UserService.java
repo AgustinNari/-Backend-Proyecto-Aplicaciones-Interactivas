@@ -12,6 +12,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.uade.tpo.marketplace.entity.basic.User;
 import com.uade.tpo.marketplace.entity.dto.create.UserAvatarCreateDto;
@@ -34,8 +36,8 @@ import com.uade.tpo.marketplace.repository.interfaces.IReviewRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IUserRepository;
 import com.uade.tpo.marketplace.service.interfaces.IUserService;
 
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 @Service
 public class UserService implements IUserService {
@@ -54,6 +56,8 @@ public class UserService implements IUserService {
     @Autowired
     private UserAvatarMapper avatarMapper;
 
+    @PersistenceContext
+    private EntityManager entityManager;
 
 
 
@@ -250,10 +254,14 @@ public class UserService implements IUserService {
             throw new UserNotFoundException("No se pudo guardar el avatar. Usuario no encontrado (id=" + targetUserId + ").");
         }
 
+        
 
         User saved = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado tras guardar el avatar (id=" + targetUserId + ")."));
 
+        entityManager.refresh(saved);
+        
+        
         return avatarMapper.toResponse(saved);
     }
 
