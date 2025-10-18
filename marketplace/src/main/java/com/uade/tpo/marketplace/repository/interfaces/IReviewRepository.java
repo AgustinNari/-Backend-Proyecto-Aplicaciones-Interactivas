@@ -2,6 +2,7 @@ package com.uade.tpo.marketplace.repository.interfaces;
 
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -20,6 +21,8 @@ import jakarta.transaction.Transactional;
 public interface IReviewRepository extends JpaRepository<Review, Long> {
 
 
+    List<Review> findAllByProductIdAndVisibleTrue(Long productId);
+    
     @Query("SELECT r FROM Review r WHERE r.product.id = :productId AND r.visible = true")
     Page<Review> findByProductIdAndVisible(Long productId, Pageable pageable);
 
@@ -45,6 +48,9 @@ public interface IReviewRepository extends JpaRepository<Review, Long> {
 
     @Query("SELECT COUNT(r) FROM Review r WHERE r.product.id = :productId")
     Long getCountByProductId(Long productId);
+
+    @Query("SELECT COUNT(r) FROM Review r WHERE r.seller.id = :sellerId")
+    Long getCountBySellerId(Long sellerId);
 
     boolean existsByOrderItemId(Long orderItemId);
 

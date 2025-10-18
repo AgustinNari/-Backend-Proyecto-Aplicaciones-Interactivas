@@ -106,6 +106,9 @@ public class UserRepositoryCustomImpl implements IUserRepositoryCustom {
 
 
         if (filter != null) {
+            if (filter.getSellerIds() != null && !filter.getSellerIds().isEmpty()) {
+                predicates.add(u.get("id").in(filter.getSellerIds()));
+            }
             if (filter.getMinAvgRating() != null) {
 
                 Subquery<Long> avgFilter = cq.subquery(Long.class);
@@ -221,6 +224,9 @@ public class UserRepositoryCustomImpl implements IUserRepositoryCustom {
         predicates.add(cb.isTrue(u.get("active")));
 
         if (filter != null) {
+            if (filter.getSellerIds() != null && !filter.getSellerIds().isEmpty()) {
+                predicates.add(u.get("id").in(filter.getSellerIds()));
+            }
             if (filter.getMinAvgRating() != null) {
                 Subquery<Long> avgFilter = cq.subquery(Long.class);
                 Root<Review> r2 = avgFilter.from(Review.class);

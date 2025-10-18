@@ -22,7 +22,7 @@ public class ProductListDTO {
     private boolean featured;
 
 
-    private List<Long> categories;
+    private List<CategoryResponseDto> categories;
 
 
     private Long bestDiscountId;
@@ -120,10 +120,10 @@ public class ProductListDTO {
     public void setFeatured(boolean featured) {
         this.featured = featured;
     }
-    public List<Long> getCategories() {
+    public List<CategoryResponseDto> getCategories() {
         return categories;
     }
-    public void setCategories(List<Long> categories) {
+    public void setCategories(List<CategoryResponseDto> categories) {
         this.categories = categories;
     }
     public Long getBestDiscountId() {

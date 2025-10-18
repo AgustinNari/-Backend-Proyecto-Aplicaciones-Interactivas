@@ -86,6 +86,17 @@ public class CategoriesController {
         return ResponseEntity.ok(out);
     }
 
-    
+    @GetMapping("/featured")
+    public ResponseEntity<Page<CategoryResponseDto>> getFeaturedCategories(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size) {
+
+        PageRequest pr = (page == null || size == null)
+                ? PageRequest.of(0, Integer.MAX_VALUE)
+                : PageRequest.of(page, size);
+
+        Page<CategoryResponseDto> result = categoryService.getFeaturedCategories(pr);
+        return ResponseEntity.ok(result);
+    }
 
 }

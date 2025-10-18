@@ -84,4 +84,8 @@ public interface IDigitalKeyRepository extends JpaRepository<DigitalKey, Long> {
                                         @Param("soldAt") Instant soldAt,
                                         @Param("orderItemId") Long orderItemId);
 
+
+    @Query("SELECT COUNT(dk) FROM DigitalKey dk WHERE dk.product.seller.id = :sellerId AND dk.status = :status")
+    Long countBySellerIdAndStatus(@Param("sellerId") Long sellerId, @Param("status") KeyStatus status);
+
 }

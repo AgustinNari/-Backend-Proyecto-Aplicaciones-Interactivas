@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.uade.tpo.marketplace.entity.basic.Product;
 import com.uade.tpo.marketplace.entity.dto.create.ProductCreateDto;
+import com.uade.tpo.marketplace.entity.dto.response.ProductDetailResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.ProductResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.ProductUpdateDto;
 import com.uade.tpo.marketplace.exceptions.BadRequestException;
@@ -70,4 +71,6 @@ public interface IProductService {
 
         ProductResponseDto toggleProductFeaturedStatus(Long id, Boolean isFeatured, Long requestingUserId) throws ProductNotFoundException, UnauthorizedException;
 
+
+        Optional<ProductDetailResponseDto> getProductDetail(Long id, Pageable reviewsPageable);
 }

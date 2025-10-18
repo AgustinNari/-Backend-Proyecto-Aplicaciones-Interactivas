@@ -9,6 +9,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -26,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.uade.tpo.marketplace.controllers.auth.CurrentUserProvider;
 import com.uade.tpo.marketplace.entity.dto.create.ProductCreateDto;
+import com.uade.tpo.marketplace.entity.dto.response.ProductDetailResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.ProductResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.ProductPriceUpdateDto;
 import com.uade.tpo.marketplace.entity.dto.update.ProductUpdateDto;
@@ -213,6 +215,17 @@ public class ProductsController {
         Long requestingUserId = currentUserProvider.getCurrentUserId(authentication);
         ProductResponseDto updated = productService.toggleProductFeaturedStatus(id, featured, requestingUserId);
         return ResponseEntity.ok(updated);
+    }
+
+
+
+    @GetMapping("/{id}/detail")
+    public ResponseEntity<ProductDetailResponseDto> getProductDetail(
+            @PathVariable("id") Long id,
+            Pageable pageable) {
+
+        Optional<ProductDetailResponseDto> opt = productService.getProductDetail(id, pageable);
+        return opt.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.noContent().build());
     }
 
 

@@ -40,6 +40,8 @@ public interface ICategoryRepository extends JpaRepository<Category, Long> {
     @Modifying
     @Query("UPDATE Category c SET c.featured = :featured WHERE c.id = :categoryId")
     int toggleCategoryFeaturedStatus(Long categoryId, boolean featured);
+
+    Page<Category> findByFeaturedTrue(Pageable pageable);
     
 
 

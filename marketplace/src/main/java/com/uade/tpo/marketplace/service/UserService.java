@@ -17,11 +17,13 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.uade.tpo.marketplace.entity.basic.User;
 import com.uade.tpo.marketplace.entity.dto.create.UserAvatarCreateDto;
+import com.uade.tpo.marketplace.entity.dto.response.SellerDetailResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.SellerResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.UserAvatarDeletionResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.UserAvatarResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.UserResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.UserUpdateDto;
+import com.uade.tpo.marketplace.entity.enums.KeyStatus;
 import com.uade.tpo.marketplace.entity.enums.Role;
 import com.uade.tpo.marketplace.exceptions.BadRequestException;
 import com.uade.tpo.marketplace.exceptions.DuplicateResourceException;
@@ -32,6 +34,8 @@ import com.uade.tpo.marketplace.exceptions.UserDuplicateException;
 import com.uade.tpo.marketplace.exceptions.UserNotFoundException;
 import com.uade.tpo.marketplace.extra.mappers.UserAvatarMapper;
 import com.uade.tpo.marketplace.extra.mappers.UserMapper;
+import com.uade.tpo.marketplace.repository.interfaces.IDigitalKeyRepository;
+import com.uade.tpo.marketplace.repository.interfaces.IOrderItemRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IReviewRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IUserRepository;
 import com.uade.tpo.marketplace.service.interfaces.IUserService;
@@ -58,6 +62,15 @@ public class UserService implements IUserService {
 
     @PersistenceContext
     private EntityManager entityManager;
+
+    @Autowired
+    private UserAvatarMapper userAvatarMapper;
+
+    @Autowired
+    private IOrderItemRepository orderItemRepository;
+
+    @Autowired
+    private IDigitalKeyRepository digitalKeyRepository;
 
 
 
@@ -295,4 +308,71 @@ public class UserService implements IUserService {
 
         return new UserAvatarDeletionResponseDto(true, userId, "Avatar eliminado correctamente.");
     }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<SellerDetailResponseDto> getSellerDetail(Long sellerId) throws UserNotFoundException {
+        Optional<User> opt = userRepository.findById(sellerId);
+        if (opt.isEmpty()) return Optional.empty();
+        User u = opt.get();
+        if (u.getRole() != Role.SELLER) {
+            return Optional.empty();
+        }
+
+
+        String avatarContentType = u.getAvatarContentType();
+        String avatarDataUrl = null;
+        if (u.getAvatar() != null) {
+            try {
+                UserAvatarResponseDto av = userAvatarMapper.toResponse(u);
+                avatarContentType = av.contentType();
+                avatarDataUrl = av.dataUrl();
+            } catch (Exception ignored) {}
+        }
+
+
+        Double avgRating = null;
+        Long ratingCount = 0L;
+        try {
+            BigDecimal bd = reviewRepository.getAverageRatingBySellerId(sellerId);
+            if (bd != null) avgRating = bd.doubleValue();
+            Long rc = reviewRepository.getCountBySellerId(sellerId);
+            ratingCount = rc != null ? rc : 0L;
+        } catch (Exception ignored) {}
+
+
+        Long soldKeys = 0L;
+        try {
+            Long cnt = digitalKeyRepository.countBySellerIdAndStatus(sellerId, KeyStatus.SOLD);
+            soldKeys = cnt != null ? cnt : 0L;
+        } catch (Exception ignored) {}
+
+
+        Long amountSold = 0L;
+        try {
+            Long sum = orderItemRepository.sumQuantityBySellerId(sellerId);
+            amountSold = sum != null ? sum : 0L;
+        } catch (Exception ignored) {}
+
+        SellerDetailResponseDto dto = new SellerDetailResponseDto(
+                u.getId(),
+                u.getDisplayName(),
+                avatarContentType,
+                avatarDataUrl,
+                u.getSellerDescription(),
+                u.getFirstName(),
+                u.getLastName(),
+                u.getEmail(),
+                u.getPhone(),
+                u.getCountry(),
+                avgRating,
+                ratingCount,
+                soldKeys,
+                amountSold
+        );
+
+        return Optional.of(dto);
+    }
+
 }

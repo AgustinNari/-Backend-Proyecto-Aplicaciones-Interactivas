@@ -15,17 +15,25 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.uade.tpo.marketplace.entity.basic.Category; 
 import com.uade.tpo.marketplace.entity.basic.Product;
+import com.uade.tpo.marketplace.entity.basic.ProductImage;
 import com.uade.tpo.marketplace.entity.basic.User;
 import com.uade.tpo.marketplace.entity.dto.create.ProductCreateDto;
 import com.uade.tpo.marketplace.entity.dto.create.ProductImageCreateDto;
+import com.uade.tpo.marketplace.entity.dto.response.CategoryResponseDto;
+import com.uade.tpo.marketplace.entity.dto.response.DiscountResponseDto;
+import com.uade.tpo.marketplace.entity.dto.response.ProductDetailResponseDto;
+import com.uade.tpo.marketplace.entity.dto.response.ProductImageResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.ProductResponseDto;
+import com.uade.tpo.marketplace.entity.dto.response.ReviewResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.ProductUpdateDto;
+import com.uade.tpo.marketplace.entity.enums.KeyStatus;
 import com.uade.tpo.marketplace.entity.enums.Role;
 import com.uade.tpo.marketplace.exceptions.BadRequestException;
 import com.uade.tpo.marketplace.exceptions.CategoryNotFoundException;
@@ -37,14 +45,19 @@ import com.uade.tpo.marketplace.exceptions.ProductOwnershipException;
 import com.uade.tpo.marketplace.exceptions.ResourceNotFoundException;
 import com.uade.tpo.marketplace.exceptions.UnauthorizedException;
 import com.uade.tpo.marketplace.exceptions.UserNotFoundException;
+import com.uade.tpo.marketplace.extra.mappers.ProductImageMapper;
 import com.uade.tpo.marketplace.extra.mappers.ProductMapper;
 import com.uade.tpo.marketplace.repository.interfaces.ICategoryRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IDigitalKeyRepository;
+import com.uade.tpo.marketplace.repository.interfaces.IOrderItemRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IProductImageRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IProductRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IUserRepository;
+import com.uade.tpo.marketplace.service.interfaces.IDigitalKeyService;
+import com.uade.tpo.marketplace.service.interfaces.IDiscountService;
 import com.uade.tpo.marketplace.service.interfaces.IProductImageService;
 import com.uade.tpo.marketplace.service.interfaces.IProductService;
+import com.uade.tpo.marketplace.service.interfaces.IReviewService;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -70,13 +83,17 @@ public class ProductService implements IProductService {
 
     @Autowired
     private ProductMapper productMapper;
+    @Autowired
+    private ProductImageMapper productImageMapper;
 
- 
-
-    
-
-    
-
+    @Autowired
+    private IReviewService reviewService;
+    @Autowired
+    private IDiscountService discountService;
+    @Autowired
+    private IDigitalKeyService digitalKeyService;
+    @Autowired
+    private IOrderItemRepository orderItemRepository;
 
 
 
@@ -487,5 +504,105 @@ public class ProductService implements IProductService {
 
         return productMapper.toResponse(updated, stock, sellerName);
     }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<ProductDetailResponseDto> getProductDetail(Long id, Pageable reviewsPageable) {
+        Optional<Product> opt = productRepository.findById(id);
+        if (opt.isEmpty()) return Optional.empty();
+        Product p = opt.get();
+
+
+        Long sellerId = p.getSeller() != null ? p.getSeller().getId() : null;
+        String sellerDisplayName = p.getSeller() != null ? p.getSeller().getDisplayName() : null;
+
+
+        List<CategoryResponseDto> categoryDtos = p.getCategories().stream()
+                .map(c -> new CategoryResponseDto(c.getId(), c.getDescription(), null, c.isFeatured()))
+                .collect(Collectors.toList());
+
+
+        List<ProductImage> imagesEntities = productImageRepository.findByProductIdOrderByIdAsc(id);
+        List<ProductImageResponseDto> images = imagesEntities.stream()
+                .map(productImageMapper::toResponse)
+                .collect(Collectors.toList());
+
+
+        Page<ReviewResponseDto> reviewsPage = reviewService.getReviewsByProduct(id, reviewsPageable);
+
+
+        Pair<Double, Long> avgAndCount;
+        try {
+            avgAndCount = reviewService.getAverageRatingAndCountByProduct(id);
+        } catch (ResourceNotFoundException e) {
+            avgAndCount = Pair.of(null, 0L);
+        }
+
+        Double avgRating = avgAndCount != null ? avgAndCount.getFirst() : null;
+        Long ratingCount = avgAndCount != null ? avgAndCount.getSecond() : 0L;
+
+
+        int stock = 0;
+        try {
+            stock = digitalKeyService.countAvailableKeysByProductId(id);
+        } catch (Exception ignored) {}
+
+
+        Integer soldCount = 0;
+        try {
+            Long soldL = (long) digitalKeyRepository.countByProductIdAndStatus(id, KeyStatus.SOLD);
+            soldCount = soldL != null ? soldL.intValue() : 0;
+        } catch (Exception ignored) {}
+
+
+        Long amountSold = 0L;
+        try {
+            Long sum = orderItemRepository.sumQuantityByProductId(id);
+            amountSold = sum != null ? sum : 0L;
+        } catch (Exception ignored) {}
+
+
+        Optional<DiscountResponseDto> bestDiscOpt = discountService.getHighestValueDiscountForProduct(id);
+        DiscountResponseDto bestDiscountDto = bestDiscOpt.orElse(null);
+
+        ProductDetailResponseDto dto = new ProductDetailResponseDto(
+                p.getId(),
+                sellerId,
+                p.getSku(),
+                sellerDisplayName,
+
+                p.getTitle(),
+                p.getDescription(),
+                p.getPrice(),
+                p.isActive(),
+                p.getPlatform(),
+                p.getRegion(),
+                p.getMinPurchaseQuantity(),
+                p.getMaxPurchaseQuantity(),
+
+                p.getReleaseDate(),
+                p.getDeveloper(),
+                p.getPublisher(),
+                p.getMetacriticScore(),
+                p.isFeatured(),
+
+                categoryDtos,
+
+                bestDiscountDto,
+
+                images,
+
+                reviewsPage,
+                avgRating,
+                ratingCount,
+                stock,
+                soldCount,
+                amountSold
+        );
+
+        return Optional.of(dto);
+    }
+
 
 }

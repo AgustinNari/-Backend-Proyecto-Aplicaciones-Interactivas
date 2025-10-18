@@ -1,6 +1,7 @@
 package com.uade.tpo.marketplace.repository.interfaces;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,4 +37,13 @@ public interface IOrderItemRepository extends JpaRepository<OrderItem, Long> {
     
     @Query("SELECT oi FROM OrderItem oi JOIN oi.order o WHERE o.buyer.id = :userId AND o.status = 'COMPLETED'")
     Page<OrderItem> findOrderItemsByUser(@Param("userId") Long userId, Pageable pageable);
+
+    @Query("SELECT COALESCE(SUM(oi.quantity), 0) FROM OrderItem oi WHERE oi.product.id = :productId")
+    Long sumQuantityByProductId(@Param("productId") Long productId);
+
+    @Query("SELECT COALESCE(SUM(oi.quantity), 0) FROM OrderItem oi WHERE oi.product.seller.id = :sellerId")
+    Long sumQuantityBySellerId(@Param("sellerId") Long sellerId);
+
+    @Query("SELECT oi FROM OrderItem oi LEFT JOIN FETCH oi.digitalKeys dk LEFT JOIN FETCH oi.product p WHERE oi.id = :orderItemId")
+    Optional<OrderItem> findByIdWithProductAndKeys(@Param("orderItemId") Long orderItemId);
 }

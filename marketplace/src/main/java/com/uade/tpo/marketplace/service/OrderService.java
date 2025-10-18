@@ -27,6 +27,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.uade.tpo.marketplace.entity.basic.DigitalKey;
 import com.uade.tpo.marketplace.entity.basic.Discount;
@@ -37,11 +38,14 @@ import com.uade.tpo.marketplace.entity.basic.User;
 import com.uade.tpo.marketplace.entity.dto.create.OrderCreateDto;
 import com.uade.tpo.marketplace.entity.dto.create.OrderItemCreateDto;
 import com.uade.tpo.marketplace.entity.dto.response.OrderItemResponseDto;
+import com.uade.tpo.marketplace.entity.dto.response.OrderKeyResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.OrderResponseDto;
 import com.uade.tpo.marketplace.entity.enums.KeyStatus;
 import com.uade.tpo.marketplace.entity.enums.OrderStatus;
 import com.uade.tpo.marketplace.exceptions.BadRequestException;
 import com.uade.tpo.marketplace.exceptions.CouponAlreadyUsedException;
+import com.uade.tpo.marketplace.exceptions.CouponNotApplicableException;
+import com.uade.tpo.marketplace.exceptions.DigitalKeyAssignmentException;
 import com.uade.tpo.marketplace.exceptions.DuplicateOrderItemException;
 import com.uade.tpo.marketplace.exceptions.InsufficientStockException;
 import com.uade.tpo.marketplace.exceptions.OrderNotFoundException;
@@ -55,17 +59,13 @@ import com.uade.tpo.marketplace.exceptions.UserNotFoundException;
 import com.uade.tpo.marketplace.extra.mappers.OrderItemMapper;
 import com.uade.tpo.marketplace.extra.mappers.OrderMapper;
 import com.uade.tpo.marketplace.repository.interfaces.IDigitalKeyRepository;
+import com.uade.tpo.marketplace.repository.interfaces.IOrderItemRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IOrderRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IProductRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IUserRepository;
 import com.uade.tpo.marketplace.service.interfaces.IDiscountService;
 import com.uade.tpo.marketplace.service.interfaces.IOrderService;
 import com.uade.tpo.marketplace.service.interfaces.IUserService;
-
-import org.springframework.transaction.annotation.Transactional;
-
-import com.uade.tpo.marketplace.exceptions.CouponNotApplicableException;
-import com.uade.tpo.marketplace.exceptions.DigitalKeyAssignmentException;
 
 @Service
 public class OrderService implements IOrderService {
@@ -82,6 +82,8 @@ public class OrderService implements IOrderService {
     private IDiscountService discountService;
     @Autowired
     private IUserService userService;
+    @Autowired
+    private IOrderItemRepository orderItemRepository;
 
     @Autowired
     private OrderItemMapper orderItemMapper;
@@ -575,5 +577,108 @@ public Page<OrderItemResponseDto> getOrderItemsByOrderId(Long orderId, Long requ
 
         boolean includeKeyCodes = true;
         return orderMapper.toResponse(updatedOrder, includeKeyCodes);
+    }
+
+
+
+
+    @Override
+    public List<OrderKeyResponseDto> getKeysByOrderId(Long orderId, Long requestingUserId)
+            throws ResourceNotFoundException, UnauthorizedException {
+
+        if (orderId == null) throw new BadRequestException("orderId es nulo");
+        if (requestingUserId == null) throw new UnauthorizedException("requestingUserId es nulo");
+
+        Order order = orderRepository.findOrderWithItemsAndProductsAndKeys(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Orden no encontrada (id=" + orderId + ")."));
+
+        Long buyerId = order.getBuyer() != null ? order.getBuyer().getId() : null;
+        boolean isBuyer = Objects.equals(requestingUserId, buyerId);
+
+
+        boolean isSellerOfAnyItem = order.getItems() != null && order.getItems().stream().anyMatch(oi ->
+                oi.getProduct() != null && oi.getProduct().getSeller() != null &&
+                        Objects.equals(oi.getProduct().getSeller().getId(), requestingUserId)
+        );
+
+        if (!isBuyer && !isSellerOfAnyItem) {
+            throw new UnauthorizedException("No está autorizado para ver las claves de esta orden.");
+        }
+
+        List<OrderKeyResponseDto> out = new ArrayList<>();
+
+
+        Set<OrderItem> items = Optional.ofNullable(order.getItems()).orElse(Collections.emptySet());
+        for (OrderItem oi : items) {
+            Set<DigitalKey> keys = Optional.ofNullable(oi.getDigitalKeys()).orElse(Collections.emptySet());
+            for (DigitalKey dk : keys) {
+                boolean canSeeKeyCode = false;
+
+                if (isBuyer) {
+
+                    canSeeKeyCode = true;
+                } else {
+
+                    if (oi.getProduct() != null && oi.getProduct().getSeller() != null &&
+                            Objects.equals(oi.getProduct().getSeller().getId(), requestingUserId)) {
+                        canSeeKeyCode = true;
+                    }
+                }
+
+                OrderKeyResponseDto dto = mapKeyToDto(dk, canSeeKeyCode, order.getId());
+
+                out.add(dto);
+            }
+        }
+
+        return out;
+    }
+
+    @Override
+    public List<OrderKeyResponseDto> getKeysByOrderItemId(Long orderItemId, Long requestingUserId)
+            throws ResourceNotFoundException, UnauthorizedException {
+
+        if (orderItemId == null) throw new BadRequestException("orderItemId es nulo");
+        if (requestingUserId == null) throw new UnauthorizedException("requestingUserId es nulo");
+
+        OrderItem oi = orderItemRepository.findByIdWithProductAndKeys(orderItemId)
+                .orElseThrow(() -> new OrderNotFoundException("OrderItem no encontrado (id=" + orderItemId + ")."));
+
+        Order order = oi.getOrder();
+        if (order == null) {
+            throw new OrderNotFoundException("El OrderItem no pertenece a ninguna orden válida (id=" + orderItemId + ").");
+        }
+
+        Long buyerId = order.getBuyer() != null ? order.getBuyer().getId() : null;
+        boolean isBuyer = Objects.equals(requestingUserId, buyerId);
+        boolean isSellerOfItem = oi.getProduct() != null && oi.getProduct().getSeller() != null &&
+                Objects.equals(oi.getProduct().getSeller().getId(), requestingUserId);
+
+        if (!isBuyer && !isSellerOfItem) {
+            throw new UnauthorizedException("No está autorizado para ver las claves de este ítem.");
+        }
+
+        List<OrderKeyResponseDto> out = new ArrayList<>();
+        Set<DigitalKey> keys = Optional.ofNullable(oi.getDigitalKeys()).orElse(Collections.emptySet());
+        for (DigitalKey dk : keys) {
+            boolean canSeeKeyCode = isBuyer || isSellerOfItem;
+            out.add(mapKeyToDto(dk, canSeeKeyCode, order.getId()));
+        }
+
+        return out;
+    }
+
+
+    private OrderKeyResponseDto mapKeyToDto(DigitalKey dk, boolean includeKeyCode, Long orderId) {
+        return new OrderKeyResponseDto(
+                dk.getId(),
+                includeKeyCode ? dk.getKeyCode() : null,
+                dk.getStatus() != null ? dk.getStatus().name() : null,
+                dk.getSoldAt(),
+                dk.getOrderItem() != null ? dk.getOrderItem().getId() : null,
+                orderId,
+                dk.getProduct() != null ? dk.getProduct().getId() : null,
+                dk.getProduct() != null ? dk.getProduct().getTitle() : null
+        );
     }
 }

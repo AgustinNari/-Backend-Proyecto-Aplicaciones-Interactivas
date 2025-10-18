@@ -1,6 +1,7 @@
 package com.uade.tpo.marketplace.controllers;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.uade.tpo.marketplace.controllers.auth.CurrentUserProvider;
 import com.uade.tpo.marketplace.entity.dto.create.OrderCreateDto;
 import com.uade.tpo.marketplace.entity.dto.response.OrderItemResponseDto;
+import com.uade.tpo.marketplace.entity.dto.response.OrderKeyResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.OrderResponseDto;
 import com.uade.tpo.marketplace.exceptions.BadRequestException;
 import com.uade.tpo.marketplace.exceptions.InsufficientStockException;
@@ -89,12 +91,36 @@ public class OrdersController {
 
     @PatchMapping("/{id}/status")
     public OrderResponseDto updateOrderStatus(@PathVariable Long id,
-                                         @RequestParam("status") String status,
-                                         Authentication authentication)
+                                            @RequestParam("status") String status,
+                                            Authentication authentication)
             throws ResourceNotFoundException, UnauthorizedException, BadRequestException {
         Long performedByUserId = currentUserProvider.getCurrentUserId(authentication);
         return orderService.updateOrderStatus(id, status, performedByUserId);
     }
+
+
+    @GetMapping("/{id}/keys")
+    public ResponseEntity<List<OrderKeyResponseDto>> getKeysByOrderId(
+            @PathVariable Long id,
+            Authentication authentication)
+            throws ResourceNotFoundException, UnauthorizedException {
+
+        Long requestingUserId = currentUserProvider.getCurrentUserId(authentication);
+        List<OrderKeyResponseDto> keys = orderService.getKeysByOrderId(id, requestingUserId);
+        return ResponseEntity.ok(keys);
+    }
+
+    @GetMapping("/items/{orderItemId}/keys")
+    public ResponseEntity<List<OrderKeyResponseDto>> getKeysByOrderItemId(
+            @PathVariable Long orderItemId,
+            Authentication authentication)
+            throws ResourceNotFoundException, UnauthorizedException {
+
+        Long requestingUserId = currentUserProvider.getCurrentUserId(authentication);
+        List<OrderKeyResponseDto> keys = orderService.getKeysByOrderItemId(orderItemId, requestingUserId);
+        return ResponseEntity.ok(keys);
+    }
+
 
 
 }

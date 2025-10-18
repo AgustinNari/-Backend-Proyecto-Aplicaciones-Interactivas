@@ -94,5 +94,13 @@ public class CategoryService implements ICategoryService {
 
         return categoryMapper.toResponse(updatedCategory);
     }
+
+
+    @Override
+    public Page<CategoryResponseDto> getFeaturedCategories(PageRequest pageable) {
+        Page<Category> page = categoryRepository.findByFeaturedTrue(pageable);
+        return page.map(categoryMapper::toResponse);
     
+}
+
 }

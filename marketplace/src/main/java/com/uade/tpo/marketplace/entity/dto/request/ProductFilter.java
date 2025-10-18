@@ -5,7 +5,9 @@ import java.time.LocalDate;
 import java.util.List;
 
 public class ProductFilter {
+    private List<Long> productIds;
     private Long sellerId;
+    private List<Long> sellerIds;
     private String title;
     private BigDecimal minPrice;
     private BigDecimal maxPrice;
@@ -28,13 +30,23 @@ public class ProductFilter {
     private BigDecimal minDiscountPercent;
 
 
-
-    
+    public List<Long> getProductIds() {
+        return productIds;
+    }
+    public void setProductIds(List<Long> productIds) {
+        this.productIds = productIds;
+    }
     public Long getSellerId() {
         return sellerId;
     }
     public void setSellerId(Long sellerId) {
         this.sellerId = sellerId;
+    }
+    public List<Long> getSellerIds() {
+        return sellerIds;
+    }
+    public void setSellerIds(List<Long> sellerIds) {
+        this.sellerIds = sellerIds;
     }
     public String getTitle() {
         return title;

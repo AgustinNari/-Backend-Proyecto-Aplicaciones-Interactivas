@@ -24,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.uade.tpo.marketplace.controllers.auth.CurrentUserProvider;
 import com.uade.tpo.marketplace.entity.dto.create.UserAvatarCreateDto;
+import com.uade.tpo.marketplace.entity.dto.response.SellerDetailResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.SellerResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.UserAvatarDeletionResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.UserAvatarResponseDto;
@@ -109,52 +110,58 @@ public class UsersController {
     }
 
 
-@PostMapping(value = "/{id}/avatar", consumes = {"multipart/form-data"})
-public ResponseEntity<UserAvatarResponseDto> uploadAvatar(
-        @PathVariable("id") Long userId,
-        @RequestPart("file") MultipartFile file,
-        Authentication authentication)
-        throws UserNotFoundException, UnauthorizedException, BadRequestException {
+    @PostMapping(value = "/{id}/avatar", consumes = {"multipart/form-data"})
+    public ResponseEntity<UserAvatarResponseDto> uploadAvatar(
+            @PathVariable("id") Long userId,
+            @RequestPart("file") MultipartFile file,
+            Authentication authentication)
+            throws UserNotFoundException, UnauthorizedException, BadRequestException {
 
-    Long requestingUserId = authenticator.getCurrentUserId(authentication);
+        Long requestingUserId = authenticator.getCurrentUserId(authentication);
 
-    UserAvatarCreateDto dto = new UserAvatarCreateDto(userId, file);
+        UserAvatarCreateDto dto = new UserAvatarCreateDto(userId, file);
 
-    UserAvatarResponseDto created = userService.uploadAvatar(dto, requestingUserId);
+        UserAvatarResponseDto created = userService.uploadAvatar(dto, requestingUserId);
 
-    URI location = URI.create("/users/" + userId + "/avatar");
-    return ResponseEntity.created(location).body(created);
-}
-
-
-@PutMapping(value = "/{id}/avatar", consumes = {"multipart/form-data"})
-public ResponseEntity<UserAvatarResponseDto> replaceAvatar(
-        @PathVariable("id") Long userId,
-        @RequestPart("file") MultipartFile file,
-        Authentication authentication)
-        throws UserNotFoundException, UnauthorizedException, BadRequestException {
-
-    Long requestingUserId = authenticator.getCurrentUserId(authentication);
-    UserAvatarCreateDto dto = new UserAvatarCreateDto(userId, file);
-
-    UserAvatarResponseDto updated = userService.uploadAvatar(dto, requestingUserId);
-
-    return ResponseEntity.ok(updated);
-}
+        URI location = URI.create("/users/" + userId + "/avatar");
+        return ResponseEntity.created(location).body(created);
+    }
 
 
-@DeleteMapping("/{id}/avatar")
-public ResponseEntity<UserAvatarDeletionResponseDto> deleteAvatar(
-        @PathVariable("id") Long userId,
-        Authentication authentication)
-        throws UserNotFoundException, UnauthorizedException {
+    @PutMapping(value = "/{id}/avatar", consumes = {"multipart/form-data"})
+    public ResponseEntity<UserAvatarResponseDto> replaceAvatar(
+            @PathVariable("id") Long userId,
+            @RequestPart("file") MultipartFile file,
+            Authentication authentication)
+            throws UserNotFoundException, UnauthorizedException, BadRequestException {
 
-    Long requestingUserId = authenticator.getCurrentUserId(authentication);
+        Long requestingUserId = authenticator.getCurrentUserId(authentication);
+        UserAvatarCreateDto dto = new UserAvatarCreateDto(userId, file);
 
-    UserAvatarDeletionResponseDto deleted = userService.deleteAvatar(userId, requestingUserId);
+        UserAvatarResponseDto updated = userService.uploadAvatar(dto, requestingUserId);
 
-    return ResponseEntity.ok(deleted);
-}
+        return ResponseEntity.ok(updated);
+    }
+
+
+    @DeleteMapping("/{id}/avatar")
+    public ResponseEntity<UserAvatarDeletionResponseDto> deleteAvatar(
+            @PathVariable("id") Long userId,
+            Authentication authentication)
+            throws UserNotFoundException, UnauthorizedException {
+
+        Long requestingUserId = authenticator.getCurrentUserId(authentication);
+
+        UserAvatarDeletionResponseDto deleted = userService.deleteAvatar(userId, requestingUserId);
+
+        return ResponseEntity.ok(deleted);
+    }
+
+    @GetMapping("/seller/{sellerId}/detail")
+    public ResponseEntity<SellerDetailResponseDto> getSellerDetail(@PathVariable("sellerId") Long sellerId) {
+        Optional<SellerDetailResponseDto> opt = userService.getSellerDetail(sellerId);
+        return opt.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.noContent().build());
+    }
 
     
 }

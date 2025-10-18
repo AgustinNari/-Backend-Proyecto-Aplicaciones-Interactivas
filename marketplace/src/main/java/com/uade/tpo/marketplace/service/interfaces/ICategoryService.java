@@ -22,4 +22,5 @@ public interface  ICategoryService {
     CategoryResponseDto toggleCategoryFeaturedStatus(Long categoryId, boolean featured, Long requestingUserId)
             throws ResourceNotFoundException, UnauthorizedException;
 
+    Page<CategoryResponseDto> getFeaturedCategories(PageRequest pageable);
 }
