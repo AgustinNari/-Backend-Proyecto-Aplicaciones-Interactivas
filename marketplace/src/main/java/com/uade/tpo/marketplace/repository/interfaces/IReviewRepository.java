@@ -40,16 +40,16 @@ public interface IReviewRepository extends JpaRepository<Review, Long> {
     
     Page<Review> findByBuyerId(Long buyerId, Pageable pageable);
 
-    @Query("SELECT AVG(r.rating) FROM Review r WHERE r.seller.id = :sellerId")
+    @Query("SELECT AVG(r.rating) FROM Review r WHERE r.seller.id = :sellerId AND r.visible = true")
     BigDecimal getAverageRatingBySellerId(Long sellerId);
 
-    @Query("SELECT AVG(r.rating) FROM Review r WHERE r.product.id = :productId")
+    @Query("SELECT AVG(r.rating) FROM Review r WHERE r.product.id = :productId AND r.visible = true")
     BigDecimal getAverageRatingByProductId(Long productId);
 
-    @Query("SELECT COUNT(r) FROM Review r WHERE r.product.id = :productId")
+    @Query("SELECT COUNT(r) FROM Review r WHERE r.product.id = :productId AND r.visible = true")
     Long getCountByProductId(Long productId);
 
-    @Query("SELECT COUNT(r) FROM Review r WHERE r.seller.id = :sellerId")
+    @Query("SELECT COUNT(r) FROM Review r WHERE r.seller.id = :sellerId AND r.visible = true")
     Long getCountBySellerId(Long sellerId);
 
     boolean existsByOrderItemId(Long orderItemId);
