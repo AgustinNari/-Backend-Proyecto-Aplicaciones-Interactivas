@@ -1,5 +1,6 @@
 package com.uade.tpo.marketplace.service;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,7 @@ import com.uade.tpo.marketplace.entity.basic.Category;
 import com.uade.tpo.marketplace.entity.basic.User;
 import com.uade.tpo.marketplace.entity.dto.create.CategoryCreateDto;
 import com.uade.tpo.marketplace.entity.dto.response.CategoryResponseDto;
+import com.uade.tpo.marketplace.entity.dto.update.CategoryUpdateDto;
 import com.uade.tpo.marketplace.entity.enums.Role;
 import com.uade.tpo.marketplace.exceptions.BadRequestException;
 import com.uade.tpo.marketplace.exceptions.CategoryDuplicateException;
@@ -102,5 +104,44 @@ public class CategoryService implements ICategoryService {
         return page.map(categoryMapper::toResponse);
     
 }
+
+    @Override
+    @Transactional(rollbackFor = Throwable.class)
+    public CategoryResponseDto updateCategory(Long categoryId, CategoryUpdateDto dto, Long requestingUserId)
+            throws ResourceNotFoundException, UnauthorizedException, CategoryDuplicateException {
+
+        if (categoryId == null) {
+            throw new BadRequestException("Id de categoría no proporcionado.");
+        }
+        if (dto == null || dto.description() == null || dto.description().isBlank()) {
+            throw new BadRequestException("La descripción de la categoría no puede estar vacía.");
+        }
+        if (requestingUserId == null) {
+            throw new UnauthorizedException("Id de usuario solicitante no proporcionado.");
+        }
+
+        User requester = userRepository.findById(requestingUserId)
+                .orElseThrow(() -> new UserNotFoundException("Usuario solicitante no encontrado (id=" + requestingUserId + ")."));
+
+        if (requester.getRole() != Role.ADMIN) {
+            throw new UnauthorizedException("No tienes permisos para modificar la descripción de la categoría.");
+        }
+
+        Category existing = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new CategoryNotFoundException("No se encontró la categoría (id=" + categoryId + ")."));
+
+        String newDescTrimmed = dto.description().trim();
+
+        Optional<Category> sameDesc = categoryRepository.findByDescription(newDescTrimmed);
+
+        if (sameDesc.isPresent() && !Objects.equals(sameDesc.get().getId(), categoryId)) {
+            throw new CategoryDuplicateException("Ya existe una categoría con la descripción: " + newDescTrimmed);
+        }
+
+        existing.setDescription(newDescTrimmed);
+        Category saved = categoryRepository.save(existing);
+
+        return categoryMapper.toResponse(saved);
+    }
 
 }
