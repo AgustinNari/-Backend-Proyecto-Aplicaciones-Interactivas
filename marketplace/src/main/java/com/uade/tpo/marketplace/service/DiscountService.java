@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -929,6 +930,59 @@ public CouponValidationResponseDto validateCouponForOrderItemsPreview(
         return new CouponValidationResponseDto(false, "Error interno al validar el cupón.", BigDecimal.ZERO, null, null, null);
     }
 }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<DiscountResponseDto> getDiscountsForSellerManagement(Long requestingUserId, Pageable pageable)
+            throws ResourceNotFoundException, UnauthorizedException {
+
+        if (requestingUserId == null) throw new UnauthorizedException("Id de usuario solicitante no proporcionado.");
+
+        User seller = userRepository.findById(requestingUserId)
+                .orElseThrow(() -> new UserNotFoundException("Vendedor no encontrado (id=" + requestingUserId + ")."));
+
+
+        if (seller.getRole() != Role.SELLER) {
+            throw new UnauthorizedException("El usuario solicitante no es un vendedor válido.");
+        }
+
+        Pageable effective = pageable == null ? PageRequest.of(0, 20) : pageable;
+
+        Page<Discount> page = discountRepository.findDiscountsForSeller(requestingUserId, effective);
+        List<DiscountResponseDto> dtos = page.getContent().stream()
+                .map(discountMapper::toResponse)
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(dtos, effective, page.getTotalElements());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<DiscountResponseDto> getDiscountsForAdminManagement(Long requestingUserId, Pageable pageable)
+            throws ResourceNotFoundException, UnauthorizedException {
+
+        if (requestingUserId == null) throw new UnauthorizedException("Id de usuario solicitante no proporcionado.");
+
+
+        User requester = userRepository.findById(requestingUserId)
+                .orElseThrow(() -> new UserNotFoundException("Usuario solicitante no encontrado (id=" + requestingUserId + ")."));
+
+        if (requester.getRole() != Role.ADMIN) {
+            throw new UnauthorizedException("No autorizado: solo administradores pueden ver descuentos de categorías.");
+        }
+
+        Pageable effective = pageable == null ? PageRequest.of(0, 20) : pageable;
+
+        Page<Discount> page = discountRepository.getDiscountsForCategories(effective);
+        List<DiscountResponseDto> dtos = page.getContent().stream()
+                .map(discountMapper::toResponse)
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(dtos, effective, page.getTotalElements());
+    }
+
+
 
 
 

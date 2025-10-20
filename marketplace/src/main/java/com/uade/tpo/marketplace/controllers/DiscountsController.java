@@ -139,4 +139,26 @@ public class DiscountsController {
 
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/seller/me")
+    public Page<DiscountResponseDto> getDiscountsForSellerManagement(Pageable pageable, Authentication authentication)
+            throws ResourceNotFoundException, UnauthorizedException {
+
+        Long requestingUserId = currentUserProvider.getCurrentUserId(authentication);
+
+        return discountService.getDiscountsForSellerManagement(requestingUserId, pageable);
+    }
+
+    @GetMapping("/admin/categories")
+    public Page<DiscountResponseDto> getDiscountsForAdminManagement(
+            Pageable pageable,
+            Authentication authentication)
+            throws ResourceNotFoundException, UnauthorizedException {
+
+        Long requestingUserId = currentUserProvider.getCurrentUserId(authentication);
+        return discountService.getDiscountsForAdminManagement(requestingUserId, pageable);
+    }
+
+
+
 }

@@ -120,4 +120,16 @@ public interface IDiscountRepository extends JpaRepository<Discount, Long> {
        @Query("UPDATE Discount d SET d.active = false WHERE d.id = :couponId AND d.type = 'FIXED' AND d.targetBuyer.id = :targetBuyerId")
        int markCouponAsUsed(Long couponId, Long targetBuyerId);
 
+
+       @Query("SELECT d FROM Discount d " +
+              "WHERE ( (d.targetSeller IS NOT NULL AND d.targetSeller.id = :sellerId) " +
+              "OR (d.targetProduct IS NOT NULL AND d.targetProduct.seller IS NOT NULL AND d.targetProduct.seller.id = :sellerId ) ) ")
+       Page<Discount> findDiscountsForSeller(@Param("sellerId") Long sellerId, Pageable pageable);
+
+
+       @Query("SELECT d FROM Discount d " +
+              "WHERE d.targetCategory IS NOT NULL ")
+       Page<Discount> getDiscountsForCategories(Pageable pageable);
+
+
 }

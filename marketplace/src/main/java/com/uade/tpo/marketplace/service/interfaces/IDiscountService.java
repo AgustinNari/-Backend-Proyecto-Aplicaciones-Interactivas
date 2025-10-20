@@ -57,4 +57,11 @@ public interface IDiscountService {
 
         CouponValidationResponseDto validateCouponForOrderItemsPreview(String code, Long buyerId, List<OrderItemCreateDto> items);
 
+
+        Page<DiscountResponseDto> getDiscountsForSellerManagement(Long requestingUserId, Pageable pageable)
+                throws ResourceNotFoundException, UnauthorizedException;
+
+        Page<DiscountResponseDto> getDiscountsForAdminManagement(Long requestingUserId, Pageable pageable)
+                throws ResourceNotFoundException, UnauthorizedException;
+
 }
