@@ -86,6 +86,7 @@ public class SecurityConfig {
                                                 //REVIEWS
                                                 .requestMatchers(HttpMethod.GET, "/reviews/product/**").permitAll()
                                                 .requestMatchers(HttpMethod.GET, "/reviews/me").authenticated()
+                                                .requestMatchers(HttpMethod.GET, "/reviews/order-item/**").hasAnyRole("BUYER", "SELLER")
                                                 .requestMatchers(HttpMethod.GET, "/reviews").hasRole("ADMIN")
                                                 .requestMatchers(HttpMethod.POST, "/reviews").hasAnyRole("BUYER", "SELLER")
                                                 .requestMatchers(HttpMethod.PUT, "/reviews/**").hasAnyRole("BUYER", "SELLER")

@@ -3,6 +3,7 @@ package com.uade.tpo.marketplace.service;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -256,6 +257,37 @@ public class ReviewService implements IReviewService {
         Review saved = reviewRepository.save(existing);
 
         return reviewMapper.toResponse(saved);
+    }
+
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public ReviewResponseDto getReviewByOrderItemIdForBuyer(Long orderItemId, Long requestingUserId)
+            throws ResourceNotFoundException, UnauthorizedException {
+
+        if (orderItemId == null) {
+            throw new BadRequestException("orderItemId no proporcionado.");
+        }
+        if (requestingUserId == null) {
+            throw new UnauthorizedException("Id de usuario solicitante no proporcionado.");
+        }
+
+        Optional<Review> opt = reviewRepository.findByOrderItemId(orderItemId);
+
+        if (opt.isEmpty()) {
+            throw new ReviewNotFoundException("No se encontró una reseña asociada al orderItem (id=" + orderItemId + ").");
+        }
+
+        Review review = opt.get();
+        User buyer = review.getBuyer();
+        Long buyerId = buyer != null ? buyer.getId() : null;
+
+        if (buyerId == null || !Objects.equals(buyerId, requestingUserId)) {
+            throw new UnauthorizedException("No autorizado: Solamente el comprador que creó la reseña puede verla.");
+        }
+
+        return reviewMapper.toResponse(review);
     }
 
 }

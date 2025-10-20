@@ -113,4 +113,17 @@ public class ReviewsController {
     ReviewResponseDto updated = reviewService.toggleReviewVisibility(reviewId, visible, requestingUserId);
     return ResponseEntity.ok(updated);
 }
+
+
+    @GetMapping("/order-item/{orderItemId}")
+    public ResponseEntity<ReviewResponseDto> getReviewByOrderItem(
+            @PathVariable("orderItemId") Long orderItemId,
+            Authentication authentication)
+            throws ResourceNotFoundException, UnauthorizedException {
+
+        Long requestingUserId = authenticator.getCurrentUserId(authentication);
+        ReviewResponseDto dto = reviewService.getReviewByOrderItemIdForBuyer(orderItemId, requestingUserId);
+        return ResponseEntity.ok(dto);
+    }
+
 }

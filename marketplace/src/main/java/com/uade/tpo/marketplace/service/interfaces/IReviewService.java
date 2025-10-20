@@ -29,4 +29,7 @@ public interface IReviewService {
     Pair<Double, Long> getAverageRatingAndCountByProduct(Long productId) throws ResourceNotFoundException;
 
     ReviewResponseDto toggleReviewVisibility(Long reviewId, boolean visible, Long requestingUserId) throws ResourceNotFoundException, UnauthorizedException;
+
+    ReviewResponseDto getReviewByOrderItemIdForBuyer(Long orderItemId, Long requestingUserId)
+        throws ResourceNotFoundException, UnauthorizedException;
 }
