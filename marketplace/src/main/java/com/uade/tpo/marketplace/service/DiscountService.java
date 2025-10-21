@@ -130,19 +130,50 @@ public class DiscountService implements IDiscountService {
             throw new BadRequestException("Debe especificarse al menos un objetivo para el descuento: targetProductId, targetCategoryId o targetSellerId.");
         }
 
-        if (dto.type() == DiscountType.FIXED) {
-            if (dto.targetBuyerId() == null) {
-                throw new CouponTargetBuyerMissingException("Los cupones (tipo FIXED) deben estar dirigidos a un comprador específico (targetBuyerId).");
-            }
-            if (dto.code() == null || dto.code().isBlank()) {
-                throw new BadRequestException("Los cupones (tipo FIXED) deben tener un código (code) definido.");
-            }
-    }
+        DiscountCreateDto dtoToUse = dto;
 
-        Discount entity = discountMapper.toEntity(dto);
-        Discount saved = discountRepository.save(entity);
-        return discountMapper.toResponse(saved);
-    }
+            if (dto.type() == DiscountType.FIXED) {
+                if (dto.targetBuyerId() == null) {
+                    List<User> buyers = userRepository.findAll()
+                            .stream()
+                            .filter(u -> !u.getId().equals(createdByUserId))
+                            .collect(Collectors.toList());
+
+                    if (buyers.isEmpty()) {
+                        throw new UserNotFoundException("No se encontraron compradores válidos para asignar al cupón.");
+                    }
+
+                    User randomBuyer = buyers.get(new java.util.Random().nextInt(buyers.size()));
+                    Long chosenBuyerId = randomBuyer.getId();
+
+                    dtoToUse = new DiscountCreateDto(
+                            dto.code(),
+                            dto.type(),
+                            dto.value(),
+                            dto.scope(),
+                            dto.targetProductId(),
+                            dto.targetCategoryId(),
+                            dto.targetSellerId(),
+                            dto.minQuantity(),
+                            dto.maxQuantity(),
+                            dto.startsAt(),
+                            dto.endsAt(),
+                            dto.minPrice(),
+                            dto.maxPrice(),
+                            dto.expiresAt(),
+                            chosenBuyerId
+                    );
+                }
+
+                if (dtoToUse.code() == null || dtoToUse.code().isBlank()) {
+                    throw new BadRequestException("Los cupones (tipo FIXED) deben tener un código (code) definido.");
+                }
+            }
+
+            Discount entity = discountMapper.toEntity(dtoToUse);
+            Discount saved = discountRepository.save(entity);
+            return discountMapper.toResponse(saved);
+        }
 
 
     @Override
