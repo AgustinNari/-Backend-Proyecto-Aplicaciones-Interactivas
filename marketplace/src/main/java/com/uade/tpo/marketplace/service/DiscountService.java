@@ -155,7 +155,7 @@ public class DiscountService implements IDiscountService {
 
         if (requestingUserId == null) throw new BadRequestException("Id de usuario no proporcionado.");
 
-        if (existing.getTargetSeller() == null || existing.getTargetSeller().getId() == null || !existing.getTargetSeller().getId().equals(requestingUserId) ) {
+        if (existing.getTargetSeller() != null && !existing.getTargetSeller().getId().equals(requestingUserId) ) {
                 throw new UnauthorizedException("No tienes permiso para realizar esta acción.");
         }
 
