@@ -375,4 +375,41 @@ public class UserService implements IUserService {
         return Optional.of(dto);
     }
 
+
+    @Override
+    @Transactional(rollbackFor = Throwable.class)
+    public UserResponseDto toggleUserActivity(Long userId, Boolean isActive, Long requestingUserId)
+            throws UserNotFoundException, UnauthorizedException {
+
+        if (userId == null) throw new BadRequestException("UserId no proporcionado.");
+        if (isActive == null) throw new BadRequestException("Valor 'active' no proporcionado.");
+        if (requestingUserId == null) throw new UnauthorizedException("No autenticado.");
+
+        User requestingUser = userRepository.findById(requestingUserId)
+                .orElseThrow(() -> new UserNotFoundException("Usuario solicitante no encontrado (id=" + requestingUserId + ")."));
+
+        if (requestingUser.getRole() != Role.ADMIN) {
+            throw new UnauthorizedException("Acción permitida solo para administradores.");
+        }
+        try {
+            int updatedRows = userRepository.toggleUserActivity(userId, isActive);
+            if (updatedRows == 0) {
+                throw new UserNotFoundException("Usuario no encontrado (id=" + userId + ").");
+            }
+        } catch (Exception ex) {
+            Optional<User> opt = userRepository.findById(userId);
+            if (opt.isEmpty()) {
+                throw new UserNotFoundException("Usuario no encontrado (id=" + userId + ").");
+            }
+            User target = opt.get();
+            target.setActive(isActive);
+            userRepository.save(target);
+        }
+        User updatedUser = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado tras actualizar (id=" + userId + ")."));
+
+        return userMapper.toResponse(updatedUser);
+    }
+
+
 }

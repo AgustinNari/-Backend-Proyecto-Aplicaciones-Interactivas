@@ -111,6 +111,7 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.PATCH, "/users/me/balance").hasRole("ADMIN")
                                                 .requestMatchers(HttpMethod.POST, "/users/*/avatar").authenticated()
                                                 .requestMatchers(HttpMethod.PUT, "/users/*/avatar").authenticated()
+                                                .requestMatchers(HttpMethod.PATCH, "/users/*/active").hasRole("ADMIN")
                                                 .requestMatchers(HttpMethod.DELETE, "/users/*/avatar").authenticated()
 
 

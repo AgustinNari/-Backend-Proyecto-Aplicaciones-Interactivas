@@ -49,6 +49,9 @@ public interface IUserService {
 
         Optional<SellerDetailResponseDto> getSellerDetail(Long sellerId);
 
+        UserResponseDto toggleUserActivity(Long userId, Boolean isActive, Long requestingUserId)
+                throws UserNotFoundException, UnauthorizedException;
+
 
 }
 

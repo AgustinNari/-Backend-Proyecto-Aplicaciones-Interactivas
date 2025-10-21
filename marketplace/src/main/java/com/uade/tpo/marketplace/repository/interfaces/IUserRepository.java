@@ -72,4 +72,10 @@ public interface IUserRepository extends JpaRepository<User, Long> {
     @Modifying
     @Query("UPDATE User u SET u.avatar = NULL, u.avatarContentType = NULL WHERE u.id = :userId")
     int deleteAvatarById(Long userId);
+
+    @Transactional
+    @Modifying
+    @Query("UPDATE User u SET u.active = :active WHERE u.id = :userId")
+    int toggleUserActivity(@Param("userId") Long userId, @Param("active") boolean active);
+
 }

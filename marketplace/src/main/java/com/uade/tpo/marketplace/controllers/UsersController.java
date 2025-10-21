@@ -163,5 +163,18 @@ public class UsersController {
         return opt.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.noContent().build());
     }
 
+    @PatchMapping("/{id}/active")
+    public ResponseEntity<UserResponseDto> toggleUserActivity(
+            @PathVariable("id") Long userId,
+            @RequestParam("active") boolean active,
+            Authentication authentication)
+            throws UserNotFoundException, UnauthorizedException {
+
+        Long requestingUserId = authenticator.getCurrentUserId(authentication);
+        UserResponseDto updated = userService.toggleUserActivity(userId, active, requestingUserId);
+        return ResponseEntity.ok(updated);
+    }
+
+
     
 }
