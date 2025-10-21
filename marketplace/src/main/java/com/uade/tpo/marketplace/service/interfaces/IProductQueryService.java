@@ -10,6 +10,6 @@ import com.uade.tpo.marketplace.entity.dto.response.ProductListDTO;
 
 public interface IProductQueryService {
 
-    Page<ProductListDTO> search(ProductFilter filter, Pageable pageable);
+    Page<ProductListDTO> search(ProductFilter filter, Pageable pageable, boolean activeOnly);
 
 }

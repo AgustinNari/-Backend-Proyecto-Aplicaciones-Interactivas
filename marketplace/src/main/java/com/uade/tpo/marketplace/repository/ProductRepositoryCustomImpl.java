@@ -67,7 +67,7 @@ public class ProductRepositoryCustomImpl implements IProductRepositoryCustom {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ProductListDTO> findProductsWithAggregates(ProductFilter filter, Pageable pageable) {
+    public Page<ProductListDTO> findProductsWithAggregates(ProductFilter filter, Pageable pageable, boolean activeOnly) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
 
 
@@ -149,7 +149,10 @@ public class ProductRepositoryCustomImpl implements IProductRepositoryCustom {
 
 
         List<Predicate> predicates = new ArrayList<>();
-        predicates.add(cb.isTrue(root.get("active")));
+        
+        if (activeOnly) {
+            predicates.add(cb.isTrue(root.get("active")));
+        }
 
         if (filter != null) {
             if (filter.getProductIds() != null && !filter.getProductIds().isEmpty()) {
@@ -320,7 +323,8 @@ public class ProductRepositoryCustomImpl implements IProductRepositoryCustom {
             dto.setSellerDisplayName((String) t.get("sellerDisplayName"));
             dto.setTitle((String) t.get("title"));
             dto.setPrice((BigDecimal) t.get("price"));
-            dto.setActive(Boolean.TRUE.equals(t.get("active")));
+            boolean active = (Boolean) t.get("active");
+            dto.setActive(active);
             dto.setPlatform((String) t.get("platform"));
             dto.setRegion((String) t.get("region"));
             dto.setReleaseDate((LocalDate) t.get("releaseDate"));
@@ -374,7 +378,7 @@ public class ProductRepositoryCustomImpl implements IProductRepositoryCustom {
             }
         }
 
-        long total = computeCount(filter);
+        long total = computeCount(filter, activeOnly);
         return new PageImpl<>(dtos, pageable, total);
     }
 
@@ -497,14 +501,17 @@ public class ProductRepositoryCustomImpl implements IProductRepositoryCustom {
     }
 
 
-    private long computeCount(ProductFilter filter) {
+    private long computeCount(ProductFilter filter, boolean activeOnly) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Long> cq = cb.createQuery(Long.class);
         Root<Product> root = cq.from(Product.class);
         cq.select(cb.countDistinct(root.get("id")));
 
         List<Predicate> predicates = new ArrayList<>();
-        predicates.add(cb.isTrue(root.get("active")));
+        
+        if (activeOnly) {
+            predicates.add(cb.isTrue(root.get("active")));
+        }
 
         if (filter != null) {
             if (filter.getProductIds() != null && !filter.getProductIds().isEmpty()) {

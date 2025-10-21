@@ -17,8 +17,8 @@ public class ProductQueryService implements IProductQueryService {
     private IProductRepositoryCustom productRepositoryCustom;
 
     @Override
-    public Page<ProductListDTO> search(ProductFilter filter, Pageable pageable) {
-        return productRepositoryCustom.findProductsWithAggregates(filter, pageable);
+    public Page<ProductListDTO> search(ProductFilter filter, Pageable pageable, boolean activeOnly) {
+        return productRepositoryCustom.findProductsWithAggregates(filter, pageable, activeOnly);
     }
 
 }

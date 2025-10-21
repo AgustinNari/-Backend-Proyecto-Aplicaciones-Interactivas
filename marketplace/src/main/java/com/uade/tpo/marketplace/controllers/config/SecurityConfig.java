@@ -36,7 +36,8 @@ public class SecurityConfig {
                                                 .permitAll()
 
                                                 //PRODUCT QUERIES
-                                                .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
+                                                .requestMatchers(HttpMethod.GET, "/api/v1/products/filtered/active").permitAll()
+                                                .requestMatchers(HttpMethod.GET, "/api/v1/products/filtered/all").hasAnyRole("SELLER", "ADMIN")
 
                                                 //SELLER QUERIES
                                                 .requestMatchers(HttpMethod.GET, "/api/v1/sellers/**").permitAll()

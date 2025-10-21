@@ -21,8 +21,8 @@ public class ProductQueryController {
     @Autowired
     private ProductQueryService queryService;
 
-    @GetMapping ("/filtered")
-    public Page<ProductListDTO> list(
+    @GetMapping ("/filtered/active")
+    public Page<ProductListDTO> listOnlyActive(
             ProductFilter filter,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size,
@@ -30,7 +30,19 @@ public class ProductQueryController {
     ) {
         Sort sortOrder = parseSort(sort);
         Pageable pageable = PageRequest.of(page, size, sortOrder);
-        return queryService.search(filter, pageable);
+        return queryService.search(filter, pageable, true);
+    }
+
+    @GetMapping ("/filtered/all")
+    public Page<ProductListDTO> listAll(
+            ProductFilter filter,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(defaultValue = "createdAt,desc") String sort
+    ) {
+        Sort sortOrder = parseSort(sort);
+        Pageable pageable = PageRequest.of(page, size, sortOrder);
+        return queryService.search(filter, pageable, false);
     }
 
 

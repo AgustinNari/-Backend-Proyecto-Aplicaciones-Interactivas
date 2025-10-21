@@ -7,5 +7,5 @@ import com.uade.tpo.marketplace.entity.dto.request.ProductFilter;
 import com.uade.tpo.marketplace.entity.dto.response.ProductListDTO;
 
 public interface IProductRepositoryCustom {
-    Page<ProductListDTO> findProductsWithAggregates(ProductFilter filter, Pageable pageable);
+    Page<ProductListDTO> findProductsWithAggregates(ProductFilter filter, Pageable pageable, boolean activeOnly);
 }
