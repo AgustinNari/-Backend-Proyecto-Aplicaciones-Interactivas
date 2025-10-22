@@ -287,9 +287,10 @@ public class ProductService implements IProductService {
             if (requestingUserId == null) {
                 throw new BadRequestException(" No se pudo identificar el usuario solicitante.");
             }
+            User user = userRepository.findById(requestingUserId).orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado (id=" + requestingUserId + ")."));
             if (existing.getSeller() != null) {
                 Long sellerId = existing.getSeller().getId();
-                if (requestingUserId != null && !requestingUserId.equals(sellerId)) {
+                if (requestingUserId != null && !requestingUserId.equals(sellerId) && user.getRole() != Role.ADMIN) {
                     throw new ProductOwnershipException("No tienes permiso para realizar esta acción.");
                 }
             }
