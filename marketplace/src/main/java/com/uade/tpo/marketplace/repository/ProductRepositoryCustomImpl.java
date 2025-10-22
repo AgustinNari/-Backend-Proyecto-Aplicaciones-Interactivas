@@ -149,7 +149,20 @@ public Page<ProductListDTO> findProductsWithAggregates(ProductFilter filter, Pag
 
 
     List<Predicate> predicates = new ArrayList<>();
-    if (activeOnly) predicates.add(cb.isTrue(root.get("active")));
+    if (activeOnly) {
+        predicates.add(cb.isTrue(root.get("active")));
+
+        Subquery<Long> stockExist = cq.subquery(Long.class);
+        {
+            Root<DigitalKey> dkSub = stockExist.from(DigitalKey.class);
+            stockExist.select(dkSub.get("id"));
+            stockExist.where(
+                cb.equal(dkSub.get("product"), root),
+                cb.equal(dkSub.get("status"), KeyStatus.AVAILABLE)
+            );
+        }
+        predicates.add(cb.exists(stockExist));
+    }
 
     if (filter != null) {
         if (filter.getProductIds() != null && !filter.getProductIds().isEmpty()) {
@@ -478,6 +491,17 @@ public Page<ProductListDTO> findProductsWithAggregates(ProductFilter filter, Pag
         
         if (activeOnly) {
             predicates.add(cb.isTrue(root.get("active")));
+
+            Subquery<Long> stockExist = cq.subquery(Long.class);
+            {
+                Root<DigitalKey> dkSub = stockExist.from(DigitalKey.class);
+                stockExist.select(dkSub.get("id"));
+                stockExist.where(
+                    cb.equal(dkSub.get("product"), root),
+                    cb.equal(dkSub.get("status"), KeyStatus.AVAILABLE)
+                );
+            }
+            predicates.add(cb.exists(stockExist));
         }
 
         if (filter != null) {
