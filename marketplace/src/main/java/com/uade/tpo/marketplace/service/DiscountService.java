@@ -5,7 +5,9 @@ import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
@@ -132,6 +134,27 @@ public class DiscountService implements IDiscountService {
 
         DiscountCreateDto dtoToUse = dto;
 
+        if (dto.minQuantity() == null) {
+            dtoToUse = new DiscountCreateDto(
+                    dto.code(),
+                    dto.type(),
+                    dto.value(),
+                    dto.scope(),
+                    dto.targetProductId(),
+                    dto.targetCategoryId(),
+                    dto.targetSellerId(),
+                    1,
+                    1000,
+                    dto.startsAt(),
+                    dto.endsAt(),
+                    new BigDecimal(1),
+                    new BigDecimal(1000000000),
+                    dto.endsAt(),
+                    dto.targetBuyerId()
+            );
+            
+        }
+
             if (dto.type() == DiscountType.FIXED) {
                 if (dto.targetBuyerId() == null) {
                     List<User> buyers = userRepository.findAll()
@@ -146,23 +169,44 @@ public class DiscountService implements IDiscountService {
                     User randomBuyer = buyers.get(new java.util.Random().nextInt(buyers.size()));
                     Long chosenBuyerId = randomBuyer.getId();
 
-                    dtoToUse = new DiscountCreateDto(
-                            dto.code(),
-                            dto.type(),
-                            dto.value(),
-                            dto.scope(),
-                            dto.targetProductId(),
-                            dto.targetCategoryId(),
-                            dto.targetSellerId(),
-                            dto.minQuantity(),
-                            dto.maxQuantity(),
-                            dto.startsAt(),
-                            dto.endsAt(),
-                            dto.minPrice(),
-                            dto.maxPrice(),
-                            dto.expiresAt(),
-                            chosenBuyerId
-                    );
+                    if (dto.minQuantity() == null) {
+                        dtoToUse = new DiscountCreateDto(
+                                dto.code(),
+                                dto.type(),
+                                dto.value(),
+                                dto.scope(),
+                                dto.targetProductId(),
+                                dto.targetCategoryId(),
+                                dto.targetSellerId(),
+                                1,
+                                1000,
+                                dto.startsAt(),
+                                dto.endsAt(),
+                                new BigDecimal(1),
+                                new BigDecimal(1000000000),
+                                dto.endsAt(),
+                                chosenBuyerId
+                        );
+                    }
+                    else {
+                        dtoToUse = new DiscountCreateDto(
+                                dto.code(),
+                                dto.type(),
+                                dto.value(),
+                                dto.scope(),
+                                dto.targetProductId(),
+                                dto.targetCategoryId(),
+                                dto.targetSellerId(),
+                                dto.minQuantity(),
+                                dto.maxQuantity(),
+                                dto.startsAt(),
+                                dto.endsAt(),
+                                dto.minPrice(),
+                                dto.maxPrice(),
+                                dto.expiresAt(),
+                                chosenBuyerId
+                        );
+                    }
                 }
 
                 if (dtoToUse.code() == null || dtoToUse.code().isBlank()) {
@@ -237,6 +281,7 @@ public class DiscountService implements IDiscountService {
         
 
         DiscountUpdateDto dtoToUse = dto;
+        
 
             if (dto.type() == DiscountType.FIXED) {
                 if (dto.targetBuyerId() == null) {
@@ -279,6 +324,14 @@ public class DiscountService implements IDiscountService {
 
         discountMapper.updateFromDto(dtoToUse, existing);
         Discount saved = discountRepository.save(existing);
+
+        if (dto.targetProductId() != null) {
+            discountRepository.eraseSellerId(saved.getId());
+        }
+        if (dto.targetSellerId() != null) {
+            discountRepository.eraseProductId(saved.getId());
+        }
+
         return discountMapper.toResponse(saved);
     }
 
@@ -995,7 +1048,6 @@ public CouponValidationResponseDto validateCouponForOrderItemsPreview(
     }
 }
 
-
     @Override
     @Transactional(readOnly = true)
     public Page<DiscountResponseDto> getDiscountsForSellerManagement(Long requestingUserId, Pageable pageable)
@@ -1006,7 +1058,6 @@ public CouponValidationResponseDto validateCouponForOrderItemsPreview(
         User seller = userRepository.findById(requestingUserId)
                 .orElseThrow(() -> new UserNotFoundException("Vendedor no encontrado (id=" + requestingUserId + ")."));
 
-
         if (seller.getRole() != Role.SELLER) {
             throw new UnauthorizedException("El usuario solicitante no es un vendedor válido.");
         }
@@ -1014,12 +1065,19 @@ public CouponValidationResponseDto validateCouponForOrderItemsPreview(
         Pageable effective = pageable == null ? PageRequest.of(0, 20) : pageable;
 
         Page<Discount> page = discountRepository.findDiscountsForSeller(requestingUserId, effective);
-        List<DiscountResponseDto> dtos = page.getContent().stream()
+        Page<Discount> page2 = discountRepository.findDiscountsForSeller2(requestingUserId, effective);
+
+        Set<Discount> combinedContentSet = new HashSet<>(page.getContent());
+        combinedContentSet.addAll(page2.getContent());
+        List<Discount> combinedContentList = new ArrayList<>(combinedContentSet);
+
+        List<DiscountResponseDto> dtos = combinedContentList.stream()
                 .map(discountMapper::toResponse)
                 .collect(Collectors.toList());
 
-        return new PageImpl<>(dtos, effective, page.getTotalElements());
+        return new PageImpl<>(dtos, effective, combinedContentList.size());
     }
+
 
     @Override
     @Transactional(readOnly = true)

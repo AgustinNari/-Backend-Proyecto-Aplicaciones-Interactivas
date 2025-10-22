@@ -122,10 +122,22 @@ public interface IDiscountRepository extends JpaRepository<Discount, Long> {
 
 
        @Query("SELECT d FROM Discount d " +
-              "WHERE ( (d.targetSeller IS NOT NULL AND d.targetSeller.id = :sellerId) " +
-              "OR (d.targetProduct IS NOT NULL AND d.targetProduct.seller IS NOT NULL AND d.targetProduct.seller.id = :sellerId ) ) ")
+              "WHERE (d.targetProduct IS NOT NULL AND d.targetProduct.seller IS NOT NULL AND d.targetProduct.seller.id = :sellerId )  ")
        Page<Discount> findDiscountsForSeller(@Param("sellerId") Long sellerId, Pageable pageable);
 
+       @Query("SELECT d FROM Discount d " +
+              "WHERE (d.targetSeller IS NOT NULL AND d.targetSeller.id = :sellerId) ")
+       Page<Discount> findDiscountsForSeller2(@Param("sellerId") Long sellerId, Pageable pageable);
+
+       @Modifying
+       @Transactional
+       @Query("UPDATE Discount d SET d.targetSeller = NULL WHERE d.id = :discountId")
+       int eraseSellerId(Long discountId);
+
+       @Modifying
+       @Transactional
+       @Query("UPDATE Discount d SET d.targetProduct = NULL WHERE d.id = :discountId")
+       int eraseProductId(Long discountId);
 
        @Query("SELECT d FROM Discount d " +
               "WHERE d.targetCategory IS NOT NULL ")
