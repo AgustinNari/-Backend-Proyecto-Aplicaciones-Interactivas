@@ -88,22 +88,22 @@ public interface IDiscountRepository extends JpaRepository<Discount, Long> {
        Page<Discount> findActiveByScopeAndTargetBuyerId(DiscountScope scope, Long targetBuyerId, Pageable pageable);
 
        @Query("SELECT d FROM Discount d WHERE d.targetProduct.id = :productId AND d.active = true " +
-              "AND d.type = 'PERCENT' " +
+              "AND d.type = 'PERCENT' " + "AND d.minPrice <= d.targetProduct.price " + "AND d.maxPrice >= d.targetProduct.price " +
               "AND d.startsAt <= CURRENT_TIMESTAMP AND (d.endsAt IS NULL OR d.endsAt >= CURRENT_TIMESTAMP) " +
               "ORDER BY d.value DESC")
        List<Discount> getHighestValueDiscountsForProduct(Long productId);
 
        @Query("SELECT d FROM Discount d WHERE d.targetCategory.id = :categoryId AND d.active = true " +
-              "AND d.type = 'PERCENT' " +
+              "AND d.type = 'PERCENT' " + "AND d.minPrice <= :productPrice  " + "AND d.maxPrice >= :productPrice " +
               "AND d.startsAt <= CURRENT_TIMESTAMP AND (d.endsAt IS NULL OR d.endsAt >= CURRENT_TIMESTAMP) " +
               "ORDER BY d.value DESC")
-       List<Discount> getHighestValueDiscountsForCategory(Long categoryId);
+       List<Discount> getHighestValueDiscountsForCategory(Long categoryId, BigDecimal productPrice);
 
        @Query("SELECT d FROM Discount d WHERE d.targetSeller.id = :sellerId AND d.active = true " +
-              "AND d.type = 'PERCENT' " +
+              "AND d.type = 'PERCENT' " + "AND d.minPrice <= :productPrice  " + "AND d.maxPrice >= :productPrice " +
               "AND d.startsAt <= CURRENT_TIMESTAMP AND (d.endsAt IS NULL OR d.endsAt >= CURRENT_TIMESTAMP) " +
               "ORDER BY d.value DESC")
-       List<Discount> getHighestValueDiscountsForSeller(Long sellerId);
+       List<Discount> getHighestValueDiscountsForSeller(Long sellerId, BigDecimal productPrice);
 
 
        @Query("SELECT d FROM Discount d WHERE d.type = 'FIXED' AND d.targetBuyer.id = :targetBuyerId AND d.active = true " +

@@ -7,10 +7,10 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -559,7 +559,7 @@ public class DiscountService implements IDiscountService {
          
             Discount bestCategory = product.getCategories() == null ? null :
                     product.getCategories().stream()
-                        .map(cat -> discountRepository.getHighestValueDiscountsForCategory(cat.getId())
+                        .map(cat -> discountRepository.getHighestValueDiscountsForCategory(cat.getId(), product.getPrice())
                                 .stream().findFirst().orElse(null))
                         .filter(Objects::nonNull)
                         .max(Comparator.comparing(Discount::getValue))
@@ -568,7 +568,7 @@ public class DiscountService implements IDiscountService {
 
             Discount bestSeller = null;
             if (product.getSeller() != null && product.getSeller().getId() != null) {
-                bestSeller = discountRepository.getHighestValueDiscountsForSeller(product.getSeller().getId())
+                bestSeller = discountRepository.getHighestValueDiscountsForSeller(product.getSeller().getId(), product.getPrice())
                         .stream().findFirst().orElse(null);
             }
 
@@ -598,7 +598,7 @@ public class DiscountService implements IDiscountService {
 
             Discount bestCategory = product.getCategories() == null ? null :
                     product.getCategories().stream()
-                        .map(cat -> discountRepository.getHighestValueDiscountsForCategory(cat.getId())
+                        .map(cat -> discountRepository.getHighestValueDiscountsForCategory(cat.getId(), product.getPrice())
                                 .stream().findFirst().orElse(null))
                         .filter(Objects::nonNull)
                         .max(Comparator.comparing(Discount::getValue))
@@ -606,7 +606,7 @@ public class DiscountService implements IDiscountService {
 
             Discount bestSeller = null;
             if (product.getSeller() != null && product.getSeller().getId() != null) {
-                bestSeller = discountRepository.getHighestValueDiscountsForSeller(product.getSeller().getId())
+                bestSeller = discountRepository.getHighestValueDiscountsForSeller(product.getSeller().getId(), product.getPrice())
                         .stream().findFirst().orElse(null);
             }
 

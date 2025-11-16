@@ -142,7 +142,7 @@ public class DigitalKeyService implements IDigitalKeyService {
 
   
     @Override
-    public Page<DigitalKeyResponseDto> getAvailableKeysByProduct(Integer keyQuantity, Long productId, Pageable pageable, Long requestingUserId)
+    public Page<DigitalKeyResponseDto> getKeysByProduct(Integer keyQuantity, Long productId, Pageable pageable, Long requestingUserId)
             throws ResourceNotFoundException, UnauthorizedException {
 
         if (productId == null) throw new ResourceNotFoundException("Id del producto nulo");
@@ -159,7 +159,7 @@ public class DigitalKeyService implements IDigitalKeyService {
 
 
     
-        Page<DigitalKey> page = digitalKeyRepository.findByProductIdAndStatus(productId, KeyStatus.AVAILABLE, pageable);
+        Page<DigitalKey> page = digitalKeyRepository.findByProductId(productId, pageable);
 
 
 

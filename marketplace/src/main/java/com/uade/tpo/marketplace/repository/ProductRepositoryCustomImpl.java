@@ -38,6 +38,7 @@ import com.uade.tpo.marketplace.entity.enums.KeyStatus;
 import com.uade.tpo.marketplace.exceptions.ImageProcessingException;
 import com.uade.tpo.marketplace.exceptions.InvalidFileException;
 import com.uade.tpo.marketplace.repository.interfaces.IDiscountRepository;
+import com.uade.tpo.marketplace.repository.interfaces.IProductRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IProductRepositoryCustom;
 
 import jakarta.persistence.EntityManager;
@@ -64,6 +65,9 @@ public class ProductRepositoryCustomImpl implements IProductRepositoryCustom {
 
     @Autowired
     private IDiscountRepository discountRepository;
+
+    @Autowired
+    private IProductRepository productRepository;
 
 @Override
 @Transactional(readOnly = true)
@@ -413,6 +417,7 @@ public Page<ProductListDTO> findProductsWithAggregates(ProductFilter filter, Pag
         for (Long pid : productIds) {
             BigDecimal bestVal = null;
             Long bestId = null;
+            BigDecimal productPrice = productRepository.findById(pid).get().getPrice();
 
             try {
                 List<Discount> prod = discountRepository.getHighestValueDiscountsForProduct(pid);
@@ -430,7 +435,7 @@ public Page<ProductListDTO> findProductsWithAggregates(ProductFilter filter, Pag
                 for (CategoryResponseDto crd : catDtos) {
                     try {
                         Long cid = crd.id();
-                        List<Discount> catList = discountRepository.getHighestValueDiscountsForCategory(cid);
+                        List<Discount> catList = discountRepository.getHighestValueDiscountsForCategory(cid, productPrice);
                         if (catList != null && !catList.isEmpty()) {
                             Discount c = catList.get(0);
                             if (c != null && c.getValue() != null) {
@@ -447,7 +452,7 @@ public Page<ProductListDTO> findProductsWithAggregates(ProductFilter filter, Pag
             Long sellerId = productToSeller.get(pid);
             if (sellerId != null) {
                 try {
-                    List<Discount> sellerList = discountRepository.getHighestValueDiscountsForSeller(sellerId);
+                    List<Discount> sellerList = discountRepository.getHighestValueDiscountsForSeller(sellerId, productPrice);
                     if (sellerList != null && !sellerList.isEmpty()) {
                         Discount s = sellerList.get(0);
                         if (s != null && s.getValue() != null) {

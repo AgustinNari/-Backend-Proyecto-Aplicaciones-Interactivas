@@ -34,7 +34,7 @@ public class DigitalKeysController {
     private CurrentUserProvider currentUserProvider;
 
     @GetMapping("/product/{productId}")
-    public ResponseEntity<Page<DigitalKeyResponseDto>> getAvailableKeysByProduct(
+    public ResponseEntity<Page<DigitalKeyResponseDto>> getKeysByProduct(
             @PathVariable Long productId,
             @RequestParam(required = false) Integer keyQuantity,
             @RequestParam(defaultValue = "0") int page,
@@ -45,7 +45,7 @@ public class DigitalKeysController {
         Long requestingUserId = currentUserProvider.getCurrentUserId(authentication);
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<DigitalKeyResponseDto> pageRes = digitalKeyService.getAvailableKeysByProduct(
+        Page<DigitalKeyResponseDto> pageRes = digitalKeyService.getKeysByProduct(
                 keyQuantity, productId, pageable, requestingUserId);
 
         return ResponseEntity.ok(pageRes);
