@@ -12,6 +12,7 @@ import com.uade.tpo.marketplace.entity.basic.OrderItem;
 import com.uade.tpo.marketplace.entity.basic.Product;
 import com.uade.tpo.marketplace.entity.basic.Review;
 import com.uade.tpo.marketplace.entity.dto.create.ReviewCreateDto;
+import com.uade.tpo.marketplace.entity.dto.response.LatestReviewResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.ReviewResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.ReviewUpdateDto;
 
@@ -83,6 +84,28 @@ public class ReviewMapper {
     private Long safeGetId(com.uade.tpo.marketplace.entity.basic.User u) {
         try { return u.getId(); } catch (Exception e) { return null; }
     }
+
+// En ReviewMapper.java agregar este método:
+
+public LatestReviewResponseDto toLatestReviewResponse(Review review, 
+                                                    String productTitle, 
+                                                    String productImageDataUrl,
+                                                    String buyerDisplayName) {
+    if (review == null) return null;
+    
+    return new LatestReviewResponseDto(
+        review.getId(),
+        review.getRating(),
+        review.getTitle(),
+        review.getComment(),
+        review.getCreatedAt(),
+        review.getProduct() != null ? safeGetId(review.getProduct()) : null,
+        productTitle,
+        productImageDataUrl,
+        review.getBuyer() != null ? safeGetId(review.getBuyer()) : null,
+        buyerDisplayName
+    );
+}
 
 
 }

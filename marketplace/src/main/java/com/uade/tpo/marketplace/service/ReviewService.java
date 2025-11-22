@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
@@ -17,9 +18,12 @@ import org.springframework.transaction.annotation.Transactional;
 import com.uade.tpo.marketplace.entity.basic.Order;
 import com.uade.tpo.marketplace.entity.basic.OrderItem;
 import com.uade.tpo.marketplace.entity.basic.Product;
+import com.uade.tpo.marketplace.entity.basic.ProductImage;
 import com.uade.tpo.marketplace.entity.basic.Review;
 import com.uade.tpo.marketplace.entity.basic.User;
 import com.uade.tpo.marketplace.entity.dto.create.ReviewCreateDto;
+import com.uade.tpo.marketplace.entity.dto.response.LatestReviewResponseDto;
+import com.uade.tpo.marketplace.entity.dto.response.ProductImageResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.ReviewDeletionResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.ReviewResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.ReviewUpdateDto;
@@ -33,9 +37,11 @@ import com.uade.tpo.marketplace.exceptions.ResourceNotFoundException;
 import com.uade.tpo.marketplace.exceptions.ReviewNotFoundException;
 import com.uade.tpo.marketplace.exceptions.UnauthorizedException;
 import com.uade.tpo.marketplace.exceptions.UserNotFoundException;
+import com.uade.tpo.marketplace.extra.mappers.ProductImageMapper;
 import com.uade.tpo.marketplace.extra.mappers.ReviewMapper;
 import com.uade.tpo.marketplace.repository.interfaces.IOrderItemRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IOrderRepository;
+import com.uade.tpo.marketplace.repository.interfaces.IProductImageRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IProductRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IReviewRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IUserRepository;
@@ -54,9 +60,14 @@ public class ReviewService implements IReviewService {
     private IOrderItemRepository orderItemRepository;
     @Autowired
     private IOrderRepository orderRepository;
+    @Autowired
+    private IProductImageRepository productImageRepository;
 
     @Autowired
     private ReviewMapper reviewMapper;
+    @Autowired
+    private ProductImageMapper productImageMapper;
+
 
 
 
@@ -290,4 +301,85 @@ public class ReviewService implements IReviewService {
         return reviewMapper.toResponse(review);
     }
 
+     //CAMBIOS:
+
+        @Override
+    @Transactional(readOnly = true)
+    public Page<LatestReviewResponseDto> getLatestReviews(Pageable pageable) {
+        Page<Review> reviewsPage = reviewRepository.findLatestVisibleReviews(pageable);
+        
+        List<LatestReviewResponseDto> dtos = reviewsPage.getContent().stream()
+                .map(this::enrichReviewWithDetails)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        
+        return new PageImpl<>(dtos, pageable, reviewsPage.getTotalElements());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LatestReviewResponseDto> getLatestReviews(int count) {
+        Pageable pageable = PageRequest.of(0, count);
+        List<Review> reviews = reviewRepository.findTopNByVisibleTrueOrderByCreatedAtDesc(pageable);
+        
+        return reviews.stream()
+                .map(this::enrichReviewWithDetails)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    private LatestReviewResponseDto enrichReviewWithDetails(Review review) {
+        try {
+            // Obtener información del producto
+            String productTitle = null;
+            String productImageDataUrl = null;
+            
+            if (review.getProduct() != null && review.getProduct().getId() != null) {
+                Product product = productRepository.findById(review.getProduct().getId()).orElse(null);
+                if (product != null) {
+                    productTitle = product.getTitle();
+                    
+                    // Obtener imagen principal del producto
+                    Optional<ProductImage> primaryImageOpt = productImageRepository
+                        .findFirstByProductIdAndIsPrimaryTrue(product.getId());
+                    
+                    if (primaryImageOpt.isPresent()) {
+                        ProductImageResponseDto imageDto = productImageMapper.toResponse(primaryImageOpt.get());
+                        productImageDataUrl = imageDto != null ? imageDto.dataUrl() : null;
+                    } else {
+                        // Si no hay imagen principal, tomar la primera imagen
+                        List<ProductImage> productImages = productImageRepository
+                            .findByProductIdOrderByIdAsc(product.getId());
+                        if (!productImages.isEmpty()) {
+                            ProductImageResponseDto imageDto = productImageMapper.toResponse(productImages.get(0));
+                            productImageDataUrl = imageDto != null ? imageDto.dataUrl() : null;
+                        }
+                    }
+                }
+            }
+            
+            // Obtener información del usuario - USANDO displayName de la entidad User
+            String buyerDisplayName = "Usuario";
+            if (review.getBuyer() != null && review.getBuyer().getId() != null) {
+                User buyer = userRepository.findById(review.getBuyer().getId()).orElse(null);
+                if (buyer != null && buyer.getDisplayName() != null) {
+                    buyerDisplayName = buyer.getDisplayName();
+                } else {
+                    buyerDisplayName = "Usuario #" + review.getBuyer().getId();
+                }
+            }
+            
+            return reviewMapper.toLatestReviewResponse(review, productTitle, productImageDataUrl, buyerDisplayName);
+            
+        } catch (Exception e) {
+            // Log the error but don't break the whole process
+            System.err.println("Error enriching review with id: " + review.getId() + ", error: " + e.getMessage());
+            return null;
+        }
+    }
 }
+
+
+
+
+

@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -19,8 +20,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.springframework.data.domain.PageRequest;
+import com.uade.tpo.marketplace.entity.dto.response.LatestReviewResponseDto;
+import java.util.List;
+
 import com.uade.tpo.marketplace.controllers.auth.CurrentUserProvider;
 import com.uade.tpo.marketplace.entity.dto.create.ReviewCreateDto;
+import com.uade.tpo.marketplace.entity.dto.response.LatestReviewResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.ReviewDeletionResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.ReviewResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.ReviewUpdateDto;
@@ -125,5 +131,25 @@ public class ReviewsController {
         ReviewResponseDto dto = reviewService.getReviewByOrderItemIdForBuyer(orderItemId, requestingUserId);
         return ResponseEntity.ok(dto);
     }
+
+    // En ReviewsController.java, agrega estos métodos:
+
+@GetMapping("/latest")
+public ResponseEntity<List<LatestReviewResponseDto>> getLatestReviews(
+        @RequestParam(defaultValue = "10") int count) {
+    List<LatestReviewResponseDto> latestReviews = reviewService.getLatestReviews(count);
+    return ResponseEntity.ok(latestReviews);
+}
+
+@GetMapping("/latest-page")
+public ResponseEntity<Page<LatestReviewResponseDto>> getLatestReviewsPage(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size) {
+    Pageable pageable = PageRequest.of(page, size);
+    Page<LatestReviewResponseDto> latestReviews = reviewService.getLatestReviews(pageable);
+    return ResponseEntity.ok(latestReviews);
+}
+
+
 
 }

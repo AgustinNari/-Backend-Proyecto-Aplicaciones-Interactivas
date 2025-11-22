@@ -5,16 +5,20 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.util.Pair;
 
 import com.uade.tpo.marketplace.entity.dto.create.ReviewCreateDto;
+import com.uade.tpo.marketplace.entity.dto.response.LatestReviewResponseDto; // Añadir esta importación
 import com.uade.tpo.marketplace.entity.dto.response.ReviewDeletionResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.ReviewResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.ReviewUpdateDto;
 import com.uade.tpo.marketplace.exceptions.BadRequestException;
+import com.uade.tpo.marketplace.exceptions.DuplicateReviewException;
 import com.uade.tpo.marketplace.exceptions.ResourceNotFoundException;
 import com.uade.tpo.marketplace.exceptions.UnauthorizedException;
 
+import java.util.List; // Añadir esta importación
+
 public interface IReviewService {
 
-    ReviewResponseDto createReview(ReviewCreateDto dto, Long buyerId) throws ResourceNotFoundException, BadRequestException;
+    ReviewResponseDto createReview(ReviewCreateDto dto, Long buyerId) throws ResourceNotFoundException, BadRequestException, DuplicateReviewException;
 
     ReviewResponseDto updateReview(Long reviewId, ReviewUpdateDto dto, Long requestingUserId) throws ResourceNotFoundException, UnauthorizedException;
 
@@ -32,4 +36,8 @@ public interface IReviewService {
 
     ReviewResponseDto getReviewByOrderItemIdForBuyer(Long orderItemId, Long requestingUserId)
         throws ResourceNotFoundException, UnauthorizedException;
+
+
+    Page<LatestReviewResponseDto> getLatestReviews(Pageable pageable);
+    List<LatestReviewResponseDto> getLatestReviews(int count);
 }
