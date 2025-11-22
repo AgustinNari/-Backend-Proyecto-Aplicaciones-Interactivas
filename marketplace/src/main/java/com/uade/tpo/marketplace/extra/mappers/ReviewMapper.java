@@ -1,3 +1,4 @@
+// ReviewMapper.java - versión completa actualizada
 package com.uade.tpo.marketplace.extra.mappers;
 
 import java.util.Collection;
@@ -46,7 +47,6 @@ public class ReviewMapper {
         if (dto.visible() != null) entity.setVisible(dto.visible());
     }
 
-
     public ReviewResponseDto toResponse(Review r){
         if (r == null) return null;
         Long productId = r.getProduct() != null ? safeGetId(r.getProduct()) : null;
@@ -63,18 +63,39 @@ public class ReviewMapper {
         );
     }
 
-
     public List<ReviewResponseDto> toResponseList(Collection<Review> reviews) {
         if (reviews == null || reviews.isEmpty()) return Collections.emptyList();
         return reviews.stream().filter(Objects::nonNull).map(this::toResponse).collect(Collectors.toList());
     }
-
 
     public Review fromId(Long id) {
         if (id == null) return null;
         Review r = new Review();
         r.setId(id);
         return r;
+    }
+
+    // MÉTODO ACTUALIZADO CON 5 PARÁMETROS
+    public LatestReviewResponseDto toLatestReviewResponse(Review review, 
+                                                        String productTitle, 
+                                                        String productImageDataUrl,
+                                                        String buyerDisplayName,
+                                                        List<String> productCategories) {
+        if (review == null) return null;
+        
+        return new LatestReviewResponseDto(
+            review.getId(),
+            review.getRating(),
+            review.getTitle(),
+            review.getComment(),
+            review.getCreatedAt(),
+            review.getProduct() != null ? safeGetId(review.getProduct()) : null,
+            productTitle,
+            productImageDataUrl,
+            review.getBuyer() != null ? safeGetId(review.getBuyer()) : null,
+            buyerDisplayName,
+            productCategories != null ? productCategories : Collections.emptyList()
+        );
     }
 
     private Long safeGetId(Product p) {
@@ -84,28 +105,4 @@ public class ReviewMapper {
     private Long safeGetId(com.uade.tpo.marketplace.entity.basic.User u) {
         try { return u.getId(); } catch (Exception e) { return null; }
     }
-
-// En ReviewMapper.java agregar este método:
-
-public LatestReviewResponseDto toLatestReviewResponse(Review review, 
-                                                    String productTitle, 
-                                                    String productImageDataUrl,
-                                                    String buyerDisplayName) {
-    if (review == null) return null;
-    
-    return new LatestReviewResponseDto(
-        review.getId(),
-        review.getRating(),
-        review.getTitle(),
-        review.getComment(),
-        review.getCreatedAt(),
-        review.getProduct() != null ? safeGetId(review.getProduct()) : null,
-        productTitle,
-        productImageDataUrl,
-        review.getBuyer() != null ? safeGetId(review.getBuyer()) : null,
-        buyerDisplayName
-    );
-}
-
-
 }

@@ -1,6 +1,8 @@
+// LatestReviewResponseDto.java
 package com.uade.tpo.marketplace.entity.dto.response;
 
 import java.time.Instant;
+import java.util.List;
 
 public record LatestReviewResponseDto(
     Long id,
@@ -12,9 +14,12 @@ public record LatestReviewResponseDto(
     // Información del producto
     Long productId,
     String productTitle,
-    String productImageDataUrl, // URL de la imagen principal del producto
+    String productImageDataUrl,
     
     // Información del usuario
     Long buyerId,
-    String buyerDisplayName
+    String buyerDisplayName,
+    
+    // Categorías del producto
+    List<String> productCategories
 ) {}

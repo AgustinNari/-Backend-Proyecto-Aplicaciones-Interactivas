@@ -15,6 +15,11 @@ import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+import com.uade.tpo.marketplace.entity.basic.Category;
+
 import com.uade.tpo.marketplace.entity.basic.Order;
 import com.uade.tpo.marketplace.entity.basic.OrderItem;
 import com.uade.tpo.marketplace.entity.basic.Product;
@@ -328,55 +333,65 @@ public class ReviewService implements IReviewService {
                 .collect(Collectors.toList());
     }
 
-    private LatestReviewResponseDto enrichReviewWithDetails(Review review) {
-        try {
-            // Obtener información del producto
-            String productTitle = null;
-            String productImageDataUrl = null;
-            
-            if (review.getProduct() != null && review.getProduct().getId() != null) {
-                Product product = productRepository.findById(review.getProduct().getId()).orElse(null);
-                if (product != null) {
-                    productTitle = product.getTitle();
-                    
-                    // Obtener imagen principal del producto
-                    Optional<ProductImage> primaryImageOpt = productImageRepository
-                        .findFirstByProductIdAndIsPrimaryTrue(product.getId());
-                    
-                    if (primaryImageOpt.isPresent()) {
-                        ProductImageResponseDto imageDto = productImageMapper.toResponse(primaryImageOpt.get());
+private LatestReviewResponseDto enrichReviewWithDetails(Review review) {
+    try {
+        // Obtener información del producto
+        String productTitle = null;
+        String productImageDataUrl = null;
+        List<String> productCategories = new ArrayList<>();
+        
+        if (review.getProduct() != null && review.getProduct().getId() != null) {
+            Product product = productRepository.findById(review.getProduct().getId()).orElse(null);
+            if (product != null) {
+                productTitle = product.getTitle();
+                
+                // Obtener categorías del producto
+                if (product.getCategories() != null) {
+                    productCategories = product.getCategories().stream()
+                            .filter(Objects::nonNull)
+                            .map(Category::getDescription)
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.toList());
+                }
+                
+                // Obtener imagen principal del producto
+                Optional<ProductImage> primaryImageOpt = productImageRepository
+                    .findFirstByProductIdAndIsPrimaryTrue(product.getId());
+                
+                if (primaryImageOpt.isPresent()) {
+                    ProductImageResponseDto imageDto = productImageMapper.toResponse(primaryImageOpt.get());
+                    productImageDataUrl = imageDto != null ? imageDto.dataUrl() : null;
+                } else {
+                    // Si no hay imagen principal, tomar la primera imagen
+                    List<ProductImage> productImages = productImageRepository
+                        .findByProductIdOrderByIdAsc(product.getId());
+                    if (!productImages.isEmpty()) {
+                        ProductImageResponseDto imageDto = productImageMapper.toResponse(productImages.get(0));
                         productImageDataUrl = imageDto != null ? imageDto.dataUrl() : null;
-                    } else {
-                        // Si no hay imagen principal, tomar la primera imagen
-                        List<ProductImage> productImages = productImageRepository
-                            .findByProductIdOrderByIdAsc(product.getId());
-                        if (!productImages.isEmpty()) {
-                            ProductImageResponseDto imageDto = productImageMapper.toResponse(productImages.get(0));
-                            productImageDataUrl = imageDto != null ? imageDto.dataUrl() : null;
-                        }
                     }
                 }
             }
-            
-            // Obtener información del usuario - USANDO displayName de la entidad User
-            String buyerDisplayName = "Usuario";
-            if (review.getBuyer() != null && review.getBuyer().getId() != null) {
-                User buyer = userRepository.findById(review.getBuyer().getId()).orElse(null);
-                if (buyer != null && buyer.getDisplayName() != null) {
-                    buyerDisplayName = buyer.getDisplayName();
-                } else {
-                    buyerDisplayName = "Usuario #" + review.getBuyer().getId();
-                }
-            }
-            
-            return reviewMapper.toLatestReviewResponse(review, productTitle, productImageDataUrl, buyerDisplayName);
-            
-        } catch (Exception e) {
-            // Log the error but don't break the whole process
-            System.err.println("Error enriching review with id: " + review.getId() + ", error: " + e.getMessage());
-            return null;
         }
+        
+        // Obtener información del usuario
+        String buyerDisplayName = "Usuario";
+        if (review.getBuyer() != null && review.getBuyer().getId() != null) {
+            User buyer = userRepository.findById(review.getBuyer().getId()).orElse(null);
+            if (buyer != null && buyer.getDisplayName() != null) {
+                buyerDisplayName = buyer.getDisplayName();
+            } else {
+                buyerDisplayName = "Usuario #" + review.getBuyer().getId();
+            }
+        }
+        
+        return reviewMapper.toLatestReviewResponse(review, productTitle, productImageDataUrl, 
+                                                  buyerDisplayName, productCategories);
+        
+    } catch (Exception e) {
+        System.err.println("Error enriching review with id: " + review.getId() + ", error: " + e.getMessage());
+        return null;
     }
+}
 }
 
 
