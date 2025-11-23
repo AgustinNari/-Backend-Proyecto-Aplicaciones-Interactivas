@@ -27,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.uade.tpo.marketplace.controllers.auth.CurrentUserProvider;
 import com.uade.tpo.marketplace.entity.dto.create.ProductCreateDto;
+import com.uade.tpo.marketplace.entity.dto.response.FilterExtrasResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.ProductDetailResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.ProductResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.ProductPriceUpdateDto;
@@ -225,6 +226,13 @@ public class ProductsController {
             Pageable pageable) {
 
         Optional<ProductDetailResponseDto> opt = productService.getProductDetail(id, pageable);
+        return opt.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.noContent().build());
+    }
+
+
+    @GetMapping("/filter/extras")
+    public ResponseEntity<FilterExtrasResponseDto> getFilterExtras() {
+        Optional<FilterExtrasResponseDto> opt = productService.getFilterExtras();
         return opt.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.noContent().build());
     }
 

@@ -75,6 +75,11 @@ public interface IProductRepository extends JpaRepository<Product, Long>, JpaSpe
     @Query("UPDATE Product p SET p.price = :newPrice WHERE p.id = :id")
     int updateProductPrice(Long id, BigDecimal newPrice);
     
+    @Query("SELECT DISTINCT p.developer FROM Product p WHERE p.active = true AND p.developer IS NOT NULL")
+    List<String> findDistinctDevelopersByActiveTrue();
+
+    @Query("SELECT DISTINCT p.publisher FROM Product p WHERE p.active = true AND p.publisher IS NOT NULL")
+    List<String> findDistinctPublishersByActiveTrue();
 
     @Transactional
     @Modifying

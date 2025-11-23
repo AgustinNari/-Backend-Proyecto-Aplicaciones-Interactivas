@@ -28,6 +28,7 @@ import com.uade.tpo.marketplace.entity.dto.create.ProductCreateDto;
 import com.uade.tpo.marketplace.entity.dto.create.ProductImageCreateDto;
 import com.uade.tpo.marketplace.entity.dto.response.CategoryResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.DiscountResponseDto;
+import com.uade.tpo.marketplace.entity.dto.response.FilterExtrasResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.ProductDetailResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.ProductImageResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.ProductResponseDto;
@@ -602,6 +603,16 @@ public class ProductService implements IProductService {
                 amountSold
         );
 
+        return Optional.of(dto);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<FilterExtrasResponseDto> getFilterExtras() {
+        List<String> developers = productRepository.findDistinctDevelopersByActiveTrue();
+        List<String> publishers = productRepository.findDistinctPublishersByActiveTrue();
+
+        FilterExtrasResponseDto dto = new FilterExtrasResponseDto(developers, publishers);
         return Optional.of(dto);
     }
 
