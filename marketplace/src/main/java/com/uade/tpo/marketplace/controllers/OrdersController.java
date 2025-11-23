@@ -73,7 +73,11 @@ public class OrdersController {
     }
 
     @GetMapping("/seller/{sellerId}")
-    public Page<OrderResponseDto> getOrdersBySeller(@PathVariable Long sellerId, Pageable pageable) {
+    public Page<OrderResponseDto> getOrdersBySeller(@PathVariable Long sellerId, Authentication authentication, Pageable pageable) {
+        Long requestingUserId = currentUserProvider.getCurrentUserId(authentication);
+        if (!requestingUserId.equals(sellerId) && authentication.getAuthorities().stream().noneMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+            throw new UnauthorizedException("No estás autorizado para ver las ordenes de este vendedor.");
+        }
         return orderService.getOrdersBySeller(sellerId, pageable);
     }
 
