@@ -1,4 +1,3 @@
-// ReviewMapper.java - versión completa actualizada
 package com.uade.tpo.marketplace.extra.mappers;
 
 import java.util.Collection;

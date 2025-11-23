@@ -1,11 +1,13 @@
 package com.uade.tpo.marketplace.service.interfaces;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.util.Pair;
 
 import com.uade.tpo.marketplace.entity.dto.create.ReviewCreateDto;
-import com.uade.tpo.marketplace.entity.dto.response.LatestReviewResponseDto; // Añadir esta importación
+import com.uade.tpo.marketplace.entity.dto.response.LatestReviewResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.ReviewDeletionResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.ReviewResponseDto;
 import com.uade.tpo.marketplace.entity.dto.update.ReviewUpdateDto;
@@ -13,8 +15,6 @@ import com.uade.tpo.marketplace.exceptions.BadRequestException;
 import com.uade.tpo.marketplace.exceptions.DuplicateReviewException;
 import com.uade.tpo.marketplace.exceptions.ResourceNotFoundException;
 import com.uade.tpo.marketplace.exceptions.UnauthorizedException;
-
-import java.util.List; // Añadir esta importación
 
 public interface IReviewService {
 

@@ -1,6 +1,7 @@
 package com.uade.tpo.marketplace.controllers;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +20,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import org.springframework.data.domain.PageRequest;
-import com.uade.tpo.marketplace.entity.dto.response.LatestReviewResponseDto;
-import java.util.List;
 
 import com.uade.tpo.marketplace.controllers.auth.CurrentUserProvider;
 import com.uade.tpo.marketplace.entity.dto.create.ReviewCreateDto;
@@ -132,7 +129,6 @@ public class ReviewsController {
         return ResponseEntity.ok(dto);
     }
 
-    // En ReviewsController.java, agrega estos métodos:
 
 @GetMapping("/latest")
 public ResponseEntity<List<LatestReviewResponseDto>> getLatestReviews(

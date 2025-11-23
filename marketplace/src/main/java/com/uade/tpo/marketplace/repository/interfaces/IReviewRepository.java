@@ -58,7 +58,6 @@ public interface IReviewRepository extends JpaRepository<Review, Long> {
 
     Optional<Review> findByOrderItemId(Long orderItemId);
 
-// En IReviewRepository.java agregar estos métodos:
 
     @Query("SELECT r FROM Review r WHERE r.visible = true ORDER BY r.createdAt DESC")
     Page<Review> findLatestVisibleReviews(Pageable pageable);
