@@ -56,6 +56,7 @@ public class AuthenticationService implements IAuthenticationService{
                         );
                 user.setActive(true);
                 user.setBuyerBalance(BigDecimal.ZERO);
+                user.setLastLogin(java.time.Instant.now());
 
                 repository.save(user);
                 var jwtToken = jwtService.generateToken( user);
@@ -73,6 +74,8 @@ public class AuthenticationService implements IAuthenticationService{
                 var user = repository.findByEmail(request.getEmail())
                                 .orElseThrow();
                 var jwtToken = jwtService.generateToken(user);
+                user.setLastLogin(java.time.Instant.now());
+                repository.save(user);
                 return AuthenticationResponse.builder()
                                 .accessToken(jwtToken)
                                 .build();

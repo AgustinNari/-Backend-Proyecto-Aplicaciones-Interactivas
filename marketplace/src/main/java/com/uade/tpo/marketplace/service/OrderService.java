@@ -214,6 +214,9 @@ public class OrderService implements IOrderService {
             oi.setDiscount(best);
             oi.setDiscountAmount(amount == null ? BigDecimal.ZERO : amount);
             totalDiscounts = totalDiscounts.add(oi.getDiscountAmount());
+            BigDecimal base = oi.getUnitPrice() == null ? BigDecimal.ZERO : oi.getUnitPrice().multiply(BigDecimal.valueOf(oi.getQuantity()));
+            BigDecimal discountAmt = oi.getDiscountAmount() == null ? BigDecimal.ZERO : oi.getDiscountAmount();
+            oi.setLineTotal(base.subtract(discountAmt).max(BigDecimal.ZERO));
             continue;
         }
 

@@ -685,7 +685,6 @@ public class DiscountService implements IDiscountService {
             d = discountRepository.findByCode(code);
         }
         DiscountType type = DiscountType.FIXED;
-        if (Math.random() < 0.5) type = DiscountType.PERCENT;
 
         
         BigDecimal value = new BigDecimal(Math.random() * 100).setScale(2, RoundingMode.HALF_UP);
@@ -708,14 +707,33 @@ public class DiscountService implements IDiscountService {
             targetProductId = getRandomProductId();
         }
 
-        Integer minQuantity = (int) Math.round(Math.random() * 100);
+        BigDecimal productPrice = BigDecimal.ZERO;
+        if (scope == DiscountScope.PRODUCT) {
+            Product product = productRepository.findById(targetProductId).orElse(null);
+            if (product != null && product.getPrice() != null) {
+                productPrice = product.getPrice();
+            }
+        }
+
+        Integer minQuantity = 1;
         Integer maxQuantity = minQuantity + (int) Math.round(Math.random() * 100);
 
-        Instant startsAt = Instant.now().plusSeconds((long) Math.round(Math.random() * 100));
-        Instant endsAt = startsAt.plusSeconds((long) Math.round(Math.random() * 100));
 
+        long daysToAdd = 5 + (long) (Math.random() * 26);
+        long secondsToAdd = daysToAdd * 24 * 60 * 60;
+
+        Instant startsAt = Instant.now().minusSeconds((long) Math.round(Math.random() * 100));
+        Instant endsAt = startsAt.plusSeconds(secondsToAdd);
+
+        
         BigDecimal minPrice = new BigDecimal(Math.random() * 100).setScale(2, RoundingMode.HALF_UP);
         BigDecimal maxPrice = minPrice.add(new BigDecimal(Math.random() * 100).setScale(2, RoundingMode.HALF_UP));
+
+        if (scope == DiscountScope.PRODUCT) {
+            minPrice = productPrice;
+            maxPrice = productPrice.multiply(new BigDecimal(maxQuantity)).setScale(2, RoundingMode.HALF_UP);
+            maxPrice = maxPrice.add(new BigDecimal(Math.random() * 100).setScale(2, RoundingMode.HALF_UP));
+        }
 
 
         Discount discount = new Discount();
