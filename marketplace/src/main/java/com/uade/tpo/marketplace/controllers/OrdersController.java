@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.uade.tpo.marketplace.controllers.auth.CurrentUserProvider;
 import com.uade.tpo.marketplace.entity.dto.create.OrderCreateDto;
+import com.uade.tpo.marketplace.entity.dto.response.AdminStatsExtrasResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.OrderItemResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.OrderKeyResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.OrderResponseDto;
@@ -123,6 +124,13 @@ public class OrdersController {
         Long requestingUserId = currentUserProvider.getCurrentUserId(authentication);
         List<OrderKeyResponseDto> keys = orderService.getKeysByOrderItemId(orderItemId, requestingUserId);
         return ResponseEntity.ok(keys);
+    }
+
+    @GetMapping("/admin/stats/extras")
+    public ResponseEntity<AdminStatsExtrasResponseDto> getAdminStatsExtras(Authentication authentication) throws UnauthorizedException {
+        Long requestingUserId = currentUserProvider.getCurrentUserId(authentication);
+        Optional<AdminStatsExtrasResponseDto> opt = orderService.getAdminStatsExtras(requestingUserId);
+        return opt.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
 

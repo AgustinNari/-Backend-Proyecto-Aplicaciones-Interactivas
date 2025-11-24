@@ -1,6 +1,7 @@
 package com.uade.tpo.marketplace.entity.dto.response;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -38,6 +39,7 @@ public class ProductListDTO {
     private Integer stock;
     private Integer sold;
     private Long amountSold;
+    private Instant createdAt;
 
 
 
@@ -179,6 +181,12 @@ public class ProductListDTO {
     }
     public void setAmountSold(Long amountSold) {
         this.amountSold = amountSold;
+    }
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
     }
 
 

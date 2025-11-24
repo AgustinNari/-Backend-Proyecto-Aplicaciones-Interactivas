@@ -15,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.uade.tpo.marketplace.entity.basic.Order;
 import com.uade.tpo.marketplace.entity.enums.OrderStatus;
 
+import jakarta.persistence.Tuple;
+
 @Repository
 public interface IOrderRepository extends JpaRepository<Order, Long> {
 
@@ -49,4 +51,11 @@ public interface IOrderRepository extends JpaRepository<Order, Long> {
         "LEFT JOIN FETCH i.digitalKeys dk " +
         "WHERE o.id = :id")
     Optional<Order> findOrderWithItemsAndProductsAndKeys(@Param("id") Long id);
+
+    @Query("SELECT COUNT(o), COALESCE(SUM(o.totalAmount), 0) FROM Order o WHERE o.status = 'COMPLETED'")
+    Tuple getAdminTotalOrdersAndRevenue();
+
+    @Query("SELECT COUNT(o) FROM Order o WHERE DATE(o.createdAt) = CURRENT_DATE")
+    Integer countOrdersPlacedToday();
+
 }

@@ -37,6 +37,7 @@ import com.uade.tpo.marketplace.entity.basic.Product;
 import com.uade.tpo.marketplace.entity.basic.User;
 import com.uade.tpo.marketplace.entity.dto.create.OrderCreateDto;
 import com.uade.tpo.marketplace.entity.dto.create.OrderItemCreateDto;
+import com.uade.tpo.marketplace.entity.dto.response.AdminStatsExtrasResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.OrderItemResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.OrderKeyResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.OrderResponseDto;
@@ -62,10 +63,13 @@ import com.uade.tpo.marketplace.repository.interfaces.IDigitalKeyRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IOrderItemRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IOrderRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IProductRepository;
+import com.uade.tpo.marketplace.repository.interfaces.IReviewRepository;
 import com.uade.tpo.marketplace.repository.interfaces.IUserRepository;
 import com.uade.tpo.marketplace.service.interfaces.IDiscountService;
 import com.uade.tpo.marketplace.service.interfaces.IOrderService;
 import com.uade.tpo.marketplace.service.interfaces.IUserService;
+
+import jakarta.persistence.Tuple;
 
 @Service
 public class OrderService implements IOrderService {
@@ -84,6 +88,8 @@ public class OrderService implements IOrderService {
     private IUserService userService;
     @Autowired
     private IOrderItemRepository orderItemRepository;
+    @Autowired
+    private IReviewRepository reviewRepository;
 
     @Autowired
     private OrderItemMapper orderItemMapper;
@@ -480,7 +486,6 @@ public Page<OrderItemResponseDto> getOrderItemsByOrderId(Long orderId, Long requ
         return new PageImpl<>(dtos, effectivePageable, page.getTotalElements());
     }
 
-
     @Override
     public Page<OrderResponseDto> getOrdersBySeller(Long sellerId, Pageable pageable) {
         if (sellerId == null) {
@@ -509,12 +514,23 @@ public Page<OrderItemResponseDto> getOrderItemsByOrderId(Long orderId, Long requ
             }
         }
 
+        effectivePageable = PageRequest.of(effectivePageable.getPageNumber(), effectivePageable.getPageSize(),
+            Sort.by(Sort.Order.desc("id")));
+
         Page<Order> page = orderRepository.findBySellerId(sellerId, effectivePageable);
 
         List<OrderResponseDto> dtos = Optional.ofNullable(page.getContent())
             .orElseGet(Collections::emptyList)
             .stream()
-            .map(o -> orderMapper.toResponse(o, true))
+            .map(order -> {
+                Set<OrderItem> filteredItems = order.getItems().stream()
+                    .filter(item -> item.getProduct().getSeller().getId().equals(sellerId))
+                    .collect(Collectors.toSet());
+
+                order.setItems(filteredItems);
+
+                return orderMapper.toResponse(order, true);
+            })
             .collect(Collectors.toList());
 
         return new PageImpl<>(dtos, effectivePageable, page.getTotalElements());
@@ -683,5 +699,37 @@ public Page<OrderItemResponseDto> getOrderItemsByOrderId(Long orderId, Long requ
                 dk.getProduct() != null ? dk.getProduct().getId() : null,
                 dk.getProduct() != null ? dk.getProduct().getTitle() : null
         );
+    }
+
+
+
+    @Override
+    public Optional<AdminStatsExtrasResponseDto> getAdminStatsExtras(Long requestingUserId) {
+        
+        User requestingUser = userRepository.findById(requestingUserId)
+            .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado (id=" + requestingUserId + ")."));
+
+        if (!requestingUser.getRole().name().equals("ADMIN")) {
+            throw new UnauthorizedException("No autorizado para ver estadísticas administrativas.");
+        }
+
+        Tuple totalOrdersAndRevenue = orderRepository.getAdminTotalOrdersAndRevenue();
+        Integer totalOrders = totalOrdersAndRevenue != null && totalOrdersAndRevenue.get(0) != null
+            ? ((Number) totalOrdersAndRevenue.get(0)).intValue() : 0;
+        BigDecimal totalRevenue = totalOrdersAndRevenue != null && totalOrdersAndRevenue.get(1) != null
+            ? (BigDecimal) totalOrdersAndRevenue.get(1) : null;
+
+        Integer ordersToday = orderRepository.countOrdersPlacedToday();
+        Integer totalReviews = reviewRepository.countTotalReviews();
+
+
+        AdminStatsExtrasResponseDto dto = new AdminStatsExtrasResponseDto(
+            totalOrders,
+            ordersToday,
+            totalReviews,
+            totalRevenue != null ? totalRevenue.setScale(2, RoundingMode.HALF_UP) : BigDecimal.ZERO
+        );
+
+        return Optional.of(dto);
     }
 }

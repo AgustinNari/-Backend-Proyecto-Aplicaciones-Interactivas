@@ -366,6 +366,7 @@ public class ProductRepositoryCustomImpl implements IProductRepositoryCustom {
             dto.setStock(t.get("stock") != null ? ((Number) t.get("stock")).intValue() : 0);
             dto.setSold(t.get("sold") != null ? ((Number) t.get("sold")).intValue() : 0);
             dto.setAmountSold(t.get("amountSold") != null ? ((Number) t.get("amountSold")).longValue() : 0L);
+            dto.setCreatedAt(t.get("createdAt") != null ? (Instant) t.get("createdAt") : null);
 
             dtos.add(dto);
         }

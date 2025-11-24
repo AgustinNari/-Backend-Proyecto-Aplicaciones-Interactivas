@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import com.uade.tpo.marketplace.entity.dto.create.OrderCreateDto;
+import com.uade.tpo.marketplace.entity.dto.response.AdminStatsExtrasResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.OrderItemResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.OrderKeyResponseDto;
 import com.uade.tpo.marketplace.entity.dto.response.OrderResponseDto;
@@ -44,5 +45,7 @@ public interface IOrderService {
 
         List<OrderKeyResponseDto> getKeysByOrderItemId(Long orderItemId, Long requestingUserId)
                 throws ResourceNotFoundException, UnauthorizedException;
+
+        Optional<AdminStatsExtrasResponseDto> getAdminStatsExtras(Long requestingUserId);
 
         }

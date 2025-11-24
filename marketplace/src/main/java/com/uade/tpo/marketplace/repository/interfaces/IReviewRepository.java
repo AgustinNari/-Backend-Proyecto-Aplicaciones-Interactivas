@@ -69,4 +69,7 @@ public interface IReviewRepository extends JpaRepository<Review, Long> {
     @Modifying
     @Query("UPDATE Review r SET r.visible = :visible WHERE r.id = :reviewId")
     int toggleReviewVisibility(Long reviewId, boolean visible);
+
+    @Query("SELECT COUNT(r) FROM Review r")
+    Integer countTotalReviews();
 }
