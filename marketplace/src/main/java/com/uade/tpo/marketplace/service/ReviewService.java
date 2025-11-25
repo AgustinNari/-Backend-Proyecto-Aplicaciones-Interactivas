@@ -124,7 +124,7 @@ public class ReviewService implements IReviewService {
 
         if (product.getId() != null && buyerId != null &&
                 reviewRepository.existsByProductIdAndBuyerId(product.getId(), buyerId)) {
-            throw new DuplicateReviewException("El comprador ya realizó una reseña para este producto.");
+            throw new DuplicateReviewException("El comprador ya realizó una reseña para este producto, por lo que no puede realizar otra.");
         }
 
         Review review = reviewMapper.toEntity(dto);
